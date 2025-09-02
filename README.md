@@ -8,9 +8,34 @@
 - Android Studio Narwhal Feature Drop | 2025.1.2 Patch 2 </br>
 ![alt](./img/img_as.png "Android Studio Narwhal Feature Drop")</br></br>
 
-- AGP : 8.12</br>
+- AGP : 8.12.2</br>
 
 </br>
+
+## 🌿 브랜치 전략 (GitHub Flow)
+
+```bash
+main (프로덕션)
+├── develop (개발 통합)
+├── feature/user-auth (기능 개발)
+├── feature/video-upload
+├── hotfix/critical-bug (긴급 수정)
+└── release/v1.0.0 (릴리스 준비)
+```
+
+## 💬 커밋 컨벤션 (Conventional Commits)
+
+```bash
+형식: <type>(scope): <description>
+
+feat(auth): 소셜 로그인 구현
+fix(video): 업로드 실패 이슈 해결
+docs(readme): 개발 환경 설정 가이드 추가
+style(ui): 메인 화면 레이아웃 개선
+refactor(api): 사용자 API 구조 개선
+test(unit): 로그인 기능 테스트 케이스 추가
+chore(deps): iOS 라이브러리 업데이트
+```
 
 ## :open_file_folder: 프로젝트 구조 
 
