@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -20,4 +21,10 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "JiuJitsuPjt"
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
+include(":core:ui")
+include(":core:data")
+include(":core:domain")
+include(":feature:login")
