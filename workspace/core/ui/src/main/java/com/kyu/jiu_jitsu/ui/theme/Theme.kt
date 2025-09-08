@@ -51,7 +51,7 @@ fun JiuJitsuPjtTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = JiuJitsuTypography,
         content = content
     )
 }

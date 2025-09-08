@@ -11,6 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.kyu.jiu_jitsu.ui.components.PressableButton
 import com.kyu.jiu_jitsu.ui.theme.JiuJitsuPjtTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,8 +22,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             JiuJitsuPjtTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+//                    Greeting(
+//                        name = "Android",
+//                        modifier = Modifier.padding(innerPadding)
+//                    )
+                    TestPressButton(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -35,6 +40,17 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
         text = "Hello $name!",
         modifier = modifier
+    )
+}
+
+@Composable
+fun TestPressButton(
+    modifier: Modifier
+) {
+    PressableButton(
+        text = "TestPressable",
+        onClick = { /*TODO*/ },
+        modifier = modifier,
     )
 }
 

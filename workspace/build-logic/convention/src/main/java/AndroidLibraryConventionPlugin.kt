@@ -15,17 +15,17 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
             extensions.configure<LibraryExtension> {
                 configureKotlinAndroid(this)
-                defaultConfig.targetSdk = 35
+                defaultConfig.targetSdk = 36
             }
 
             dependencies {
-                "androidTestImplementation"(libs.findLibrary("kotlin.test").get())
-                "testImplementation"(libs.findLibrary("kotlin.test").get())
-
-                "testImplementation"(libs.findLibrary("junit").get())
-
-                "androidTestImplementation"(libs.findLibrary("androidx.junit").get())
-                "androidTestImplementation"(libs.findLibrary("androidx.espresso.core").get())
+//                "androidTestImplementation"(libs.findLibrary("kotlin.test").get())
+//                "testImplementation"(libs.findLibrary("kotlin.test").get())
+//
+//                "testImplementation"(libs.findLibrary("junit").get())
+//
+//                "androidTestImplementation"(libs.findLibrary("androidx.junit").get())
+//                "androidTestImplementation"(libs.findLibrary("androidx.espresso.core").get())
             }
         }
     }
