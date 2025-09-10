@@ -7,14 +7,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.kyu.jiu_jitsu.ui.components.PressableButton
+import com.kyu.jiu_jitsu.login.LoginScreen
 import com.kyu.jiu_jitsu.ui.theme.JiuJitsuPjtTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,9 +28,11 @@ class MainActivity : ComponentActivity() {
 //                        name = "Android",
 //                        modifier = Modifier.padding(innerPadding)
 //                    )
-                    TestPressButton(
+                    Surface(
                         modifier = Modifier.padding(innerPadding)
-                    )
+                    ) {
+                        LoginScreen()
+                    }
                 }
             }
         }
@@ -43,16 +47,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     )
 }
 
-@Composable
-fun TestPressButton(
-    modifier: Modifier
-) {
-    PressableButton(
-        text = "TestPressable",
-        onClick = { /*TODO*/ },
-        modifier = modifier,
-    )
-}
 
 @Preview(showBackground = true)
 @Composable

@@ -1,42 +1,59 @@
+import java.util.Properties
+
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.jjs.android.library)
+    alias(libs.plugins.jjs.hilt)
 }
+
+val properties = Properties()
+properties.load(project.rootProject.file("local.properties").inputStream())
 
 android {
     namespace = "com.kyu.jiu_jitsu.data"
-    compileSdk = 36
 
     defaultConfig {
-        minSdk = 26
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
-        release {
+        getByName("release") {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            // 개발여부설정 : false
+            buildConfigField ("boolean", "DEV", "false")
+            buildConfigField("String", "BASE_URL", properties.getProperty("BASE_URL"))
+//            buildConfigField("String", "NAVER_MAP_BASE_URL", properties.getProperty("NAVER_MAP_URL"))
+//            buildConfigField("String", "GOOGLE_CLOUD_CLIENT_ID", properties.getProperty("GOOGLE_CLOUD_CLIENT_ID"))
         }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
+        getByName("debug") {
+            // 개발여부설정 : true
+            buildConfigField("boolean", "DEV", "true")
+            buildConfigField("String", "BASE_URL", properties.getProperty("DEV_BASE_URL"))
+//            buildConfigField("String", "NAVER_MAP_BASE_URL", properties.getProperty("NAVER_MAP_URL"))
+//            buildConfigField("String", "GOOGLE_CLOUD_CLIENT_ID", properties.getProperty("GOOGLE_CLOUD_CLIENT_ID"))
+        }
+
     }
 }
 
 dependencies {
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.kotlin.serialization)
+    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.moshi.kotlin)
+    implementation(libs.okhttp.logging)
+    implementation(libs.okhttp.profiler)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

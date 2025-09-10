@@ -32,11 +32,13 @@ android {
                 "proguard-rules.pro"
             )
 
+            buildConfigField ("boolean", "DEV", "false")
+
 //            signingConfig = signingConfigs.getByName("release")
         }
 
         getByName("debug") {
-
+            buildConfigField("boolean", "DEV", "true")
         }
     }
 }

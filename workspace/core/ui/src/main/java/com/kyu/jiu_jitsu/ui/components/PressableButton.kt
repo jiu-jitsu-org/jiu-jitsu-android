@@ -15,7 +15,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +34,8 @@ import com.kyu.jiu_jitsu.ui.theme.CoolGray25
 import com.kyu.jiu_jitsu.ui.theme.CoolGray75
 import com.kyu.jiu_jitsu.ui.theme.Typography
 import com.kyu.jiu_jitsu.ui.theme.White
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun PressableButton(
@@ -47,10 +52,14 @@ fun PressableButton(
     disabledTextColor: Color = CoolGray25,
     roundedCorner: Dp = 12.dp,
     horizontalPadding: Dp = 16.dp,
-    verticalPadding: Dp = 10.dp
+    verticalPadding: Dp = 10.dp,
+    throttleTime: Long = 700L,
 ) {
     val interactionSource = remember { MutableInteractionSource() } // ← 반드시 remember
     val isPressed by interactionSource.collectIsPressedAsState()     // 손가락이 닿아있는 동안 true
+
+    var throttleFlag by remember { mutableStateOf(false) }   // Button Click Throttle Flag
+    val scope = rememberCoroutineScope()
 
     val bgColor by animateColorAsState(
         if (!enabled) disabledBgColor
@@ -77,7 +86,17 @@ fun PressableButton(
                 enabled = enabled,
                 interactionSource = interactionSource,
                 indication = ripple(bounded = true),
-                onClick = onClick
+                onClick = {
+                    // 연속 터치를 막기 위함 ThrottleFlag, ThrottleTime
+                    if (!throttleFlag) {
+                        onClick()
+                        throttleFlag = true
+                        scope.launch {
+                            delay(throttleTime)
+                            throttleFlag = false
+                        }
+                    }
+                }
             )
             .padding(
                 horizontal = horizontalPadding,
