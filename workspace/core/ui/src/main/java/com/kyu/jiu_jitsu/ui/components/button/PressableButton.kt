@@ -1,12 +1,10 @@
-package com.kyu.jiu_jitsu.ui.components
+package com.kyu.jiu_jitsu.ui.components.button
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -37,6 +35,8 @@ import com.kyu.jiu_jitsu.ui.theme.White
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+// TODO chan 아이콘 Text Icon 개발
+
 @Composable
 fun PressableButton(
     text: String,
@@ -50,7 +50,7 @@ fun PressableButton(
     enableTextColor: Color = White,
     pressedTextColor: Color = Black,
     disabledTextColor: Color = CoolGray25,
-    roundedCorner: Dp = 12.dp,
+    roundedCorner: Dp = 15.dp,
     horizontalPadding: Dp = 16.dp,
     verticalPadding: Dp = 10.dp,
     throttleTime: Long = 700L,

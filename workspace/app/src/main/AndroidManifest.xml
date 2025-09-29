@@ -5,6 +5,7 @@
     <application
         android:name=".App"
         android:allowBackup="true"
+        android:enableOnBackInvokedCallback="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -21,6 +22,9 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+
+                <data android:host="oauth"
+                    android:scheme="kakao${KAKAO_APP_KEY}" />
             </intent-filter>
         </activity>
     </application>

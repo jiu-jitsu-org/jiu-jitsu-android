@@ -1,6 +1,6 @@
 package com.kyu.jiu_jitsu.data.module
 
-import com.kyu.jiu_jitsu.data.api.LoginApiService
+import com.kyu.jiu_jitsu.data.api.LoginService
 import com.kyu.jiu_jitsu.data.api.RandomUserService
 import dagger.Module
 import dagger.Provides
@@ -15,8 +15,8 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun loginApiService(@NetworkModule.BaseNetworkExceptToken baseRetrofit: Retrofit): LoginApiService =
-        baseRetrofit.create(LoginApiService::class.java)
+    fun loginService(@NetworkModule.BaseNetworkExceptToken baseRetrofit: Retrofit): LoginService =
+        baseRetrofit.create(LoginService::class.java)
 
     @Provides
     @Singleton

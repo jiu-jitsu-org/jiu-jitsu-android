@@ -1,3 +1,13 @@
 <resources>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="signup_bottom_sheet_title">최소한의 정보만 받을게요</string>
+
+    <string name="signup_agree_list_1">서비스 이용약관 동의</string>
+    <string name="signup_agree_list_2">개인정보 처리방침 동의</string>
+    <string name="signup_agree_list_3">만 14세 이상입니다.</string>
+    <string name="signup_agree_list_4">마케팅 정보 수신</string>
+
+    <string name="signup_agree_all">모두 동의</string>
+
+    <string name="login_skip">로그인 없이 둘러보기</string>
+
 </resources>

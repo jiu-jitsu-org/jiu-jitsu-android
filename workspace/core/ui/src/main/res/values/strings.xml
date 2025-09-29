@@ -1,0 +1,5 @@
+<resources>
+    <string name="common_required">필수</string>
+    <string name="common_optional">선택</string>
+    <string name="common_next">다음</string>
+</resources>

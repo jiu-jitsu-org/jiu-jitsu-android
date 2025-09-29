@@ -1,7 +1,11 @@
 package com.kyu.jiu_jitsu.data.module
 
+import com.kyu.jiu_jitsu.data.api.LoginService
 import com.kyu.jiu_jitsu.data.api.RandomUserService
 import com.kyu.jiu_jitsu.data.repository.RandomUserRepository
+import com.kyu.jiu_jitsu.data.repository.RefreshTokenRepository
+import com.kyu.jiu_jitsu.data.repository.SnsLoginRepository
+import com.kyu.jiu_jitsu.data.repository.impl.LoginUserRepositoryImpl
 import com.kyu.jiu_jitsu.data.repository.impl.RandomUserRepositoryImpl
 import dagger.Module
 import dagger.Provides
@@ -18,5 +22,17 @@ object RepositoryModule {
     fun provideRandomUserRepository(
         randomUserService: RandomUserService
     ): RandomUserRepository = RandomUserRepositoryImpl(randomUserService)
+
+    @Provides
+    @Singleton
+    fun provideSnsLoginRepository(
+        loginService: LoginService
+    ): SnsLoginRepository = LoginUserRepositoryImpl(loginService)
+
+    @Provides
+    @Singleton
+    fun provideRefreshTokenRepository(
+        loginService: LoginService
+    ): RefreshTokenRepository = LoginUserRepositoryImpl(loginService)
 
 }

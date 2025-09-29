@@ -1,0 +1,12 @@
+package com.kyu.jiu_jitsu.ui.routes
+
+import kotlinx.serialization.Serializable
+
+@Serializable object HomeGraph
+@Serializable object RedScreen
+@Serializable object BlueScreen
+@Serializable object GrayScreen
+
+@Serializable object LoginGraph
+@Serializable object LoginScreen
+@Serializable object InputNickNameScreen

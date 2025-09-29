@@ -1,5 +1,6 @@
 package com.kyu.jiu_jitsu.data.module
 
+import com.kyu.jiu_jitsu.data.BuildConfig
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -18,7 +19,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
     private const val PRINT_LOG = true
-    private const val BASE_URL = "https://randomuser.me/" // 기본 URL
+    private const val BASE_URL = BuildConfig.BASE_URL // 기본 URL
 
     private const val CONNECT_TIMEOUT = 3000L // 커넥션 타임
     private const val WRITE_TIMEOUT = 3000L // 쓰기 타임

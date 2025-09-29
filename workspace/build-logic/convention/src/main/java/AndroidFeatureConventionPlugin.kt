@@ -11,7 +11,6 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
 
             dependencies {
                 "implementation"(project(":core:ui"))
-//                "implementation"(project(":navigator"))
             }
         }
     }

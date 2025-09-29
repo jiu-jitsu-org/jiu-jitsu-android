@@ -27,18 +27,27 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            val kakaoKey = properties.getProperty("KAKAO_NATIVE_APP_KEY") ?: ""
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
 
             buildConfigField ("boolean", "DEV", "false")
+            buildConfigField("String", "KAKAO_KEY",kakaoKey)
 
+            manifestPlaceholders["KAKAO_APP_KEY"] = kakaoKey
 //            signingConfig = signingConfigs.getByName("release")
         }
 
         getByName("debug") {
+            val kakaoKey = properties.getProperty("KAKAO_NATIVE_APP_KEY") ?: ""
+
             buildConfigField("boolean", "DEV", "true")
+            buildConfigField("String", "KAKAO_KEY",kakaoKey)
+
+            manifestPlaceholders["KAKAO_APP_KEY"] = kakaoKey
         }
     }
 }
@@ -56,6 +65,10 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.navigation)
+    implementation(libs.androidx.compose.material.iconsExtended)
+
+    implementation(libs.kakao.user)
 
     ksp(libs.hilt.compiler)
 

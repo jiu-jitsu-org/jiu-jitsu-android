@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.jjs.android.library)
     alias(libs.plugins.jjs.android.compose.library)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -34,6 +35,8 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.navigation)
+    implementation(libs.androidx.compose.material.iconsExtended)
 
     testImplementation(libs.junit)
 

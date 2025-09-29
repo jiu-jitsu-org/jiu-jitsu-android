@@ -41,7 +41,7 @@ val CoolGray700 = Color(0xFF4D4E54)
 val CoolGray800 = Color(0xFF37383D)
 val CoolGray900 = Color(0xFF292A2E)
 
-val Red50 = Color(0xFFFF1D0D)
+val Red500 = Color(0xFFFF1D0D)
 val RedOpacity10 = Color(0x1AFF1D0D)
 
 val BlackOpacity40 = Color(0x66000000)
@@ -50,3 +50,6 @@ val WhiteOpacity40 = Color(0x66FFFFFF)
 
 val BlueOpacity10 = Color(0x1A009DFF)
 val BlueOpacity40 = Color(0x66009DFF)
+
+val KakaoBg = Color(0xFFFEE500)
+val AppleBg = Color(0xFF050708)

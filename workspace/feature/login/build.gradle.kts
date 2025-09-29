@@ -26,12 +26,13 @@ dependencies {
 
     implementation(projects.core.data)
     implementation(projects.core.domain)
-    implementation(projects.core.ui)
 
+    implementation(libs.androidx.material3)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.kakao.user)
 
     testImplementation(libs.junit)
 
