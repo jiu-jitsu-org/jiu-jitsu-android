@@ -2,35 +2,114 @@ package com.kyu.jiu_jitsu.login
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.user.UserApiClient
 import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.domain.usecase.GetRandomUserUseCase
+import com.kyu.jiu_jitsu.data.datastore.PrefKeys
+import com.kyu.jiu_jitsu.data.datastore.SecurePreferences
+import com.kyu.jiu_jitsu.data.model.SnsLoginResponse
 import com.kyu.jiu_jitsu.domain.usecase.GetSnsLoginUseCase
-import com.kyu.jiu_jitsu.login.screen.LoginType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+sealed class LoginType(
+    val type: String,
+    var snsLoginToken: String? = null,
+) {
+    data object KAKAO_ACCOUNT : LoginType("KAKAO")
+    data object GOOGLE : LoginType("GOOGLE")
+    data object APPLE : LoginType("APPLE")
+}
+
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val getRandomUserUseCase: GetRandomUserUseCase,
     private val getSnsLoginUseCase: GetSnsLoginUseCase,
+    private val securePreferences: SecurePreferences,
 ): ViewModel() {
 
-    fun startSnsLogin(type: LoginType, context: Context) {
-        when(type) {
+    var loginType by mutableStateOf<LoginType>(LoginType.GOOGLE)
+    var loginUiState by mutableStateOf<UiState<SnsLoginResponse>>(UiState.Idle)
+
+    fun startSnsLogin(
+        context: Context,
+    ) {
+        when(loginType) {
             is LoginType.KAKAO_ACCOUNT -> {
                 loginWithKakaoTalk(context)
             }
             is LoginType.GOOGLE -> {
-
+                signInWithGoogle(context)
             }
             is LoginType.APPLE -> {
 
+            }
+        }
+    }
+
+    private fun buildGoogleIdOption(
+        webClientId: String,
+        nonce: String? = null,
+    ): GetGoogleIdOption {
+        return GetGoogleIdOption.Builder()
+            // 기존에 이 앱에 로그인한 적 있는 계정을 우선 필터링
+            .setFilterByAuthorizedAccounts(false)
+            // 서버 검증 시 서버(Web) 클라이언트 ID 사용
+            .setServerClientId(webClientId)
+            // 단일 자격이면 자동 로그인 UX 허용(권장)
+            .setAutoSelectEnabled(true)
+            .apply { nonce?.let { setNonce(it) } }
+            .build()
+    }
+
+    fun signInWithGoogle(
+        context: Context,
+        onSuccess: (GoogleIdTokenCredential) -> Unit = {},
+        onCancelOrError: (Throwable?) -> Unit = {},
+    ) {
+        val cm = CredentialManager.create(context)
+        val googleId = buildGoogleIdOption(BuildConfig.GOOGLE_OAUTH_WEB_CLIENT_ID)
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(googleId)
+            .build()
+
+        viewModelScope.launch {
+            try {
+                val result = cm.getCredential(
+                    context = context,
+                    request = request
+                )
+                when (val cred = result.credential) {
+                    is androidx.credentials.CustomCredential -> {
+                        if (cred.type ==
+                            GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                            val idCred = GoogleIdTokenCredential.createFrom(cred.data)
+                            loginType = LoginType.GOOGLE.apply { snsLoginToken = idCred.idToken }
+                            onSuccess(idCred)
+                            getSnsLoginInfo()
+                        } else {
+                            onCancelOrError(IllegalStateException("Unknown credential type"))
+                        }
+                    }
+                    else -> {
+                        onCancelOrError(IllegalStateException("Unexpected credential"))
+                    }
+                }
+            } catch (e: GetCredentialException) {
+                // 사용자가 취소했거나 네트워크/구성 오류 등
+                Log.e("@@@@@@@@", "Google Login Error : ${e.message}")
+                onCancelOrError(e)
             }
         }
     }
@@ -40,7 +119,9 @@ class LoginViewModel @Inject constructor(
             if (error != null) {
                 Log.e("KakaoTalk", "카카오계정으로 로그인 실패", error)
             } else if (token != null) {
+                loginType = LoginType.KAKAO_ACCOUNT.apply { snsLoginToken = token.accessToken }
                 Log.i("KakaoTalk", "카카오계정으로 로그인 성공 ${token.accessToken}")
+                getSnsLoginInfo()
             }
         }
 
@@ -50,7 +131,9 @@ class LoginViewModel @Inject constructor(
                     if (error != null) {
                         Log.e("KakaoTalk", "카카오톡으로 로그인 실패", error)
                     } else if (token != null) {
+                        loginType = LoginType.KAKAO_ACCOUNT.apply { snsLoginToken = token.accessToken }
                         Log.i("KakaoTalk", "카카오톡으로 로그인 성공 ${token.accessToken}")
+                        getSnsLoginInfo()
                     }
                 }
             } else {
@@ -59,9 +142,10 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    fun getSnsLoginInfo(snsProvider: String, token: String) {
+    fun getSnsLoginInfo() {
         viewModelScope.launch {
-            getSnsLoginUseCase(snsProvider, token).collectLatest { uiState ->
+            loginUiState = UiState.Loading
+            getSnsLoginUseCase(loginType.type, loginType.snsLoginToken?:"").collectLatest { uiState ->
                 when(uiState) {
                     is UiState.Success -> {
                         Log.d("LoginViewModel", "getSnsLoginInfo Success : ${uiState.result}")
@@ -69,36 +153,13 @@ class LoginViewModel @Inject constructor(
                     is UiState.Error -> {
                         Log.d("LoginViewModel", "getSnsLoginInfo Error : ${uiState.message}")
                     }
-                    is UiState.Idle -> {
-                        Log.d("LoginViewModel", "getSnsLoginInfo Idle")
-                    }
-                    is UiState.Loading -> {
-                        Log.d("LoginViewModel", "getSnsLoginInfo Loading")
+                    else -> {
+                        Log.d("LoginViewModel", "getSnsLoginInfo else")
                     }
                 }
             }
         }
     }
 
-    fun getUser(results: Int = 20) {
-        viewModelScope.launch {
-            getRandomUserUseCase(results).collect { uiState ->
-                when(uiState) {
-                    is UiState.Success -> {
-                        Log.d("LoginViewModel", "getUser Success : ${uiState.result}")
-                    }
-                    is UiState.Error -> {
-                        Log.d("LoginViewModel", "getUser Error : ${uiState.message}")
-                    }
-                    is UiState.Idle -> {
-                        Log.d("LoginViewModel", "getUser Idle")
-                    }
-                    is UiState.Loading -> {
-                        Log.d("LoginViewModel", "getUser Loading")
-                    }
-                }
-            }
-        }
-    }
 
 }

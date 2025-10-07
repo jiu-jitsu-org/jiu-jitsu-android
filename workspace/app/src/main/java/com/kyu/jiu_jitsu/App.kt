@@ -11,6 +11,6 @@ class App: Application() {
         super.onCreate()
 
         // Init KAKAO SDK
-        KakaoSdk.init(this, BuildConfig.KAKAO_KEY)
+        KakaoSdk.init(this, BuildConfig.KAKAO_NATIVE_APP_KEY)
     }
 }

@@ -1,54 +1,50 @@
 package com.kyu.jiu_jitsu.login.screen
 
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.kyu.jiu_jitsu.login.LoginType
 import com.kyu.jiu_jitsu.login.LoginViewModel
 import com.kyu.jiu_jitsu.login.R
 import com.kyu.jiu_jitsu.login.components.SignUpBottomSheet
-import com.kyu.jiu_jitsu.ui.components.button.DartCTAButton
-import com.kyu.jiu_jitsu.ui.components.button.NeutralButton
+import com.kyu.jiu_jitsu.ui.components.button.PressableButton
 import com.kyu.jiu_jitsu.ui.components.button.PrimaryButton
 import com.kyu.jiu_jitsu.ui.components.button.TextButton
-import com.kyu.jiu_jitsu.ui.components.button.TintButton
+import com.kyu.jiu_jitsu.ui.theme.AppleBg
+import com.kyu.jiu_jitsu.ui.theme.Color1F1F1F
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents
 import com.kyu.jiu_jitsu.ui.theme.CoolGray75
-import com.kyu.jiu_jitsu.ui.theme.Red500
-
-sealed class LoginType(val type: String) {
-    object KAKAO_ACCOUNT : LoginType("KAKAO_ACCOUNT")
-    object GOOGLE : LoginType("GOOGLE")
-    object APPLE : LoginType("APPLE")
-}
+import com.kyu.jiu_jitsu.ui.theme.KakaoBg
+import com.kyu.jiu_jitsu.ui.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +57,6 @@ fun LoginScreen(
     val viewModel = hiltViewModel<LoginViewModel>()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var open by rememberSaveable { mutableStateOf(false) }
-    var loginType by remember { mutableStateOf<LoginType?>(null) }
 
     Surface(
         color = CoolGray75,
@@ -70,46 +65,95 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .windowInsetsPadding(WindowInsets.systemBars),
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .padding(35.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Kakao
-            PrimaryButton(
+            PressableButton(
                 modifier = Modifier
+                    .height(52.dp)
                     .fillMaxWidth(),
-                text = "Kakao",
+                text = stringResource(R.string.login_kakao),
+                disabledBgColor = KakaoBg,
+                enabledBgColor = KakaoBg,
+                pressedBgColor = KakaoBg,
+                enableTextColor = Color1F1F1F,
+                pressedTextColor = Color1F1F1F,
+                disabledTextColor = Color1F1F1F,
+                roundedCorner = 12.dp,
+                leadingIcon = {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_login_kakao),
+                        contentDescription = "LoginKakao"
+                    )
+                },
                 onClick = {
                     open = true
-                    loginType = LoginType.KAKAO_ACCOUNT
+                    viewModel.loginType = LoginType.KAKAO_ACCOUNT
                 },
             )
             Spacer(modifier = Modifier.height(15.dp))
             // Google
-            PrimaryButton(
+            PressableButton(
                 modifier = Modifier
+                    .height(52.dp)
                     .fillMaxWidth(),
-                text = "Google",
+                text = stringResource(R.string.login_google),
+                disabledBgColor = White,
+                enabledBgColor = White,
+                pressedBgColor = White,
+                enableTextColor = Color1F1F1F,
+                pressedTextColor = Color1F1F1F,
+                disabledTextColor = Color1F1F1F,
+                roundedCorner = 12.dp,
+                leadingIcon = {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_login_google),
+                        contentDescription = "LoginGoogle"
+                    )
+                },
                 onClick = {
                     open = true
-                    loginType = LoginType.GOOGLE
+                    viewModel.loginType = LoginType.GOOGLE
                 },
             )
             Spacer(modifier = Modifier.height(15.dp))
             // Apple
-            PrimaryButton(
+            PressableButton(
                 modifier = Modifier
+                    .height(52.dp)
                     .fillMaxWidth(),
-                text = "Apple",
+                text = stringResource(R.string.login_apple),
+                disabledBgColor = AppleBg,
+                enabledBgColor = AppleBg,
+                pressedBgColor = AppleBg,
+                enableTextColor = White,
+                pressedTextColor = White,
+                disabledTextColor = White,
+                roundedCorner = 12.dp,
+                leadingIcon = {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_login_apple),
+                        contentDescription = "LoginApple"
+                    )
+                },
                 onClick = {
                     open = true
-                    loginType = LoginType.APPLE
+                    viewModel.loginType = LoginType.APPLE
                 },
             )
             Spacer(modifier = Modifier.height(15.dp))
             // Skip
             TextButton(
+                modifier = Modifier
+                    .height(44.dp)
+                    .fillMaxWidth(),
                 text = stringResource(R.string.login_skip),
+                pressedTextColor = White,
+                enableTextColor = White,
+                disabledTextColor = White,
                 onClick = {
                     goHome()
                 }
@@ -126,7 +170,6 @@ fun LoginScreen(
             sheetState = sheetState,
             onDismissRequest = {
                 open = false
-                loginType = null
             },
             shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp),
             dragHandle = {
@@ -141,9 +184,8 @@ fun LoginScreen(
                 Log.d("@@@@@@", "@@@@@@ $agreeList")
                 open = false
 
-                loginType?.let {
-                    viewModel.startSnsLogin(it, context)
-                }
+                viewModel.startSnsLogin(context)
+
 //                goInputNickName()
             }
         }
