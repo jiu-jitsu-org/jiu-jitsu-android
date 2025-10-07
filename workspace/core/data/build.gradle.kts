@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.moshi.kotlin)
     implementation(libs.okhttp.logging)
     implementation(libs.okhttp.profiler)
+    implementation(libs.androidx.datastore)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

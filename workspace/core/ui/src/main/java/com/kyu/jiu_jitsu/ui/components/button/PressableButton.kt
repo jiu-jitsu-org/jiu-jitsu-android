@@ -7,7 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -44,6 +47,7 @@ fun PressableButton(
     onClick: () -> Unit,
     enabled: Boolean = true,
     modifier: Modifier = Modifier,
+    leadingIcon: @Composable (() -> Unit)? = null,
     enabledBgColor: Color = Blue50,
     pressedBgColor: Color = Blue1000,
     disabledBgColor: Color = CoolGray75,
@@ -104,10 +108,18 @@ fun PressableButton(
             ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text,
-            color = textColor,
-            style = textStyle,
-        )
+        Row {
+            if (leadingIcon != null) {
+                Row {
+                    leadingIcon()
+                    Spacer(modifier = Modifier.width(20.dp))
+                }
+            }
+            Text(
+                text,
+                color = textColor,
+                style = textStyle,
+            )
+        }
     }
 }

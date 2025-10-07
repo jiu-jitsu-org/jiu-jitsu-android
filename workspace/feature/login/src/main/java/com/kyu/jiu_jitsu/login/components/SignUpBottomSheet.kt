@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -21,6 +22,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
@@ -84,7 +86,7 @@ fun SignUpBottomSheet(
 
     Column(
         modifier = Modifier.padding(
-            horizontal = 15.dp,
+            horizontal = 20.dp,
             vertical = 15.dp,
         ),
     ) {
@@ -93,7 +95,7 @@ fun SignUpBottomSheet(
             stringResource(R.string.signup_bottom_sheet_title),
             style = Typography.titleMedium
         )
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         // Agree List
         LazyColumn(
             state = listState,
@@ -114,12 +116,24 @@ fun SignUpBottomSheet(
                             agreeItemLists
                                 .filterKeys { it != SignUpAgreeType.Marketing }
                                 .all { it.value }
+                    },
+                    onInfoMoreClick = { item ->
+                        when(item) {
+                            SignUpAgreeType.Service -> {}
+                            SignUpAgreeType.Privacy -> {}
+                            SignUpAgreeType.Age -> {}
+                            SignUpAgreeType.Marketing -> {}
+                        }
                     }
                 )
             }
         }
+        Spacer(modifier = Modifier.height(16.dp))
         // Agree Submit CTA Button
         PrimaryCTAButton(
+            modifier = Modifier
+                .height(51.dp)
+                .fillMaxWidth(),
             text = if (isPossibleSubmit) {
                 stringResource(com.kyu.jiu_jitsu.ui.R.string.common_next)
             } else {
@@ -149,51 +163,75 @@ fun SignUpAgreeItem(
     agreeType: SignUpAgreeType,
     isSelected: Boolean = false,
     onItemClick: (SignUpAgreeType) -> Unit,
+    onInfoMoreClick: (SignUpAgreeType) -> Unit,
 ) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
+            .height(40.dp)
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            modifier = Modifier
+                .clickable(
+                    role = Role.Button,
+                    onClick = { onItemClick(agreeType) }
+                )
+                .padding(end = 20.dp)
+                .weight(1f)
+        ) {
+            // Check Icon
+            Icon(
+                painter = painterResource(com.kyu.jiu_jitsu.ui.R.drawable.ic_check),
+                contentDescription = "Check Icon",
+                tint = if (isSelected) {
+                    ColorComponents.BottomSheet.Selected.ListItem.LeadingIcon
+                } else {
+                    ColorComponents.BottomSheet.UnSelected.ListItem.LeadingIcon
+                }
+            )
+            Spacer(modifier = Modifier.width(9.dp))
+            // Agree Title
+            Text(
+                stringResource(agreeType.titleResId),
+                style = Typography.bodySmall,
+                color = if (isSelected) {
+                    ColorComponents.BottomSheet.Selected.ListItem.Label
+                } else {
+                    ColorComponents.BottomSheet.UnSelected.ListItem.Label
+                }
+            )
+            Spacer(modifier = Modifier.width(9.dp))
+            // Required or Optional
+            Text(
+                stringResource(
+                    if (agreeType.isRequired) {
+                        com.kyu.jiu_jitsu.ui.R.string.common_required
+                    } else {
+                        com.kyu.jiu_jitsu.ui.R.string.common_optional
+                    }
+                ),
+                style = Typography.bodySmall,
+                color = if (agreeType.isRequired) {
+                    ColorComponents.BottomSheet.Selected.ListItem.LabelRequired
+                } else {
+                    ColorComponents.BottomSheet.UnSelected.ListItem.LabelOptional
+                }
+            )
+        }
+        // Arrow Icon
+        Icon(
+            modifier = Modifier
             .clickable(
                 role = Role.Button,
-                onClick = { onItemClick(agreeType) }
-            )
-    ) {
-        // Check Icon
-        Icon(
-            painter = painterResource(com.kyu.jiu_jitsu.ui.R.drawable.ic_check),
-            contentDescription = "Check Icon",
-            tint = if (isSelected) {
-                ColorComponents.BottomSheet.Selected.ListItem.LeadingIcon
-            } else {
-                ColorComponents.BottomSheet.UnSelected.ListItem.LeadingIcon
-            }
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        // Agree Title
-        Text(
-            stringResource(agreeType.titleResId),
-            style = Typography.bodySmall,
-            color = if (isSelected) {
-                ColorComponents.BottomSheet.Selected.ListItem.Label
-            } else {
-                ColorComponents.BottomSheet.UnSelected.ListItem.Label
-            }
-        )
-        // Required or Optional
-        Text(
-            stringResource(
-                if (agreeType.isRequired) {
-                    com.kyu.jiu_jitsu.ui.R.string.common_required
-                } else {
-                    com.kyu.jiu_jitsu.ui.R.string.common_optional
+                onClick = {
+                    onInfoMoreClick(agreeType)
                 }
             ),
-            style = Typography.bodySmall,
-            color = if (agreeType.isRequired) {
-                ColorComponents.BottomSheet.Selected.ListItem.LabelRequired
-            } else {
-                ColorComponents.BottomSheet.UnSelected.ListItem.LabelOptional
-            }
+            painter = painterResource(com.kyu.jiu_jitsu.ui.R.drawable.ic_arow_right),
+            contentDescription = "Arrow Icon",
+            tint = ColorComponents.BottomSheet.Selected.ListItem.FollowingIcon
         )
     }
 }

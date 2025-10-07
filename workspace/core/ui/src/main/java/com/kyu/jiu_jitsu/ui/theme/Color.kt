@@ -53,3 +53,5 @@ val BlueOpacity40 = Color(0x66009DFF)
 
 val KakaoBg = Color(0xFFFEE500)
 val AppleBg = Color(0xFF050708)
+
+val Color1F1F1F = Color(0xFF1F1F1F)

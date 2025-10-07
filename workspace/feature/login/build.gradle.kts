@@ -1,7 +1,13 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.jjs.android.feaure)
     alias(libs.plugins.jjs.android.compose.library)
+    alias(libs.plugins.secrets)
 }
+
+val properties = Properties()
+properties.load(project.rootProject.file("local.properties").inputStream())
 
 android {
     namespace = "com.kyu.jiu_jitsu.login"
@@ -11,14 +17,26 @@ android {
         consumerProguardFiles("consumer-rules.pro")
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
-        release {
+        getByName("release") {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            // 개발여부설정 : false
+            buildConfigField ("boolean", "DEV", "false")
         }
+        getByName("debug") {
+            // 개발여부설정 : true
+            buildConfigField("boolean", "DEV", "true")
+        }
+
     }
 }
 
@@ -32,7 +50,13 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.datastore)
+
+    // SNS Login
     implementation(libs.kakao.user)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.google.googleid)
 
     testImplementation(libs.junit)
 

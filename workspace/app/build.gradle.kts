@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.jjs.android.application)
     alias(libs.plugins.jjs.android.compose.application)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.secrets)
 }
 
 val properties = Properties()
@@ -27,7 +28,7 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
-            val kakaoKey = properties.getProperty("KAKAO_NATIVE_APP_KEY") ?: ""
+//            val kakaoKey = properties.getProperty("KAKAO_NATIVE_APP_KEY") ?: ""
 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -35,19 +36,11 @@ android {
             )
 
             buildConfigField ("boolean", "DEV", "false")
-            buildConfigField("String", "KAKAO_KEY",kakaoKey)
-
-            manifestPlaceholders["KAKAO_APP_KEY"] = kakaoKey
-//            signingConfig = signingConfigs.getByName("release")
         }
 
         getByName("debug") {
-            val kakaoKey = properties.getProperty("KAKAO_NATIVE_APP_KEY") ?: ""
 
             buildConfigField("boolean", "DEV", "true")
-            buildConfigField("String", "KAKAO_KEY",kakaoKey)
-
-            manifestPlaceholders["KAKAO_APP_KEY"] = kakaoKey
         }
     }
 }
