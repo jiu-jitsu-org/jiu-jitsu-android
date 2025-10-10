@@ -1,4 +1,4 @@
-package com.kyu.jiu_jitsu.ui
+package com.kyu.jiu_jitsu.ui.screen
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize

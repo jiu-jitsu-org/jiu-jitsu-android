@@ -7,8 +7,10 @@ import com.kyu.jiu_jitsu.data.model.SnsLoginRequest
 import com.kyu.jiu_jitsu.data.model.SnsLoginResponse
 import com.kyu.jiu_jitsu.data.repository.RefreshTokenRepository
 import com.kyu.jiu_jitsu.data.repository.SnsLoginRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 class LoginUserRepositoryImpl @Inject constructor(
@@ -34,7 +36,7 @@ class LoginUserRepositoryImpl @Inject constructor(
             })
         )
 
-    }
+    }.flowOn(Dispatchers.IO)
 
     override suspend fun refreshToken() {
         print("refreshToken")

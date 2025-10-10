@@ -2,6 +2,8 @@ package com.kyu.jiu_jitsu.ui.routes
 
 import kotlinx.serialization.Serializable
 
+@Serializable object SplashScreen
+
 @Serializable object HomeGraph
 @Serializable object RedScreen
 @Serializable object BlueScreen

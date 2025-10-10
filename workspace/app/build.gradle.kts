@@ -48,6 +48,8 @@ android {
 dependencies {
 
     implementation(projects.core.ui)
+    implementation(projects.core.data)
+    implementation(projects.core.domain)
     implementation(projects.feature.login)
 
     implementation(libs.androidx.core.ktx)
@@ -60,6 +62,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.compose.navigation)
     implementation(libs.androidx.compose.material.iconsExtended)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(libs.kakao.user)
 
