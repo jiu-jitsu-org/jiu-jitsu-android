@@ -1,10 +1,13 @@
 package com.kyu.jiu_jitsu.data.module
 
+import com.kyu.jiu_jitsu.data.api.BootStrapService
 import com.kyu.jiu_jitsu.data.api.LoginService
 import com.kyu.jiu_jitsu.data.api.RandomUserService
+import com.kyu.jiu_jitsu.data.repository.BootStrapRepository
 import com.kyu.jiu_jitsu.data.repository.RandomUserRepository
 import com.kyu.jiu_jitsu.data.repository.RefreshTokenRepository
 import com.kyu.jiu_jitsu.data.repository.SnsLoginRepository
+import com.kyu.jiu_jitsu.data.repository.impl.BootStrapInfoRepository
 import com.kyu.jiu_jitsu.data.repository.impl.LoginUserRepositoryImpl
 import com.kyu.jiu_jitsu.data.repository.impl.RandomUserRepositoryImpl
 import dagger.Module
@@ -34,5 +37,11 @@ object RepositoryModule {
     fun provideRefreshTokenRepository(
         loginService: LoginService
     ): RefreshTokenRepository = LoginUserRepositoryImpl(loginService)
+
+    @Provides
+    @Singleton
+    fun provideBootStrapRepository(
+        bootStrapService: BootStrapService
+    ): BootStrapRepository = BootStrapInfoRepository(bootStrapService)
 
 }

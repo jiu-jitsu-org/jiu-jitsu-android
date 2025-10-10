@@ -6,6 +6,10 @@ object NetworkConfig {
         const val RESULTS = "api/"
     }
 
+    object BootStrap {
+        const val INFO = "api/bootstrap/info"
+    }
+
     object Authentication {
         const val SNS_LOGIN = "api/auth/sns-login"
         const val REFRESH = "api/auth/refresh"
