@@ -1,4 +1,4 @@
-package com.kyu.jiu_jitsu.data.model.dto
+package com.kyu.jiu_jitsu.data.model.dto.response
 
 import com.kyu.jiu_jitsu.data.model.AppVersionInfo
 import com.kyu.jiu_jitsu.data.model.BootStrapInfo
@@ -8,6 +8,7 @@ import com.squareup.moshi.JsonClass
 data class BootStrapResponse(
     val success: Boolean?,
     val code: String?,
+    val message: String?,
     val data: BootStrapResponseData?,
 )
 

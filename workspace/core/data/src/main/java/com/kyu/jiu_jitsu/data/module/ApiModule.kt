@@ -2,7 +2,7 @@ package com.kyu.jiu_jitsu.data.module
 
 import com.kyu.jiu_jitsu.data.api.BootStrapService
 import com.kyu.jiu_jitsu.data.api.LoginService
-import com.kyu.jiu_jitsu.data.api.RandomUserService
+import com.kyu.jiu_jitsu.data.api.UserService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,6 +26,7 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun randomUserApiService(@NetworkModule.BaseNetworkExceptToken baseRetrofit: Retrofit): RandomUserService =
-        baseRetrofit.create(RandomUserService::class.java)
+    fun userService(@NetworkModule.BaseNetworkIncludeToken baseRetrofit: Retrofit): UserService =
+        baseRetrofit.create(UserService::class.java)
+
 }

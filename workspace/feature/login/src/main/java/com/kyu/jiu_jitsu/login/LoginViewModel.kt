@@ -15,10 +15,9 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.user.UserApiClient
 import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.datastore.PrefKeys
-import com.kyu.jiu_jitsu.data.datastore.SecurePreferences
-import com.kyu.jiu_jitsu.data.model.SnsLoginResponse
-import com.kyu.jiu_jitsu.domain.usecase.GetSnsLoginUseCase
+import com.kyu.jiu_jitsu.data.model.dto.response.SnsLoginResponse
+import com.kyu.jiu_jitsu.domain.usecase.login.GetSnsLoginUseCase
+import com.kyu.jiu_jitsu.domain.usecase.user.SaveLocalUserInfoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -36,7 +35,7 @@ sealed class LoginType(
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val getSnsLoginUseCase: GetSnsLoginUseCase,
-    private val securePreferences: SecurePreferences,
+    private val saveLocalUserInfoUseCase: SaveLocalUserInfoUseCase,
 ): ViewModel() {
 
     var loginType by mutableStateOf<LoginType>(LoginType.GOOGLE)

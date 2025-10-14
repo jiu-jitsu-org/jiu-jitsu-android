@@ -1,0 +1,9 @@
+<resources>
+    <string name="nickname_hint_default">닉네임을 입력해주세요</string>
+
+    <string name="nickname_title_default">어떻게 불러드리면 될까요?</string>
+    <string name="nickname_title_validate_error">한글/영문/숫자\n2~12자로 작성해주세요</string>
+    <string name="nickname_title_duplicate_error">이미 사용중인 닉네임입니다</string>
+    <string name="nickname_title_duplicate_success">사용가능한 닉네임이에요</string>
+
+</resources>

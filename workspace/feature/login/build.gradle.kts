@@ -50,7 +50,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.hilt.navigation.compose)
-    implementation(libs.androidx.datastore)
 
     // SNS Login
     implementation(libs.kakao.user)

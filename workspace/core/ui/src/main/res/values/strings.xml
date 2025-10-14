@@ -2,4 +2,6 @@
     <string name="common_required">필수</string>
     <string name="common_optional">선택</string>
     <string name="common_next">다음</string>
+    <string name="common_confirm">확인</string>
+    <string name="common_go_home">홈으로</string>
 </resources>

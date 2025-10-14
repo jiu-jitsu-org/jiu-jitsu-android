@@ -4,7 +4,8 @@ import com.kyu.jiu_jitsu.data.api.common.ApiResult
 import com.kyu.jiu_jitsu.data.api.common.UiState
 import com.kyu.jiu_jitsu.data.api.common.toUiError
 import com.kyu.jiu_jitsu.data.model.BootStrapInfo
-import com.kyu.jiu_jitsu.data.model.dto.toInfo
+import com.kyu.jiu_jitsu.data.model.dto.DtoCommonCode.OK_CODE
+import com.kyu.jiu_jitsu.data.model.dto.response.toInfo
 import com.kyu.jiu_jitsu.data.repository.BootStrapRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -17,12 +18,12 @@ class GetBootStrapInfoUseCase @Inject constructor(
         bootStrapRepository.getBootStrapInfo().map { res ->
             when (res) {
                 is ApiResult.Success -> {
-                    if (res.data.success ?: false) {
+                    if (res.data.success ?: false && res.data.code == OK_CODE) {
                         UiState.Success(
                             res.data.data.toInfo()
                         )
                     } else {
-                        UiState.Error("데이터 파싱 오류가 발생했어요.", false)
+                        UiState.Error(res.data.message ?: "", false)
                     }
                 }
 
