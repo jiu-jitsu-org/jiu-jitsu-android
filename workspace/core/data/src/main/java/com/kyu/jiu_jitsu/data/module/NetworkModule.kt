@@ -1,6 +1,8 @@
 package com.kyu.jiu_jitsu.data.module
 
 import com.kyu.jiu_jitsu.data.BuildConfig
+import com.kyu.jiu_jitsu.data.datastore.PrefKeys
+import com.kyu.jiu_jitsu.data.datastore.SecurePreferences
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -8,6 +10,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.nerdythings.okhttp.profiler.OkHttpProfilerInterceptor
+import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -24,6 +27,12 @@ object NetworkModule {
     private const val CONNECT_TIMEOUT = 3000L // 커넥션 타임
     private const val WRITE_TIMEOUT = 3000L // 쓰기 타임
     private const val READ_TIMEOUT = 3000L // 읽기 타임
+
+    private var userToken = ""
+
+    fun String?.setUserToken() {
+        userToken = this ?: ""
+    }
 
     @Qualifier
     @Retention(AnnotationRetention.BINARY)
@@ -78,7 +87,9 @@ object NetworkModule {
     @Provides
     @Singleton
     @BaseNetworkIncludeToken
-    fun provideBaseOkHttpClient(): OkHttpClient =
+    fun provideBaseOkHttpClient(
+        securePreferences: SecurePreferences,
+    ): OkHttpClient =
         if (PRINT_LOG) {
             OkHttpClient.Builder()
 //                .cookieJar(JavaNetCookieJar(CookieManager()))       // 쿠키 매니저 연결
@@ -91,7 +102,7 @@ object NetworkModule {
                         chain.request()
                             .newBuilder()
                             .header("Accept", "application/json")
-                            .header("Authorization","Bearer TOKEN")
+                            .header("Authorization","Bearer $userToken")
                             .build()
                     )
                 }
@@ -111,7 +122,7 @@ object NetworkModule {
                         chain.request()
                             .newBuilder()
                             .header("Accept", "application/json")
-                            .header("Authorization","Bearer TOKEN")
+                            .header("Authorization","Bearer $userToken")
                             .build()
                     )
                 }

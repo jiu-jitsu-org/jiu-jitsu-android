@@ -1,9 +1,9 @@
-package com.kyu.jiu_jitsu.domain.usecase
+package com.kyu.jiu_jitsu.domain.usecase.login
 
 import com.kyu.jiu_jitsu.data.api.common.ApiResult
 import com.kyu.jiu_jitsu.data.api.common.UiState
 import com.kyu.jiu_jitsu.data.api.common.toUiError
-import com.kyu.jiu_jitsu.data.model.SnsLoginResponse
+import com.kyu.jiu_jitsu.data.model.dto.response.SnsLoginResponse
 import com.kyu.jiu_jitsu.data.repository.SnsLoginRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

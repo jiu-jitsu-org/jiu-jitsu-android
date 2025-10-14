@@ -11,4 +11,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable object LoginGraph
 @Serializable object LoginScreen
-@Serializable object InputNickNameScreen
+
+@Serializable object NickNameScreen

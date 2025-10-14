@@ -13,7 +13,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Scaffold
@@ -36,6 +35,7 @@ import com.kyu.jiu_jitsu.ui.routes.BlueScreen
 import com.kyu.jiu_jitsu.ui.routes.GrayScreen
 import com.kyu.jiu_jitsu.ui.routes.HomeGraph
 import com.kyu.jiu_jitsu.ui.routes.LoginGraph
+import com.kyu.jiu_jitsu.ui.routes.NickNameScreen
 import com.kyu.jiu_jitsu.ui.routes.RedScreen
 import com.kyu.jiu_jitsu.ui.theme.JiuJitsuPjtTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -98,12 +98,12 @@ fun AppRoot() {
             }
         }
     ) { innerPadding ->
-
         AppNavHost(
             nav = navController,
             modifier = Modifier
-                .consumeWindowInsets(innerPadding)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .consumeWindowInsets(innerPadding),
+            padding = innerPadding,
         )
     }
 }

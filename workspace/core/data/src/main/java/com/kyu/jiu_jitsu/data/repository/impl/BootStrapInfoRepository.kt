@@ -3,7 +3,7 @@ package com.kyu.jiu_jitsu.data.repository.impl
 import com.kyu.jiu_jitsu.data.api.BootStrapService
 import com.kyu.jiu_jitsu.data.api.common.ApiResult
 import com.kyu.jiu_jitsu.data.api.common.safeApiCall
-import com.kyu.jiu_jitsu.data.model.dto.BootStrapResponse
+import com.kyu.jiu_jitsu.data.model.dto.response.BootStrapResponse
 import com.kyu.jiu_jitsu.data.repository.BootStrapRepository
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers

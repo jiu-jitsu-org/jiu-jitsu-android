@@ -152,7 +152,8 @@ fun LoginScreen(
                 enableTextColor = White,
                 disabledTextColor = White,
                 onClick = {
-                    goHome()
+//                    goHome()
+                    goInputNickName()
                 }
             )
             Spacer(modifier = Modifier.height(15.dp))

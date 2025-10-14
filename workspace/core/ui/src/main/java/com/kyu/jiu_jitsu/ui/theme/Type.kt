@@ -19,6 +19,19 @@ internal val PretendardFont = FontFamily(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 internal val JiuJitsuTypography = Typography(
+    // Display1 - 온보딩, 성공 실패 등 주목도 높은 항목
+    displayLarge = TextStyle(
+        fontFamily = PretendardFont,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 30.sp,
+    ),
+    // Display1 (Multi-line) - 두 줄 이상
+    displayLargeEmphasized = TextStyle(
+        fontFamily = PretendardFont,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 30.sp,
+        lineHeight = 40.sp,
+    ),
     // Title1 - 페이지 화면 최상위 타이틀
     titleLarge = TextStyle(
         fontFamily = PretendardFont,

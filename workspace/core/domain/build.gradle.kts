@@ -24,6 +24,7 @@ android {
 
 dependencies {
     implementation(projects.core.data)
+    implementation(libs.androidx.datastore)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

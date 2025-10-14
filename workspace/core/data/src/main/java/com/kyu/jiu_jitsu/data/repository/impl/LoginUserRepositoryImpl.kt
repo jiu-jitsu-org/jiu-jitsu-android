@@ -3,8 +3,8 @@ package com.kyu.jiu_jitsu.data.repository.impl
 import com.kyu.jiu_jitsu.data.api.LoginService
 import com.kyu.jiu_jitsu.data.api.common.ApiResult
 import com.kyu.jiu_jitsu.data.api.common.safeApiCall
-import com.kyu.jiu_jitsu.data.model.SnsLoginRequest
-import com.kyu.jiu_jitsu.data.model.SnsLoginResponse
+import com.kyu.jiu_jitsu.data.model.dto.request.SnsLoginRequest
+import com.kyu.jiu_jitsu.data.model.dto.response.SnsLoginResponse
 import com.kyu.jiu_jitsu.data.repository.RefreshTokenRepository
 import com.kyu.jiu_jitsu.data.repository.SnsLoginRepository
 import kotlinx.coroutines.Dispatchers

@@ -1,13 +1,14 @@
 package com.kyu.jiu_jitsu.ui.navigation
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.kyu.jiu_jitsu.login.screen.InputNickNameScreen
 import com.kyu.jiu_jitsu.login.screen.LoginScreen
+import com.kyu.jiu_jitsu.nickname.screen.NickNameScreen
 import com.kyu.jiu_jitsu.ui.screen.BlueScreen
 import com.kyu.jiu_jitsu.ui.screen.GrayScreen
 import com.kyu.jiu_jitsu.ui.screen.RedScreen
@@ -15,22 +16,24 @@ import com.kyu.jiu_jitsu.ui.screen.SplashScreen
 import com.kyu.jiu_jitsu.ui.routes.BlueScreen
 import com.kyu.jiu_jitsu.ui.routes.GrayScreen
 import com.kyu.jiu_jitsu.ui.routes.HomeGraph
-import com.kyu.jiu_jitsu.ui.routes.InputNickNameScreen
 import com.kyu.jiu_jitsu.ui.routes.LoginGraph
 import com.kyu.jiu_jitsu.ui.routes.LoginScreen
+import com.kyu.jiu_jitsu.ui.routes.NickNameScreen
 import com.kyu.jiu_jitsu.ui.routes.RedScreen
 import com.kyu.jiu_jitsu.ui.routes.SplashScreen
 
 @Composable
 fun AppNavHost(
     nav: NavHostController,
-    modifier: Modifier
+    modifier: Modifier,
+    padding: PaddingValues,
 ) {
     NavHost(
         navController = nav,
         startDestination = SplashScreen,
         modifier = modifier,
     ) {
+        // Splash
         composable<SplashScreen> {
             SplashScreen(
                 enterLoginScreen = {
@@ -51,7 +54,7 @@ fun AppNavHost(
                 }
             )
         }
-
+        // Home
         navigation<HomeGraph>(startDestination = RedScreen) {
             composable<RedScreen> {
                 RedScreen(
@@ -67,7 +70,7 @@ fun AppNavHost(
                 GrayScreen()
             }
         }
-
+        // Login
         navigation<LoginGraph>(startDestination = LoginScreen) {
             composable<LoginScreen>() {
                 LoginScreen(
@@ -80,15 +83,26 @@ fun AppNavHost(
                             restoreState = true
                         }
                     },
-                    goInputNickName = { nav.navigate(InputNickNameScreen) }
+                    goInputNickName = {
+                        nav.navigate(NickNameScreen)
+                    }
                 )
             }
+        }
+        // NickName
+        composable<NickNameScreen> {
+            NickNameScreen(
+                modifier = modifier,
+                padding = padding,
+                goHome = {
+                    nav.navigate(HomeGraph) {
+                        popUpTo(NickNameScreen) { inclusive = true }
 
-            composable<InputNickNameScreen> {
-                InputNickNameScreen(
-                    modifier = modifier,
-                )
-            }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
         }
 
     }
