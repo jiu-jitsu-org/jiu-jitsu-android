@@ -9,6 +9,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.kyu.jiu_jitsu.login.screen.LoginScreen
 import com.kyu.jiu_jitsu.nickname.screen.NickNameScreen
+import com.kyu.jiu_jitsu.profile.screen.ModifyProfileScreen
+import com.kyu.jiu_jitsu.profile.screen.ProfileScreen
 import com.kyu.jiu_jitsu.ui.screen.BlueScreen
 import com.kyu.jiu_jitsu.ui.screen.GrayScreen
 import com.kyu.jiu_jitsu.ui.screen.RedScreen
@@ -18,7 +20,10 @@ import com.kyu.jiu_jitsu.ui.routes.GrayScreen
 import com.kyu.jiu_jitsu.ui.routes.HomeGraph
 import com.kyu.jiu_jitsu.ui.routes.LoginGraph
 import com.kyu.jiu_jitsu.ui.routes.LoginScreen
+import com.kyu.jiu_jitsu.ui.routes.ModifyProfileScreen
 import com.kyu.jiu_jitsu.ui.routes.NickNameScreen
+import com.kyu.jiu_jitsu.ui.routes.ProfileGraph
+import com.kyu.jiu_jitsu.ui.routes.ProfileScreen
 import com.kyu.jiu_jitsu.ui.routes.RedScreen
 import com.kyu.jiu_jitsu.ui.routes.SplashScreen
 
@@ -63,7 +68,9 @@ fun AppNavHost(
             }
 
             composable<BlueScreen> {
-                BlueScreen()
+                BlueScreen(
+                    goProfile = { nav.navigate(ProfileGraph) }
+                )
             }
 
             composable<GrayScreen> {
@@ -103,6 +110,23 @@ fun AppNavHost(
                     }
                 }
             )
+        }
+        // Profile
+        navigation<ProfileGraph>(startDestination = ProfileScreen) {
+            composable<ProfileScreen> {
+                ProfileScreen(
+                    modifier = modifier,
+                    onModifyClick = {
+                        nav.navigate(ModifyProfileScreen)
+                    }
+                )
+            }
+            composable<ModifyProfileScreen> {
+                ModifyProfileScreen(
+                    modifier = modifier,
+                    padding = padding,
+                )
+            }
         }
 
     }

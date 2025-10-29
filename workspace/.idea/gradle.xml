@@ -32,6 +32,7 @@
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/login" />
             <option value="$PROJECT_DIR$/feature/nickname" />
+            <option value="$PROJECT_DIR$/feature/profile" />
           </set>
         </option>
       </GradleProjectSettings>

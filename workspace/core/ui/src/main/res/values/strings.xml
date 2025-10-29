@@ -4,4 +4,5 @@
     <string name="common_next">다음</string>
     <string name="common_confirm">확인</string>
     <string name="common_go_home">홈으로</string>
+    <string name="common_modify">수정</string>
 </resources>

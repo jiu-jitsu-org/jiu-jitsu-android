@@ -36,6 +36,8 @@ import com.kyu.jiu_jitsu.ui.routes.GrayScreen
 import com.kyu.jiu_jitsu.ui.routes.HomeGraph
 import com.kyu.jiu_jitsu.ui.routes.LoginGraph
 import com.kyu.jiu_jitsu.ui.routes.NickNameScreen
+import com.kyu.jiu_jitsu.ui.routes.ProfileGraph
+import com.kyu.jiu_jitsu.ui.routes.ProfileScreen
 import com.kyu.jiu_jitsu.ui.routes.RedScreen
 import com.kyu.jiu_jitsu.ui.theme.JiuJitsuPjtTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -118,7 +120,9 @@ sealed interface EdgeBehavior {
 // 2) 현재 destination을 정책으로 매핑
 @Composable
 private fun rememberEdgeBehavior(dest: NavDestination?): EdgeBehavior {
-    val isFullScreen = dest?.hierarchy?.any { it.hasRoute(LoginGraph::class) } == true
+    val isFullScreen = dest?.hierarchy?.any {
+        it.hasRoute(LoginGraph::class)  || it.hasRoute(ProfileGraph::class)
+    } == true
     val isHomeTabs   = dest?.hierarchy?.any { it.hasRoute(HomeGraph::class) } == true
 
     return when {

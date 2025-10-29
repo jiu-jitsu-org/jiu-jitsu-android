@@ -13,3 +13,7 @@ import kotlinx.serialization.Serializable
 @Serializable object LoginScreen
 
 @Serializable object NickNameScreen
+
+@Serializable object ProfileGraph
+@Serializable object ProfileScreen
+@Serializable object ModifyProfileScreen
