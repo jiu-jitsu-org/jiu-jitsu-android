@@ -18,12 +18,8 @@ import java.util.Base64
 private val Context.appPrefs by preferencesDataStore(name = "jiu_jitsu_app_prefs")
 
 object PrefKeys {
-    val DARK_MODE = booleanPreferencesKey("dark_mode")
-    val USERNAME  = stringPreferencesKey("username")
-    val LAUNCH_COUNT = intPreferencesKey("launch_count")
-    val TEST: Preferences.Key<String> = stringPreferencesKey("test")
-
     val USER_TOKEN: Preferences.Key<String> = stringPreferencesKey("jjp_user_token")
+    val USER_REFRESH_TOKEN: Preferences.Key<String> = stringPreferencesKey("jjp_user_refresh_token")
     val USER_NICK_NAME: Preferences.Key<String> = stringPreferencesKey("jjp_user_nick_name")
     val USER_PROFILE_IMG: Preferences.Key<String> = stringPreferencesKey("jjp_user_profile_img")
 }

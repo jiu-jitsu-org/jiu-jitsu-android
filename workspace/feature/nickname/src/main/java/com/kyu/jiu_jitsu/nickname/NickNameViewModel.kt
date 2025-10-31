@@ -1,5 +1,6 @@
 package com.kyu.jiu_jitsu.nickname
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,13 +10,11 @@ import com.kyu.jiu_jitsu.data.api.common.UiState
 import com.kyu.jiu_jitsu.domain.isValidUserNickName
 import com.kyu.jiu_jitsu.domain.usecase.user.GetLocalNickNameUseCase
 import com.kyu.jiu_jitsu.domain.usecase.user.SaveLocalUserInfoUseCase
+import com.kyu.jiu_jitsu.domain.usecase.user.SignupUseCase
 import com.kyu.jiu_jitsu.domain.usecase.user.UpdateUserProfileUseCase
 import com.kyu.jiu_jitsu.nickname.screen.NickNameState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -23,6 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class NickNameViewModel @Inject constructor(
     private val getLocalNickNameUseCase: GetLocalNickNameUseCase,
+    private val signupUseCase: SignupUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
     private val saveLocalUserInfoUseCase: SaveLocalUserInfoUseCase,
 ): ViewModel() {
@@ -52,13 +52,18 @@ class NickNameViewModel @Inject constructor(
      * @param inputNickName: String 입력받은 닉네임
      */
     fun onClickNickNameBottomBtn(
-        inputNickName: String
+        inputNickName: String,
+        isMarketingAgreed: Boolean,
     ) {
         viewModelScope.launch {
+            inputNickNameState = NickNameState.Loading
             async { validateNickNameRole(inputNickName) }.await()
 
             if (inputNickNameState is NickNameState.ValidationSuccess) {
-                checkForDuplicateNickName()
+                signUp(
+                    inputNickName,
+                    isMarketingAgreed
+                )
             }
         }
 
@@ -76,11 +81,36 @@ class NickNameViewModel @Inject constructor(
         }
     }
 
+
     /**
-     * Check Duplicate NickName
+     * Check Duplicate NickName & Sign Up
      */
-    private fun checkForDuplicateNickName() {
-//        inputNickNameState = NickNameState.DuplicateError
-        inputNickNameState = NickNameState.DuplicateSuccess
+    private fun signUp(
+        nickName: String,
+        isMarketingAgreed: Boolean,
+    ) {
+        viewModelScope.launch {
+            signupUseCase(nickName, isMarketingAgreed).collectLatest { uiState ->
+                when(uiState) {
+                    is UiState.Success -> {
+                        with(uiState.result) {
+                            saveLocalUserInfoUseCase(
+                                token = accessToken,
+                                refreshToken = refreshToken,
+                                nickName = userInfo?.nickname,
+                                userProfileImg = userInfo?.profileImageUrl,
+                            )
+                        }
+                        inputNickNameState = NickNameState.Succeed
+                    }
+                    is UiState.Error -> {
+                        inputNickNameState = NickNameState.Error(uiState.message)
+                    }
+                    else -> {
+                        Log.d("LoginViewModel", "signUp else")
+                    }
+                }
+            }
+        }
     }
 }
