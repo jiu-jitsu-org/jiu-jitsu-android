@@ -14,6 +14,8 @@ data class SnsLoginResponse(
 
 @JsonClass(generateAdapter = true)
 data class SnsLoginResponseData(
+    val isNewUser: Boolean?,
+    val tempToken: String?,
     val accessToken: String?,
     val refreshToken: String?,
     val userInfo: UserInfoResponseData?,
@@ -21,7 +23,7 @@ data class SnsLoginResponseData(
 
 @JsonClass(generateAdapter = true)
 data class UserInfoResponseData(
-    val id: Int,
+    val userId: Int,
     val email: String?,
     val nickname: String?,
     val profileImageUrl: String?,
@@ -32,8 +34,10 @@ fun SnsLoginResponseData?.toInfo(): LoginInfo =
     LoginInfo(
         this?.accessToken ?: "",
         this?.refreshToken ?: "",
+        this?.tempToken ?: "",
+        this?.isNewUser ?: true,
         UserInfo(
-            this?.userInfo?.id ?: 0,
+            this?.userInfo?.userId ?: 0,
             this?.userInfo?.email,
             this?.userInfo?.nickname,
             this?.userInfo?.profileImageUrl,

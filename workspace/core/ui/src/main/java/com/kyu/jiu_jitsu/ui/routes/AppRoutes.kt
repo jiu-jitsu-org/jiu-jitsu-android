@@ -12,8 +12,4 @@ import kotlinx.serialization.Serializable
 @Serializable object LoginGraph
 @Serializable object LoginScreen
 
-@Serializable object NickNameScreen
-
-@Serializable object ProfileGraph
-@Serializable object ProfileScreen
-@Serializable object ModifyProfileScreen
+@Serializable data class NickNameScreen(val isMarketingAgreed: Boolean)

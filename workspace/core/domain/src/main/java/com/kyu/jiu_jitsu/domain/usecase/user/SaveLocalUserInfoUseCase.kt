@@ -10,12 +10,17 @@ class SaveLocalUserInfoUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(
         token: String? = null,
+        refreshToken: String? = null,
         nickName: String? = null,
         userProfileImg: String? = null,
     ) {
         token?.let {
             securePreferences.setValueToEncrypt(PrefKeys.USER_TOKEN, it)
             it.setUserToken()
+        }
+
+        refreshToken?.let {
+            securePreferences.setValueToEncrypt(PrefKeys.USER_REFRESH_TOKEN, it)
         }
 
         nickName?.let {
