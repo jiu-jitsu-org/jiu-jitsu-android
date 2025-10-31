@@ -16,8 +16,11 @@ import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.user.UserApiClient
 import com.kyu.jiu_jitsu.data.api.common.UiState
 import com.kyu.jiu_jitsu.data.model.dto.response.SnsLoginResponse
+import com.kyu.jiu_jitsu.data.module.NetworkModule.setUserToken
+import com.kyu.jiu_jitsu.data.utils.NetworkConfig
 import com.kyu.jiu_jitsu.domain.usecase.login.GetSnsLoginUseCase
 import com.kyu.jiu_jitsu.domain.usecase.user.SaveLocalUserInfoUseCase
+import com.kyu.jiu_jitsu.domain.usecase.user.SignupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -32,15 +35,24 @@ sealed class LoginType(
     data object APPLE : LoginType("APPLE")
 }
 
+sealed interface SnsLoginSucceedType{
+    data object SIGN_IN: SnsLoginSucceedType
+    data object SIGN_UP: SnsLoginSucceedType
+}
+
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val getSnsLoginUseCase: GetSnsLoginUseCase,
+    private val signupUseCase: SignupUseCase,
     private val saveLocalUserInfoUseCase: SaveLocalUserInfoUseCase,
 ): ViewModel() {
 
     var loginType by mutableStateOf<LoginType>(LoginType.GOOGLE)
-    var loginUiState by mutableStateOf<UiState<SnsLoginResponse>>(UiState.Idle)
+    var loginUiState by mutableStateOf<UiState<SnsLoginSucceedType>>(UiState.Idle)
 
+    /**
+     * SNS Login
+     */
     fun startSnsLogin(
         context: Context,
     ) {
@@ -148,9 +160,26 @@ class LoginViewModel @Inject constructor(
                 when(uiState) {
                     is UiState.Success -> {
                         Log.d("LoginViewModel", "getSnsLoginInfo Success : ${uiState.result}")
+                        if (uiState.result.isNewUser) {
+                            // New User Need Sign up
+                            uiState.result.tempToken.setUserToken()
+                            loginUiState = UiState.Success(SnsLoginSucceedType.SIGN_UP)
+                        } else {
+                            // Sign in
+                            with(uiState.result) {
+                                saveLocalUserInfoUseCase(
+                                    token = accessToken,
+                                    refreshToken = refreshToken,
+                                    nickName = userInfo?.nickname,
+                                    userProfileImg = userInfo?.profileImageUrl,
+                                )
+                            }
+                            loginUiState = UiState.Success(SnsLoginSucceedType.SIGN_IN)
+                        }
                     }
                     is UiState.Error -> {
                         Log.d("LoginViewModel", "getSnsLoginInfo Error : ${uiState.message}")
+                        loginUiState = UiState.Error(uiState.message, false)
                     }
                     else -> {
                         Log.d("LoginViewModel", "getSnsLoginInfo else")
@@ -159,6 +188,5 @@ class LoginViewModel @Inject constructor(
             }
         }
     }
-
 
 }

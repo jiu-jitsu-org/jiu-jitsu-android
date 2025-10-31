@@ -18,6 +18,7 @@ object NetworkConfig {
 
     object User {
         const val PROFILE = "api/user/profile"
+        const val USER = "api/user"
     }
 
 }

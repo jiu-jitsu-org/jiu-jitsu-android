@@ -31,7 +31,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.kyu.jiu_jitsu.data.api.common.UiState
 import com.kyu.jiu_jitsu.nickname.NickNameViewModel
 import com.kyu.jiu_jitsu.nickname.R
-import com.kyu.jiu_jitsu.ui.components.button.PrimaryButton
 import com.kyu.jiu_jitsu.ui.components.button.PrimaryCTAButton
 import com.kyu.jiu_jitsu.ui.components.textfield.TransparentOutlinedTextField
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents
@@ -41,22 +40,27 @@ import com.kyu.jiu_jitsu.ui.theme.White
 sealed interface NickNameState {
     /** 닉네임 입력 상태 - 기본 */
     data object Idle : NickNameState
+    /** Loading */
+    data object Loading: NickNameState
     /** 닉네임 입력 상태 - 유효성 검사 실패 */
     data object ValidationError : NickNameState
     /** 닉네임 입력 상태 - 유효성 검사 성공 */
     data object ValidationSuccess : NickNameState
     /** 닉네임 입력 상태 - 중복 검사 실패 */
     data object DuplicateError : NickNameState
-    /** 닉네임 입력 상태 - 중복 검사 성공 */
-    data object DuplicateSuccess : NickNameState
+    /** 닉네임 입력 상태 - 중복 검사 성공 && Sign Up */
+    data object Succeed : NickNameState
+    /** Sign Up Server Error */
+    data class Error(val message: String) : NickNameState
 }
 
 @Composable
 fun NickNameScreen(
     modifier: Modifier,
     padding: PaddingValues,
+    isMarketingAgree: Boolean,
     isShowBackArrowIcon: Boolean = false,
-    goHome: () -> Unit = {},
+    goHome: () -> Unit,
 ) {
     val viewModel = hiltViewModel<NickNameViewModel>()
 
@@ -101,6 +105,9 @@ fun NickNameScreen(
                 textBottomBtn = com.kyu.jiu_jitsu.ui.R.string.common_confirm
                 titleId = R.string.nickname_title_default
             }
+            is NickNameState.Loading -> {
+
+            }
             is NickNameState.ValidationError -> {
                 enableBottomBtn = false
                 titleId = R.string.nickname_title_validate_error
@@ -112,9 +119,14 @@ fun NickNameScreen(
                 enableBottomBtn = false
                 titleId = R.string.nickname_title_duplicate_error
             }
-            is NickNameState.DuplicateSuccess -> {
+            is NickNameState.Succeed -> {
                 textBottomBtn = com.kyu.jiu_jitsu.ui.R.string.common_go_home
                 titleId = R.string.nickname_title_duplicate_success
+                enableBottomBtn = true
+            }
+            is NickNameState.Error -> {
+                val message = inputNickNameState.message
+
             }
         }
     }
@@ -171,10 +183,13 @@ fun NickNameScreen(
                     .height(51.dp),
                 text = stringResource(textBottomBtn),
                 onClick = {
-                    if (viewModel.inputNickNameState is NickNameState.DuplicateSuccess) {
+                    if (viewModel.inputNickNameState is NickNameState.Succeed) {
                         goHome()
                     } else {
-                        viewModel.onClickNickNameBottomBtn(strNickName)
+                        viewModel.onClickNickNameBottomBtn(
+                            strNickName,
+                            isMarketingAgree
+                        )
                     }
                 },
                 enabled = enableBottomBtn

@@ -17,8 +17,10 @@ import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,9 +32,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.SavedStateHandle
+import com.kyu.jiu_jitsu.data.api.common.UiState
 import com.kyu.jiu_jitsu.login.LoginType
 import com.kyu.jiu_jitsu.login.LoginViewModel
 import com.kyu.jiu_jitsu.login.R
+import com.kyu.jiu_jitsu.login.SnsLoginSucceedType
 import com.kyu.jiu_jitsu.login.components.SignUpBottomSheet
 import com.kyu.jiu_jitsu.ui.components.button.PressableButton
 import com.kyu.jiu_jitsu.ui.components.button.TextButton
@@ -42,18 +47,48 @@ import com.kyu.jiu_jitsu.ui.theme.ColorComponents
 import com.kyu.jiu_jitsu.ui.theme.CoolGray75
 import com.kyu.jiu_jitsu.ui.theme.KakaoBg
 import com.kyu.jiu_jitsu.ui.theme.White
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     modifier: Modifier,
     goHome: () -> Unit,
-    goInputNickName: () -> Unit,
+    goInputNickName: (isMarketingAgreed: Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     val viewModel = hiltViewModel<LoginViewModel>()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var open by rememberSaveable { mutableStateOf(false) }
+
+    var isMarketingAgreed = false
+
+    LaunchedEffect(Unit) {
+
+    }
+
+    LaunchedEffect(viewModel.loginUiState) {
+        val uiState = viewModel.loginUiState
+        when(uiState) {
+            is UiState.Success -> {
+                open = false
+                if (uiState.result is SnsLoginSucceedType.SIGN_UP) {
+                    open = true
+                } else {
+                    goHome()
+                }
+            }
+            is UiState.Loading -> {
+
+            }
+            is UiState.Error -> {
+                open = false
+            }
+            else -> {
+
+            }
+        }
+    }
 
     Surface(
         color = CoolGray75,
@@ -87,8 +122,8 @@ fun LoginScreen(
                     )
                 },
                 onClick = {
-                    open = true
                     viewModel.loginType = LoginType.KAKAO_ACCOUNT
+                    viewModel.startSnsLogin(context)
                 },
             )
             Spacer(modifier = Modifier.height(15.dp))
@@ -112,7 +147,6 @@ fun LoginScreen(
                     )
                 },
                 onClick = {
-                    open = true
                     viewModel.loginType = LoginType.GOOGLE
                 },
             )
@@ -137,7 +171,6 @@ fun LoginScreen(
                     )
                 },
                 onClick = {
-                    open = true
                     viewModel.loginType = LoginType.APPLE
                 },
             )
@@ -152,8 +185,7 @@ fun LoginScreen(
                 enableTextColor = White,
                 disabledTextColor = White,
                 onClick = {
-//                    goHome()
-                    goInputNickName()
+                    goHome()
                 }
             )
             Spacer(modifier = Modifier.height(15.dp))
@@ -181,10 +213,9 @@ fun LoginScreen(
             SignUpBottomSheet { agreeList ->
                 Log.d("@@@@@@", "@@@@@@ $agreeList")
                 open = false
+                isMarketingAgreed = true
 
-                viewModel.startSnsLogin(context)
-
-//                goInputNickName()
+                goInputNickName(isMarketingAgreed)
             }
         }
     }

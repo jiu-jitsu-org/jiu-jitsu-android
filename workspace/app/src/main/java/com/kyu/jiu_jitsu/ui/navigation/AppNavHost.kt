@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import androidx.navigation.toRoute
 import com.kyu.jiu_jitsu.login.screen.LoginScreen
 import com.kyu.jiu_jitsu.nickname.screen.NickNameScreen
 import com.kyu.jiu_jitsu.ui.screen.BlueScreen
@@ -72,7 +73,7 @@ fun AppNavHost(
         }
         // Login
         navigation<LoginGraph>(startDestination = LoginScreen) {
-            composable<LoginScreen>() {
+            composable<LoginScreen> {
                 LoginScreen(
                     modifier = modifier,
                     goHome = {
@@ -83,20 +84,27 @@ fun AppNavHost(
                             restoreState = true
                         }
                     },
-                    goInputNickName = {
-                        nav.navigate(NickNameScreen)
-                    }
+                    goInputNickName = { isMarketingAgreed ->
+                        nav.navigate(NickNameScreen(isMarketingAgreed)) {
+                            popUpTo(LoginGraph) { inclusive = true }
+
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                 )
             }
         }
         // NickName
-        composable<NickNameScreen> {
+        composable<NickNameScreen> { backStackEntry ->
+            val args = backStackEntry.toRoute<NickNameScreen>()
             NickNameScreen(
                 modifier = modifier,
                 padding = padding,
+                isMarketingAgree = args.isMarketingAgreed,
                 goHome = {
                     nav.navigate(HomeGraph) {
-                        popUpTo(NickNameScreen) { inclusive = true }
+                        popUpTo(NickNameScreen(args.isMarketingAgreed)) { inclusive = true }
 
                         launchSingleTop = true
                         restoreState = true
