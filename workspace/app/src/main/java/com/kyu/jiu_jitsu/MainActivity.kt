@@ -4,18 +4,19 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -31,15 +33,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.kyu.jiu_jitsu.ui.components.MainBottomNavigationBar
 import com.kyu.jiu_jitsu.ui.navigation.AppNavHost
-import com.kyu.jiu_jitsu.ui.routes.BlueScreen
 import com.kyu.jiu_jitsu.ui.routes.GrayScreen
 import com.kyu.jiu_jitsu.ui.routes.HomeGraph
 import com.kyu.jiu_jitsu.ui.routes.LoginGraph
-import com.kyu.jiu_jitsu.ui.routes.NickNameScreen
 import com.kyu.jiu_jitsu.ui.routes.ProfileGraph
 import com.kyu.jiu_jitsu.ui.routes.ProfileScreen
 import com.kyu.jiu_jitsu.ui.routes.RedScreen
 import com.kyu.jiu_jitsu.ui.theme.JiuJitsuPjtTheme
+import com.kyu.jiu_jitsu.ui.theme.White
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -58,7 +59,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppRoot() {
     val navController = rememberNavController()
-    val mainBottomNavItems = listOf(RedScreen, BlueScreen, GrayScreen)
+    val mainBottomNavItems = listOf(RedScreen, GrayScreen, ProfileScreen)
 
     val bottomBarDestinations = remember { setOf(HomeGraph::class) }
     val backStack by navController.currentBackStackEntryAsState()
@@ -92,11 +93,19 @@ fun AppRoot() {
     Scaffold(
         contentWindowInsets = contentInsets,
         bottomBar = {
-            AnimatedVisibility(visible = showBottomBar) {
-                MainBottomNavigationBar(
-                    navHostController = navController,
-                    navItems = mainBottomNavItems,
-                )
+            AnimatedVisibility(
+                visible = showBottomBar,
+                enter = fadeIn(),
+            ) {
+                Surface(
+                    color = White,
+                    shadowElevation = 10.dp
+                ) {
+                    MainBottomNavigationBar(
+                        navHostController = navController,
+                        navItems = mainBottomNavItems,
+                    )
+                }
             }
         }
     ) { innerPadding ->

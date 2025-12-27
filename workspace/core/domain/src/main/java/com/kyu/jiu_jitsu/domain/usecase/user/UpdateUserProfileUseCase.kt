@@ -30,7 +30,7 @@ class UpdateUserProfileUseCase @Inject constructor(
                         )
                     }
                     else {
-                        UiState.Error(res.data.message ?: "", false)
+                        UiState.Error(message = res.data.message ?: "", retryable = false)
                     }
                 }
                 is ApiResult.Failure -> res.error.toUiError()

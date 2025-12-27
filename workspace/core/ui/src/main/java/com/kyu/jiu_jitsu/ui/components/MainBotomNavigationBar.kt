@@ -1,5 +1,6 @@
 package com.kyu.jiu_jitsu.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Home
@@ -14,15 +15,19 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.kyu.jiu_jitsu.ui.R
 import com.kyu.jiu_jitsu.ui.routes.BlueScreen
+import com.kyu.jiu_jitsu.ui.routes.GrayScreen
 import com.kyu.jiu_jitsu.ui.routes.RedScreen
 import com.kyu.jiu_jitsu.ui.theme.Blue500
+import com.kyu.jiu_jitsu.ui.theme.CoolGray25
 import com.kyu.jiu_jitsu.ui.theme.CoolGray300
 import com.kyu.jiu_jitsu.ui.theme.CoolGray500
 import com.kyu.jiu_jitsu.ui.theme.White
@@ -53,13 +58,17 @@ fun MainBottomNavigationBar(
                     }
                 },
                 icon = {
-                    val iv = when (route) {
-                        RedScreen -> { if(selected) Icons.Filled.Android else Icons.Outlined.Android }
-                        BlueScreen -> { if(selected) Icons.Filled.Notifications else Icons.Outlined.Notifications }
-                        else -> { if(selected) Icons.Filled.Home else Icons.Outlined.Home }
+                    @DrawableRes val iv = when (route) {
+                        RedScreen -> R.drawable.ic_square_dashed
+                        GrayScreen -> R.drawable.ic_square_dashed
+                        else -> R.drawable.ic_square_dashed
                     }
 
-                    Icon(iv, contentDescription = route::class.simpleName)
+                    Icon(
+                        painter = painterResource(iv),
+                        contentDescription = "",
+                        tint = if(selected) Blue500 else CoolGray300
+                    )
 
                 },
                 label = { Text(route::class.simpleName ?: "") },

@@ -5,4 +5,16 @@
     <string name="common_confirm">확인</string>
     <string name="common_go_home">홈으로</string>
     <string name="common_modify">수정</string>
+    <string name="common_complete">완료</string>
+    <string name="common_item_null">지정해주세요</string>
+
+    <string name="common_belt">벨트</string>
+    <string name="common_weight">체급</string>
+    <string name="common_position">포지션</string>
+    <string name="common_technique">테크닉</string>
+    <string name="common_submission">서브미션</string>
+    <string name="common_my_best">특기</string>
+    <string name="common_my_favorite">최애</string>
+    <string name="common_competition_info">대회 정보</string>
+
 </resources>

@@ -17,8 +17,17 @@ object NetworkConfig {
     }
 
     object User {
-        const val PROFILE = "api/user/profile"
         const val USER = "api/user"
+        const val CHECK_NICKNAME = "api/user/check/nickname"
+    }
+
+    object UserController {
+        const val USER_PROFILE = "api/user/profile"
+    }
+
+    object CommunityProfileController {
+        const val COMMUNITY_PROFILE = "api/community/profile"
+
     }
 
 }

@@ -1,5 +1,6 @@
 package com.kyu.jiu_jitsu.ui.components.textfield
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -8,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Transparent
+import androidx.compose.ui.text.style.TextAlign
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents
 
 @Composable
@@ -23,13 +25,15 @@ fun TransparentOutlinedTextField(
 ) {
     OutlinedTextField(
         value = value,
-        textStyle = MaterialTheme.typography.displayLarge,
+        textStyle = MaterialTheme.typography.displayLarge.copy(textAlign = TextAlign.Center),
         onValueChange = onValueChange,
         placeholder = {
             Text(
-                placeholder,
+                modifier = Modifier.fillMaxWidth(),
+                text = placeholder,
                 style = MaterialTheme.typography.displayLarge,
-                color = ColorComponents.TextFieldDisplay.Default.Placeholder
+                color = ColorComponents.TextFieldDisplay.Default.Placeholder,
+                textAlign = TextAlign.Center,
             )
         },
         isError = isError,

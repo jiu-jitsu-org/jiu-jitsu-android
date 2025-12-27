@@ -1,7 +1,6 @@
 package com.kyu.jiu_jitsu.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -17,11 +16,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.kyu.jiu_jitsu.ui.components.textfield.ClearableOutlineTextField
-import com.kyu.jiu_jitsu.ui.components.CommonDialog
+import com.kyu.jiu_jitsu.ui.components.dialog.CommonDialog
 import com.kyu.jiu_jitsu.ui.components.card.DraggableFlipCard
-import com.kyu.jiu_jitsu.ui.components.textfield.TransparentOutlinedTextField
-import com.kyu.jiu_jitsu.ui.components.textfield.ValidationState
 import com.kyu.jiu_jitsu.ui.theme.CoolGray75
 import com.kyu.jiu_jitsu.ui.theme.KakaoBg
 import com.kyu.jiu_jitsu.ui.theme.Red500

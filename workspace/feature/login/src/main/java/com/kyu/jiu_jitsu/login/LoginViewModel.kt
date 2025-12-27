@@ -21,24 +21,12 @@ import com.kyu.jiu_jitsu.data.utils.NetworkConfig
 import com.kyu.jiu_jitsu.domain.usecase.login.GetSnsLoginUseCase
 import com.kyu.jiu_jitsu.domain.usecase.user.SaveLocalUserInfoUseCase
 import com.kyu.jiu_jitsu.domain.usecase.user.SignupUseCase
+import com.kyu.jiu_jitsu.login.model.LoginType
+import com.kyu.jiu_jitsu.login.model.SnsLoginSucceedType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-sealed class LoginType(
-    val type: String,
-    var snsLoginToken: String? = null,
-) {
-    data object KAKAO_ACCOUNT : LoginType("KAKAO")
-    data object GOOGLE : LoginType("GOOGLE")
-    data object APPLE : LoginType("APPLE")
-}
-
-sealed interface SnsLoginSucceedType{
-    data object SIGN_IN: SnsLoginSucceedType
-    data object SIGN_UP: SnsLoginSucceedType
-}
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
@@ -179,7 +167,7 @@ class LoginViewModel @Inject constructor(
                     }
                     is UiState.Error -> {
                         Log.d("LoginViewModel", "getSnsLoginInfo Error : ${uiState.message}")
-                        loginUiState = UiState.Error(uiState.message, false)
+                        loginUiState = UiState.Error(message = uiState.message, retryable =  false)
                     }
                     else -> {
                         Log.d("LoginViewModel", "getSnsLoginInfo else")

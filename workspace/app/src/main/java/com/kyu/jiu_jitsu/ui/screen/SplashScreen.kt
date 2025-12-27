@@ -60,6 +60,9 @@ fun SplashScreen(
             }
             is UiState.Error -> {
                 Log.d("@@@@@@@", "SplashScreen autoLoginState.Error")
+                if (uiState.code == 500) {
+                    enterLoginScreen()
+                }
             }
             is UiState.Loading -> {
                 Log.d("@@@@@@@", "SplashScreen autoLoginState.Loading")

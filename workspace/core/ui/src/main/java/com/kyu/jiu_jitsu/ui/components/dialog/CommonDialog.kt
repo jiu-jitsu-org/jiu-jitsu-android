@@ -1,4 +1,4 @@
-package com.kyu.jiu_jitsu.ui.components
+package com.kyu.jiu_jitsu.ui.components.dialog
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

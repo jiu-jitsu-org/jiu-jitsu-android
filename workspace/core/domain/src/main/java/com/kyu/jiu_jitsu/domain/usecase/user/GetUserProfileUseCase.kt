@@ -14,7 +14,6 @@ import javax.inject.Inject
 class GetUserProfileUseCase @Inject constructor(
     private val userRepository: UserRepository
 ) {
-
     suspend operator fun invoke(): Flow<UiState<UserProfileInfo>> =
         userRepository.getUserProfileInfo().map { res ->
             when (res) {
@@ -24,7 +23,7 @@ class GetUserProfileUseCase @Inject constructor(
                             res.data.data.toInfo()
                         )
                     } else {
-                        UiState.Error(res.data.message ?: "", false)
+                        UiState.Error(message = res.data.message ?: "", retryable = false)
                     }
                 }
                 is ApiResult.Failure -> res.error.toUiError()

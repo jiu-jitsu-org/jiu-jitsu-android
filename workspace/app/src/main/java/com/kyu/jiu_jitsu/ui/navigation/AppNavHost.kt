@@ -10,20 +10,23 @@ import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import com.kyu.jiu_jitsu.login.screen.LoginScreen
 import com.kyu.jiu_jitsu.nickname.screen.NickNameScreen
+import com.kyu.jiu_jitsu.profile.screen.ModifyAcademyScreen
 import com.kyu.jiu_jitsu.profile.screen.ModifyProfileScreen
 import com.kyu.jiu_jitsu.profile.screen.ProfileScreen
-import com.kyu.jiu_jitsu.ui.screen.BlueScreen
+import com.kyu.jiu_jitsu.profile.screen.ModifyCompetitionScreen
+import com.kyu.jiu_jitsu.profile.screen.ModifyMyStyleScreen
 import com.kyu.jiu_jitsu.ui.screen.GrayScreen
 import com.kyu.jiu_jitsu.ui.screen.RedScreen
 import com.kyu.jiu_jitsu.ui.screen.SplashScreen
-import com.kyu.jiu_jitsu.ui.routes.BlueScreen
 import com.kyu.jiu_jitsu.ui.routes.GrayScreen
 import com.kyu.jiu_jitsu.ui.routes.HomeGraph
 import com.kyu.jiu_jitsu.ui.routes.LoginGraph
 import com.kyu.jiu_jitsu.ui.routes.LoginScreen
+import com.kyu.jiu_jitsu.ui.routes.ModifyAcademyScreen
+import com.kyu.jiu_jitsu.ui.routes.ModifyCompetitionScreen
+import com.kyu.jiu_jitsu.ui.routes.ModifyMyStyleScreen
 import com.kyu.jiu_jitsu.ui.routes.ModifyProfileScreen
 import com.kyu.jiu_jitsu.ui.routes.NickNameScreen
-import com.kyu.jiu_jitsu.ui.routes.ProfileGraph
 import com.kyu.jiu_jitsu.ui.routes.ProfileScreen
 import com.kyu.jiu_jitsu.ui.routes.RedScreen
 import com.kyu.jiu_jitsu.ui.routes.SplashScreen
@@ -62,15 +65,29 @@ fun AppNavHost(
         }
         // Home
         navigation<HomeGraph>(startDestination = RedScreen) {
-            composable<RedScreen> {
-                RedScreen(
-                    onLoginClick = { nav.navigate(LoginGraph) }
+            composable<ProfileScreen> { backStackEntry ->
+                ProfileScreen(
+                    modifier = modifier,
+                    padding = padding,
+                    onModifyClick = {
+                        nav.navigate(ModifyProfileScreen)
+                    },
+                    savedStateHandle = backStackEntry.savedStateHandle,
+                    onAcademyClick = { academyName ->
+                        nav.navigate(ModifyAcademyScreen(academyName))
+                    },
+                    onMyStyleClick = { screenName ->
+                        nav.navigate(ModifyMyStyleScreen(screenName))
+                    },
+                    onCompetitionClick = {
+                        nav.navigate(ModifyCompetitionScreen)
+                    }
                 )
             }
 
-            composable<BlueScreen> {
-                BlueScreen(
-                    goProfile = { nav.navigate(ProfileGraph) }
+            composable<RedScreen> {
+                RedScreen(
+                    onLoginClick = { nav.navigate(LoginGraph) }
                 )
             }
 
@@ -119,22 +136,66 @@ fun AppNavHost(
                 }
             )
         }
-        // Profile
-        navigation<ProfileGraph>(startDestination = ProfileScreen) {
-            composable<ProfileScreen> {
-                ProfileScreen(
-                    modifier = modifier,
-                    onModifyClick = {
-                        nav.navigate(ModifyProfileScreen)
-                    }
-                )
-            }
-            composable<ModifyProfileScreen> {
-                ModifyProfileScreen(
-                    modifier = modifier,
-                    padding = padding,
-                )
-            }
+        // Modify Profile
+        composable<ModifyProfileScreen> { backStackEntry ->
+            ModifyProfileScreen(
+                modifier = modifier,
+                padding = padding,
+                savedStateHandle = backStackEntry.savedStateHandle,
+                onAcademyClick = { academyName ->
+                    nav.navigate(ModifyAcademyScreen(academyName))
+                },
+                onMyStyleClick = { screenName ->
+                    nav.navigate(ModifyMyStyleScreen(screenName))
+                },
+                onBackClick = { nav.popBackStack() },
+            )
+        }
+        // Modify Profile Academy
+        composable<ModifyAcademyScreen> { backStackEntry ->
+            val args = backStackEntry.toRoute<ModifyAcademyScreen>()
+            ModifyAcademyScreen(
+                modifier = modifier,
+                padding = padding,
+                academyName = args.academyName,
+                onCompleteClick = {
+                    nav.previousBackStackEntry?.savedStateHandle?.set("isCompetitionUpdated", "AcademyName")
+                    nav.popBackStack()
+                },
+                onBackClick = {
+                    nav.popBackStack()
+                }
+            )
+        }
+        // Modify Competition
+        composable<ModifyCompetitionScreen> {
+            ModifyCompetitionScreen(
+                modifier = modifier,
+                padding = padding,
+                onCompleteClick = {
+                    nav.previousBackStackEntry?.savedStateHandle?.set("isCompetitionUpdated", "Competition")
+                    nav.popBackStack()
+                },
+                onBackClick = {
+                    nav.popBackStack()
+                }
+            )
+        }
+        // Modify My Style
+        composable<ModifyMyStyleScreen> { backStackEntry ->
+            val args = backStackEntry.toRoute<ModifyMyStyleScreen>()
+            ModifyMyStyleScreen(
+                modifier = modifier,
+                padding = padding,
+                type = args.styleType,
+                onCompleteClick = {
+                    nav.previousBackStackEntry?.savedStateHandle?.set("isCompetitionUpdated", "MyStyle")
+                    nav.popBackStack()
+                },
+                onBackClick = {
+                    nav.popBackStack()
+                }
+            )
         }
 
     }

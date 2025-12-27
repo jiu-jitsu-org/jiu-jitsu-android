@@ -4,19 +4,21 @@ import androidx.compose.ui.graphics.Color
 
 object ColorComponents {
 
+    val Background: Color = ColorSemantic.Surface.BackgroundDefault
+
     object Button {
         object Filled {
             val DefaultBg: Color = ColorSemantic.Interactive.InteractivePrimary
             val DefaultText: Color = ColorSemantic.Text.TextOnPrimary
             val PressedBg: Color = ColorSemantic.Primary.PrimaryPressed
-            val DisabledBg: Color = ColorSemantic.Interactive.InteractivePrimaryDisabled
+            val DisabledBg: Color = ColorSemantic.Interactive.InteractiveDisabled
             val DisabledText: Color = ColorSemantic.Text.TextDisabled
             val PressedText: Color = ColorSemantic.Text.TextOnPrimary
         }
         object Tint {
             val DefaultBg: Color = ColorSemantic.Surface.SurfacePrimarySubtle
             val DefaultText: Color = ColorSemantic.Interactive.InteractivePrimary
-            val PressedBg: Color = ColorSemantic.Surface.SurfacePrimary
+            val PressedBg: Color = ColorSemantic.Surface.SurfacePrimarySubtlePressed
             val DisabledBg: Color = ColorSemantic.Surface.SurfaceDisabled
             val DisabledText: Color = ColorSemantic.Text.TextDisabled
             val PressedText: Color = ColorSemantic.Interactive.InteractivePrimary
@@ -32,7 +34,7 @@ object ColorComponents {
         object Text {
             val DefaultBg: Color = ColorSemantic.TransParent.TransParent
             val DefaultText: Color = ColorSemantic.Interactive.InteractivePrimary
-            val PressedBg: Color = ColorSemantic.Surface.SurfacePrimary
+            val PressedBg: Color = ColorSemantic.Surface.SurfacePrimarySubtle
             val DisabledBg: Color = ColorSemantic.TransParent.TransParent
             val DisabledText: Color = ColorSemantic.Text.TextDisabled
             val PressedText: Color = ColorSemantic.Interactive.InteractivePrimary
@@ -149,7 +151,7 @@ object ColorComponents {
         }
     }
 
-    object Navibar {
+    object Navbar {
         object Container {
             val Background: Color = ColorSemantic.Surface.SurfaceContainer
             val Divider: Color = ColorSemantic.Border.BorderSubtle
@@ -181,6 +183,12 @@ object ColorComponents {
             val Background: Color = ColorSemantic.Surface.SurfaceContainer
             val IconButton: Color = ColorSemantic.Icon.IconPrimary
         }
+    }
+
+    object SectionHeader {
+        val Title: Color = ColorSemantic.Text.TextPrimary
+        val SubTitle: Color = ColorSemantic.Text.TextSecondary
+        val Label: Color = ColorSemantic.Text.TextSecondary
     }
 
     object BottomSheet {
@@ -215,6 +223,88 @@ object ColorComponents {
                 val LabelRequired: Color = ColorSemantic.Interactive.InteractivePrimary
                 val LabelOptional: Color = ColorSemantic.Text.TextTertiary
             }
+        }
+    }
+
+    object Segment {
+        object Container {
+            val Bg: Color = ColorSemantic.Surface.SurfaceTertiary
+        }
+        object Selected {
+            val Bg: Color = ColorSemantic.Surface.SurfaceContainer
+            val TitleText: Color = ColorSemantic.Text.TextPrimary
+            val SubText: Color = ColorSemantic.Text.TextSecondary
+        }
+        object UnSelected {
+            val Bg: Color = ColorSemantic.TransParent.TransParent
+            val TitleText: Color = ColorSemantic.Text.TextSecondary
+            val SubText: Color = ColorSemantic.Text.TextTertiary
+        }
+    }
+
+    object SkillCard {
+        object Container {
+            val Bg: Color = ColorSemantic.Surface.SurfaceTertiary
+        }
+        object Default {
+            val Bg: Color = ColorSemantic.Surface.SurfaceContainer
+            val LabelText: Color = ColorSemantic.Text.TextTertiary
+            val TitleTextFilled: Color = ColorSemantic.Text.TextPrimary
+            val TitleTextEmpty: Color = ColorSemantic.Text.TextPrimary
+            val TitleTextFilled2: Color = ColorSemantic.Text.TextPrimary
+            val IconBgEmpty: Color = ColorSemantic.Surface.SurfaceDisabled
+        }
+        object Editable {
+            val Bg: Color = ColorSemantic.Surface.SurfaceContainer
+            val Bolder: Color = ColorSemantic.Border.BorderDefault
+            val LabelText: Color = ColorSemantic.Text.TextTertiary
+            val LabelText2: Color = ColorSemantic.Text.TextTertiary
+            val TitleTextFilled: Color = ColorSemantic.Text.TextPrimary
+            val TitleTextEmpty: Color = ColorSemantic.Text.TextPrimary
+            val IconBgEmpty: Color = ColorSemantic.Surface.SurfaceDisabled
+        }
+    }
+
+    object BeltCard {
+        object Default {
+            val Bg: Color = ColorSemantic.Surface.SurfaceContainer
+            val Text: Color = ColorSemantic.Text.TextPrimary
+        }
+        object Filled {
+            val Bg: Color = ColorSemantic.Surface.SurfaceContainer
+            val Divider: Color = ColorSemantic.Border.BorderDefault
+            val LabelText: Color = ColorSemantic.Text.TextTertiary
+            val ContentText: Color = ColorSemantic.Text.TextPrimary
+        }
+    }
+
+    object CompetitionCard {
+        val TitleText: Color = ColorSemantic.Text.TextPrimary
+        val CardBg: Color = ColorSemantic.Surface.SurfaceContainer
+        val CardIcon: Color = ColorSemantic.Icon.IconSecondary
+        val CardTextPrimary: Color = ColorSemantic.Text.TextPrimary
+        val CardTextSecondary: Color = ColorSemantic.Text.TextTertiary
+    }
+
+    object Picker {
+        val ItemSelectedBg: Color = ColorSemantic.Surface.SurfaceSecondary
+//        val ItemSelectedText: Color = ColorSemantic
+        val ItemUnSelectedText: Color = ColorSemantic.Text.TextTertiary
+        val Unit: Color = ColorSemantic.Text.TextPrimary
+    }
+
+    object MyProfileHeader {
+        val ProfileImagePlaceholder: Color = ColorSemantic.Surface.SurfaceContainer
+        val NicknameText: Color = ColorSemantic.Primary.OnPrimary
+        val ProfileImageDefaultIcon: Color = ColorSemantic.Icon.IconSubtle
+
+        object Bg {
+            val Default: Color = Blue300
+            val White: Color = CoolGray200
+            val Blue: Color = Blue500
+            val Purple: Color = BeltPurple
+            val Brown: Color = BeltBrown
+            val Black: Color = BeltBlack
         }
     }
 

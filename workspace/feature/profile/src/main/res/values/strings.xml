@@ -1,3 +1,32 @@
 <resources>
+    <string name="profile_input_academy">도장 정보 입력하기</string>
+    <string name="profile_hint_academy">도장명을 입력해주세요</string>
+    <string name="profile_input_title">도장 정보 추가</string>
+
+    <string name="profile_competition_title">대회 정보 추가</string>
+    <string name="profile_competition_date_title">언제 출전했나요?</string>
+    <string name="profile_competition_name_title">대회명을 입력해주세요</string>
+    <string name="profile_competition_result_title">결과는 어떠했나요?</string>
+
+    <string name="profile_belt_rank_and_weight_info">벨트와 체급이 어떻게 되세요?</string>
+    <string name="profile_belt_rank_and_weight_save">벨트/체급 등록하기</string>
+    <string name="profile_pass_belt">체급도 입력하기</string>
+    <string name="profile_weight_hide_toggle">체급 숨기기 켜짐</string>
+
+    <string name="profile_my_style_title">나의 주짓수를 보여주세요</string>
+    <string name="profile_my_style_sub_title">특기와 최애 포지션, 기술 등을 등록해보세요.</string>
+    <string name="profile_my_style_button">내 스타일 등록하기</string>
+
+    <string name="profile_my_style_position_title">포지션 설정</string>
+    <string name="profile_my_style_technique_title">기술 설정</string>
+    <string name="profile_my_style_submission_title">서브미션 설정</string>
+
+    <string name="profile_competition_input_hint">출전한 대회 정보를 입력해주세요</string>
+
+    <string name="profile_modify_title">프로필 수정</string>
+
+    <string name="profile_weight_hide">숨김</string>
+    <string name="profile_weight_hide_btn">가리기</string>
+    <string name="profile_weight_show_btn">보기</string>
 
 </resources>

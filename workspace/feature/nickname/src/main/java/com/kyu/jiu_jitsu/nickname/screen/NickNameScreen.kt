@@ -31,28 +31,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.kyu.jiu_jitsu.data.api.common.UiState
 import com.kyu.jiu_jitsu.nickname.NickNameViewModel
 import com.kyu.jiu_jitsu.nickname.R
+import com.kyu.jiu_jitsu.nickname.model.NickNameState
 import com.kyu.jiu_jitsu.ui.components.button.PrimaryCTAButton
 import com.kyu.jiu_jitsu.ui.components.textfield.TransparentOutlinedTextField
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents
 import com.kyu.jiu_jitsu.ui.theme.CoolGray25
 import com.kyu.jiu_jitsu.ui.theme.White
-
-sealed interface NickNameState {
-    /** 닉네임 입력 상태 - 기본 */
-    data object Idle : NickNameState
-    /** Loading */
-    data object Loading: NickNameState
-    /** 닉네임 입력 상태 - 유효성 검사 실패 */
-    data object ValidationError : NickNameState
-    /** 닉네임 입력 상태 - 유효성 검사 성공 */
-    data object ValidationSuccess : NickNameState
-    /** 닉네임 입력 상태 - 중복 검사 실패 */
-    data object DuplicateError : NickNameState
-    /** 닉네임 입력 상태 - 중복 검사 성공 && Sign Up */
-    data object Succeed : NickNameState
-    /** Sign Up Server Error */
-    data class Error(val message: String) : NickNameState
-}
 
 @Composable
 fun NickNameScreen(
@@ -113,7 +97,8 @@ fun NickNameScreen(
                 titleId = R.string.nickname_title_validate_error
             }
             is NickNameState.ValidationSuccess -> {
-
+                enableBottomBtn = true
+                titleId = R.string.nickname_title_duplicate_success
             }
             is NickNameState.DuplicateError -> {
                 enableBottomBtn = false
@@ -121,7 +106,6 @@ fun NickNameScreen(
             }
             is NickNameState.Succeed -> {
                 textBottomBtn = com.kyu.jiu_jitsu.ui.R.string.common_go_home
-                titleId = R.string.nickname_title_duplicate_success
                 enableBottomBtn = true
             }
             is NickNameState.Error -> {
@@ -184,11 +168,18 @@ fun NickNameScreen(
                 text = stringResource(textBottomBtn),
                 onClick = {
                     if (viewModel.inputNickNameState is NickNameState.Succeed) {
+                        // Success Sign Up
                         goHome()
-                    } else {
-                        viewModel.onClickNickNameBottomBtn(
+                    } else if(viewModel.inputNickNameState is NickNameState.ValidationSuccess) {
+                        // Sign Up
+                        viewModel.onClickSignUp(
                             strNickName,
-                            isMarketingAgree
+                            isMarketingAgree,
+                        )
+                    }else {
+                        // Check NickName
+                        viewModel.onClickValidateNickname(
+                            strNickName,
                         )
                     }
                 },

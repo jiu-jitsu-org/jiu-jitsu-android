@@ -17,7 +17,6 @@ import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,22 +31,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.SavedStateHandle
 import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.login.LoginType
 import com.kyu.jiu_jitsu.login.LoginViewModel
 import com.kyu.jiu_jitsu.login.R
-import com.kyu.jiu_jitsu.login.SnsLoginSucceedType
 import com.kyu.jiu_jitsu.login.components.SignUpBottomSheet
+import com.kyu.jiu_jitsu.login.model.LoginType
+import com.kyu.jiu_jitsu.login.model.SnsLoginSucceedType
 import com.kyu.jiu_jitsu.ui.components.button.PressableButton
-import com.kyu.jiu_jitsu.ui.components.button.TextButton
+import com.kyu.jiu_jitsu.ui.components.button.PressableTextButton
 import com.kyu.jiu_jitsu.ui.theme.AppleBg
 import com.kyu.jiu_jitsu.ui.theme.Color1F1F1F
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents
 import com.kyu.jiu_jitsu.ui.theme.CoolGray75
 import com.kyu.jiu_jitsu.ui.theme.KakaoBg
 import com.kyu.jiu_jitsu.ui.theme.White
-import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -176,7 +173,7 @@ fun LoginScreen(
             )
             Spacer(modifier = Modifier.height(15.dp))
             // Skip
-            TextButton(
+            PressableTextButton(
                 modifier = Modifier
                     .height(44.dp)
                     .fillMaxWidth(),

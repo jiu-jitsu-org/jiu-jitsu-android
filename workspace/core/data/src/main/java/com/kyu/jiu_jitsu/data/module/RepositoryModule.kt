@@ -1,13 +1,16 @@
 package com.kyu.jiu_jitsu.data.module
 
 import com.kyu.jiu_jitsu.data.api.BootStrapService
+import com.kyu.jiu_jitsu.data.api.CommunityService
 import com.kyu.jiu_jitsu.data.api.LoginService
 import com.kyu.jiu_jitsu.data.api.UserService
 import com.kyu.jiu_jitsu.data.repository.BootStrapRepository
+import com.kyu.jiu_jitsu.data.repository.CommunityRepository
 import com.kyu.jiu_jitsu.data.repository.RefreshTokenRepository
 import com.kyu.jiu_jitsu.data.repository.SnsLoginRepository
 import com.kyu.jiu_jitsu.data.repository.UserRepository
 import com.kyu.jiu_jitsu.data.repository.impl.BootStrapInfoRepository
+import com.kyu.jiu_jitsu.data.repository.impl.CommunityRepositoryImpl
 import com.kyu.jiu_jitsu.data.repository.impl.LoginUserRepositoryImpl
 import com.kyu.jiu_jitsu.data.repository.impl.UserRepositoryImpl
 import dagger.Module
@@ -43,5 +46,11 @@ object RepositoryModule {
     fun provideUserRepository(
         userService: UserService
     ): UserRepository = UserRepositoryImpl(userService)
+
+    @Provides
+    @Singleton
+    fun provideCommunityRepository(
+        communityService: CommunityService
+    ): CommunityRepository = CommunityRepositoryImpl(communityService)
 
 }

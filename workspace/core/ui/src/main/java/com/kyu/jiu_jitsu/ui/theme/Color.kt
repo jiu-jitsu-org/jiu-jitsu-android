@@ -1,6 +1,8 @@
 package com.kyu.jiu_jitsu.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import com.kyu.jiu_jitsu.data.model.BELT_RANK
+import com.kyu.jiu_jitsu.ui.R
 
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
@@ -37,7 +39,7 @@ val CoolGray300 = Color(0xFF9C9EA6)
 val CoolGray400 = Color(0xFF83868F)
 val CoolGray500 = Color(0xFF70737C)
 val CoolGray600 = Color(0xFF63666E)
-val CoolGray700 = Color(0xFF4D4E54)
+val CoolGray700 = Color(0xFF4B4E54)
 val CoolGray800 = Color(0xFF37383D)
 val CoolGray900 = Color(0xFF292A2E)
 
@@ -54,4 +56,24 @@ val BlueOpacity40 = Color(0x66009DFF)
 val KakaoBg = Color(0xFFFEE500)
 val AppleBg = Color(0xFF050708)
 
+val BeltPurple = Color(0xFFCD57FF)
+val BeltBrown = Color(0xFFA66040)
+val BeltBlack = Color(0xFF2D2D2D)
+
 val Color1F1F1F = Color(0xFF1F1F1F)
+
+fun BELT_RANK.color(): Color = when (this) {
+    is BELT_RANK.BLACK -> ColorComponents.MyProfileHeader.Bg.Black
+    is BELT_RANK.BLUE -> ColorComponents.MyProfileHeader.Bg.Blue
+    is BELT_RANK.BROWN -> ColorComponents.MyProfileHeader.Bg.Brown
+    is BELT_RANK.PURPLE -> ColorComponents.MyProfileHeader.Bg.Purple
+    is BELT_RANK.WHITE -> ColorComponents.MyProfileHeader.Bg.White
+}
+
+fun BELT_RANK.drawableRes(): Int = when (this) {
+    is BELT_RANK.BLACK -> R.drawable.ic_black_belt
+    is BELT_RANK.BLUE -> R.drawable.ic_blue_belt
+    is BELT_RANK.BROWN -> R.drawable.ic_brown_belt
+    is BELT_RANK.PURPLE -> R.drawable.ic_purple_belt
+    is BELT_RANK.WHITE -> R.drawable.ic_white_belt
+}

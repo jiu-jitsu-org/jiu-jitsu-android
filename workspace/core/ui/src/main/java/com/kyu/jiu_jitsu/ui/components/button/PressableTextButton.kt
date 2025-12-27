@@ -10,7 +10,7 @@ import com.kyu.jiu_jitsu.ui.theme.ColorComponents
 import com.kyu.jiu_jitsu.ui.theme.Typography
 
 @Composable
-fun TextButton(
+fun PressableTextButton(
     text: String,
     textStyle: TextStyle = Typography.bodyMedium,
     onClick: () -> Unit,

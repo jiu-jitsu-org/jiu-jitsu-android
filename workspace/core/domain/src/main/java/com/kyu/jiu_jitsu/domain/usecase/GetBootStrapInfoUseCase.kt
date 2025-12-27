@@ -23,7 +23,7 @@ class GetBootStrapInfoUseCase @Inject constructor(
                             res.data.data.toInfo()
                         )
                     } else {
-                        UiState.Error(res.data.message ?: "", false)
+                        UiState.Error(message =  res.data.message ?: "", retryable =  false)
                     }
                 }
 

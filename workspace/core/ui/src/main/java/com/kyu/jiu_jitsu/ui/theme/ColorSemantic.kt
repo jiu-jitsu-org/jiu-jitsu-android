@@ -4,6 +4,10 @@ import androidx.compose.ui.graphics.Color
 
 object ColorSemantic {
 
+    val PrimaryTextSubtle: Color = Blue500
+    val Error: Color = Red500
+    val OnError: Color = White
+
     object Surface {
         val SurfaceContainer: Color = White
         val SurfaceContainerPressed: Color = CoolGray75
@@ -16,10 +20,12 @@ object ColorSemantic {
         val SurfacePrimarySubtlePressed: Color = Blue75
         val SurfaceDisabled: Color = CoolGray50
         val SurfaceBackground: Color = CoolGray25
+        var BackgroundDefault: Color = CoolGray25
         val SurfaceInactive: Color = CoolGray75
         val SurfaceField: Color = CoolGray25
         val OverLaySurface: Color = CoolGray700
         val OverLaySurfacePressed: Color = CoolGray800
+        val SurfaceTertiary: Color = CoolGray75
     }
 
     object Primary {
@@ -67,6 +73,7 @@ object ColorSemantic {
         val IconOnPrimary: Color = White
         val IconSecondary: Color = CoolGray500
         val IconTertiary: Color = CoolGray300
+        val IconSubtle: Color = CoolGray100
         val IconDisabled: Color = CoolGray400
         val IconOnDark: Color = White
         val IconOnInactive: Color = White
@@ -81,11 +88,6 @@ object ColorSemantic {
         val InteractiveDisabled: Color = CoolGray100
         val InteractiveStrong: Color = CoolGray700
         val InteractiveStrongPressed: Color = CoolGray800
-    }
-
-    object Error {
-        val Error: Color = Red500
-        val OnError: Color = White
     }
 
     object TransParent {

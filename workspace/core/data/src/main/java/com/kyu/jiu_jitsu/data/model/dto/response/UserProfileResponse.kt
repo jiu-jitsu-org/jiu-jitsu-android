@@ -13,7 +13,7 @@ data class UserProfileResponse(
 
 @JsonClass(generateAdapter = true)
 data class UserProfileResponseData (
-    val id: Int,
+    val userId: Int,
     val email: String?,
     val nickname: String?,
     val profileImageUrl: String?,
@@ -24,7 +24,7 @@ data class UserProfileResponseData (
 
 fun UserProfileResponseData?.toInfo(): UserProfileInfo =
     UserProfileInfo(
-        this?.id,
+        this?.userId,
         this?.email,
         this?.nickname,
         this?.profileImageUrl,
