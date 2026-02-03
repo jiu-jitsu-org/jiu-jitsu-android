@@ -3,6 +3,7 @@ package com.kyu.jiu_jitsu.data.repository.impl
 import com.kyu.jiu_jitsu.data.api.CommunityService
 import com.kyu.jiu_jitsu.data.api.common.ApiResult
 import com.kyu.jiu_jitsu.data.api.common.safeApiCall
+import com.kyu.jiu_jitsu.data.model.dto.request.UpdateCommunityProfileRequest
 import com.kyu.jiu_jitsu.data.model.dto.response.CommunityProfileData
 import com.kyu.jiu_jitsu.data.model.dto.response.CommunityProfileResponse
 import com.kyu.jiu_jitsu.data.repository.CommunityRepository
@@ -24,7 +25,7 @@ class CommunityRepositoryImpl @Inject constructor(
         )
     }.flowOn(Dispatchers.IO)
 
-    override suspend fun modifyCommunityProfile(body: CommunityProfileData): Flow<ApiResult<CommunityProfileResponse>> = flow {
+    override suspend fun modifyCommunityProfile(body: UpdateCommunityProfileRequest): Flow<ApiResult<CommunityProfileResponse>> = flow {
         emit(
             safeApiCall {
                 communityService.modifyCommunityProfile(body)

@@ -13,6 +13,8 @@ import com.kyu.jiu_jitsu.data.model.GENDER
 import com.kyu.jiu_jitsu.data.model.POSITION
 import com.kyu.jiu_jitsu.data.model.SUBMISSION
 import com.kyu.jiu_jitsu.data.model.TECHNIQUE
+import com.kyu.jiu_jitsu.data.model.dto.request.PROFILE_REQUEST_TYPE
+import com.kyu.jiu_jitsu.data.model.dto.request.UpdateCommunityProfileRequest
 import com.kyu.jiu_jitsu.data.model.dto.response.CommunityProfileData
 import com.kyu.jiu_jitsu.data.model.dto.response.Competition
 import com.kyu.jiu_jitsu.data.model.singleton.ProfileSingleton
@@ -72,7 +74,10 @@ class ProfileViewModel @Inject constructor(
     /** 도장 정보 수정 */
     fun changeAcademyName(academyName: String) {
         changeCommunityProfile(
-            academyName = academyName
+            UpdateCommunityProfileRequest(
+                profileRequestType = PROFILE_REQUEST_TYPE.ACADEMY().name,
+                academyName = academyName
+            )
         )
     }
 
@@ -85,51 +90,24 @@ class ProfileViewModel @Inject constructor(
         isWeightHidden: Boolean? = null,
     ) {
         changeCommunityProfile(
-            beltRank = beltRank,
-            beltStripe = beltStripe,
-            gender = gender,
-            weightKg = weightKg,
-            isWeightHidden = isWeightHidden,
+            UpdateCommunityProfileRequest(
+                profileRequestType = PROFILE_REQUEST_TYPE.BELT_WEIGHT().name,
+                beltRank = beltRank?.name ?: ProfileSingleton.profileInfo?.beltRank?.name,
+                beltStripe = beltStripe?.name ?: ProfileSingleton.profileInfo?.beltStripe?.name,
+                gender = gender?.name ?: ProfileSingleton.profileInfo?.gender?.name,
+                weightKg = weightKg,
+                isWeightHidden = isWeightHidden,
+            )
         )
+
     }
 
     private fun changeCommunityProfile(
-        nickName: String? = null,
-        profileImageUrl: String? = null,
-        beltRank: BELT_RANK? = null,
-        beltStripe: BELT_STRIPE? = null,
-        gender: GENDER? = null,
-        weightKg: Double? = null,
-        academyName: String? = null,
-        competitions: List<Competition>? = null,
-        bestSubmission: SUBMISSION? = null,
-        favoriteSubmission: SUBMISSION? = null,
-        bestTechnique: TECHNIQUE? = null,
-        favoriteTechnique: TECHNIQUE? = null,
-        bestPosition: POSITION? = null,
-        favoritePosition: POSITION? = null,
-        isWeightHidden: Boolean? = null,
+        requestData : UpdateCommunityProfileRequest
     ) {
         viewModelScope.launch {
             profileUiState = UiState.Loading
-            updateCommunityProfileUseCase(
-                CommunityProfileData(
-                    nickname = nickName?: ProfileSingleton.profileInfo?.nickname,
-                    profileImageUrl = profileImageUrl?: ProfileSingleton.profileInfo?.profileImageUrl,
-                    beltRank = beltRank?.name ?: ProfileSingleton.profileInfo?.beltRank?.name,
-                    beltStripe = beltStripe?.name ?: ProfileSingleton.profileInfo?.beltStripe?.name,
-                    gender = gender?.name ?: ProfileSingleton.profileInfo?.gender?.name,
-                    weightKg = weightKg ?: ProfileSingleton.profileInfo?.weightKg,
-                    isWeightHidden = isWeightHidden ?: ProfileSingleton.profileInfo?.isWeightHidden,
-                    academyName = academyName ?: ProfileSingleton.profileInfo?.academyName,
-                    bestSubmission = bestSubmission?.name ?: ProfileSingleton.profileInfo?.bestSubmission?.name,
-                    favoriteSubmission = favoriteSubmission?.name ?: ProfileSingleton.profileInfo?.favoriteSubmission?.name,
-                    bestTechnique = bestTechnique?.name ?: ProfileSingleton.profileInfo?.bestTechnique?.name,
-                    favoriteTechnique = favoriteTechnique?.name ?: ProfileSingleton.profileInfo?.favoriteTechnique?.name,
-                    bestPosition = bestPosition?.name ?: ProfileSingleton.profileInfo?.bestPosition?.name,
-                    favoritePosition = favoritePosition?.name ?: ProfileSingleton.profileInfo?.favoritePosition?.name,
-                )
-            ).collectLatest { uiState ->
+            updateCommunityProfileUseCase(requestData).collectLatest { uiState ->
                 when(uiState) {
                     is UiState.Success -> {
                         ProfileSingleton.profileInfo = uiState.result
@@ -151,13 +129,19 @@ class ProfileViewModel @Inject constructor(
         bestSubmissionIndex: Int? = null,
         favoriteSubmissionIndex: Int? = null,
     ) {
+        val bestPosition = if(bestPositionIndex == null) null else POSITION_LIST[bestPositionIndex]
+        val favoritePosition = if(favoritePositionIndex == null) null else POSITION_LIST[favoritePositionIndex]
+        val bestTechnique = if(bestTechniqueIndex == null) null else TECHNIQUE_LIST[bestTechniqueIndex]
+        val favoriteTechnique = if(favoriteTechniqueIndex == null) null else TECHNIQUE_LIST[favoriteTechniqueIndex]
+        val bestSubmission = if(bestSubmissionIndex == null) null else SUBMISSION_LIST[bestSubmissionIndex]
+        val favoriteSubmission = if(favoriteSubmissionIndex == null) null else SUBMISSION_LIST[favoriteSubmissionIndex]
+
         changeCommunityProfile(
-            bestPosition = if(bestPositionIndex == null) null else POSITION_LIST[bestPositionIndex],
-            favoritePosition = if(favoritePositionIndex == null) null else POSITION_LIST[favoritePositionIndex],
-            bestTechnique = if(bestTechniqueIndex == null) null else TECHNIQUE_LIST[bestTechniqueIndex],
-            favoriteTechnique = if(favoriteTechniqueIndex == null) null else TECHNIQUE_LIST[favoriteTechniqueIndex],
-            bestSubmission = if(bestSubmissionIndex == null) null else SUBMISSION_LIST[bestSubmissionIndex],
-            favoriteSubmission = if(favoriteSubmissionIndex == null) null else SUBMISSION_LIST[favoriteSubmissionIndex],
+            UpdateCommunityProfileRequest(
+                profileRequestType = PROFILE_REQUEST_TYPE.POSITION().name,
+                bestSubmission = bestSubmission?.name ?: ProfileSingleton.profileInfo?.bestSubmission?.name,
+                favoriteSubmission = favoriteSubmission?.name ?: ProfileSingleton.profileInfo?.favoriteSubmission?.name,
+            )
         )
     }
 

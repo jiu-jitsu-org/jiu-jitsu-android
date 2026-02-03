@@ -1,5 +1,6 @@
 package com.kyu.jiu_jitsu.data.api
 
+import com.kyu.jiu_jitsu.data.model.dto.request.UpdateCommunityProfileRequest
 import com.kyu.jiu_jitsu.data.model.dto.response.CommunityProfileData
 import com.kyu.jiu_jitsu.data.model.dto.response.CommunityProfileResponse
 import com.kyu.jiu_jitsu.data.utils.NetworkConfig
@@ -16,7 +17,7 @@ interface CommunityService {
     // 내 커뮤니티 프로필 수정
     @POST(NetworkConfig.CommunityProfileController.COMMUNITY_PROFILE)
     suspend fun modifyCommunityProfile(
-        @Body body: CommunityProfileData
+        @Body body: UpdateCommunityProfileRequest
     ): CommunityProfileResponse
 
 }

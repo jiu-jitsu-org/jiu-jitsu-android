@@ -21,21 +21,27 @@ val POSITION_INDICATOR_LIST = listOf(
 val TECHNIQUE_LIST = listOf(
     TECHNIQUE.SWEEPS(),
     TECHNIQUE.GUARD_PASSES(),
+    TECHNIQUE.TAKE_DOWNS(),
+    TECHNIQUE.ESCAPES(),
 )
 
 val TECHNIQUE_INDICATOR_LIST = listOf(
     StyleCardIndicator.TECHNIQUE_SWEEPS(),
     StyleCardIndicator.TECHNIQUE_GUARD_PASSES(),
+    StyleCardIndicator.TECHNIQUE_TAKE_DOWNS(),
+    StyleCardIndicator.TECHNIQUE_ESCAPES(),
 )
 
 val SUBMISSION_LIST = listOf(
     SUBMISSION.CHOKES(),
     SUBMISSION.ARM_LOCKS(),
+    SUBMISSION.LEG_LOCKS(),
 )
 
 val SUBMISSION_INDICATOR_LIST = listOf(
-    StyleCardIndicator.SUMISSION_CHOKES(),
-    StyleCardIndicator.SUMISSION_ARM_LOCKS(),
+    StyleCardIndicator.SUBMISSION_CHOKES(),
+    StyleCardIndicator.SUBMISSION_ARM_LOCKS(),
+    StyleCardIndicator.SUBMISSION_LEG_LOCKS(),
 )
 
 val COMPETITION_LIST = listOf(
@@ -70,14 +76,29 @@ sealed class StyleCardIndicator(
         override val color: Color = CoolGray25,
     ): StyleCardIndicator(title = title, color = color)
 
+    data class TECHNIQUE_TAKE_DOWNS(
+        override val title: String = "TAKE_DOWNS",
+        override val color: Color = CoolGray25,
+    ): StyleCardIndicator(title = title, color = color)
+
+    data class TECHNIQUE_ESCAPES(
+        override val title: String = "ESCAPES",
+        override val color: Color = CoolGray25,
+    ): StyleCardIndicator(title = title, color = color)
+
     // Submission Card Indicator Info
-    data class SUMISSION_CHOKES(
+    data class SUBMISSION_CHOKES(
         override val title: String = "CHOKES",
         override val color: Color = Blue500,
     ): StyleCardIndicator(title = title, color = color)
 
-    data class SUMISSION_ARM_LOCKS(
+    data class SUBMISSION_ARM_LOCKS(
         override val title: String = "ARM_LOCKS",
+        override val color: Color = CoolGray25,
+    ): StyleCardIndicator(title = title, color = color)
+
+    data class SUBMISSION_LEG_LOCKS(
+        override val title: String = "LEG_LOCKS",
         override val color: Color = CoolGray25,
     ): StyleCardIndicator(title = title, color = color)
 }

@@ -62,6 +62,9 @@ fun SplashScreen(
                 Log.d("@@@@@@@", "SplashScreen autoLoginState.Error")
                 if (uiState.code == 500) {
                     enterLoginScreen()
+                } else if (uiState.code == 401) {
+                    // code U0002 , message :존재하지않는 유저입니다.
+                    enterLoginScreen()
                 }
             }
             is UiState.Loading -> {

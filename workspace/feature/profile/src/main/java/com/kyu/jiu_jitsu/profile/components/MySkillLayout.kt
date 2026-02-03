@@ -29,7 +29,7 @@ import com.kyu.jiu_jitsu.profile.R
 import com.kyu.jiu_jitsu.ui.components.button.TintButton
 import com.kyu.jiu_jitsu.ui.theme.Blue500
 import com.kyu.jiu_jitsu.ui.theme.CoolGray75
-import com.kyu.jiu_jitsu.ui.theme.getDrawableRes
+import com.kyu.jiu_jitsu.ui.theme.getIconDrawableRes
 
 /**
  * 커뮤니티 프로필 정보 - 나의 포지션, 서브미션, 기술
@@ -178,7 +178,7 @@ private fun PositionInfo(
         ) {
             StyleCardItem(
                 modifier = Modifier.weight(1f).padding(start = 20.dp),
-                iconRes = bestPosition?.getDrawableRes(),
+                iconRes = bestPosition?.getIconDrawableRes(),
                 titleRes = com.kyu.jiu_jitsu.ui.R.string.common_my_best,
                 itemName = bestPosition?.name ?: stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null),
                 onClickEvent = onSaveMyStyleClick
@@ -186,7 +186,7 @@ private fun PositionInfo(
             Spacer(modifier = Modifier.width(10.dp))
             StyleCardItem(
                 modifier = Modifier.weight(1f).padding(end = 20.dp),
-                iconRes = favoritePosition?.getDrawableRes(),
+                iconRes = favoritePosition?.getIconDrawableRes(),
                 titleRes = com.kyu.jiu_jitsu.ui.R.string.common_my_favorite,
                 itemName = favoritePosition?.name ?: stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null),
                 onClickEvent = onSaveMyStyleClick
@@ -221,7 +221,7 @@ private fun TechniqueInfo(
         ) {
             StyleCardItem(
                 modifier = Modifier.weight(1f).padding(start = 20.dp),
-                iconRes = bestTechnique?.getDrawableRes(),
+                iconRes = bestTechnique?.getIconDrawableRes(),
                 titleRes = com.kyu.jiu_jitsu.ui.R.string.common_my_best,
                 itemName = bestTechnique?.name ?: stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null),
                 onClickEvent = onSaveMyStyleClick
@@ -229,7 +229,7 @@ private fun TechniqueInfo(
             Spacer(modifier = Modifier.width(10.dp))
             StyleCardItem(
                 modifier = Modifier.weight(1f).padding(end = 20.dp),
-                iconRes = favoriteTechnique?.getDrawableRes(),
+                iconRes = favoriteTechnique?.getIconDrawableRes(),
                 titleRes = com.kyu.jiu_jitsu.ui.R.string.common_my_favorite,
                 itemName = favoriteTechnique?.name ?: stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null),
                 onClickEvent = onSaveMyStyleClick
@@ -264,7 +264,7 @@ private fun SubmissionInfo(
         ) {
             StyleCardItem(
                 modifier = Modifier.weight(1f).padding(start = 20.dp),
-                iconRes = bestSubmission?.getDrawableRes(),
+                iconRes = bestSubmission?.getIconDrawableRes(),
                 titleRes = com.kyu.jiu_jitsu.ui.R.string.common_my_best,
                 itemName = bestSubmission?.name ?: stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null),
                 onClickEvent = onSaveMyStyleClick
@@ -272,7 +272,7 @@ private fun SubmissionInfo(
             Spacer(modifier = Modifier.width(10.dp))
             StyleCardItem(
                 modifier = Modifier.weight(1f).padding(end = 20.dp),
-                iconRes = favoriteSubmission?.getDrawableRes(),
+                iconRes = favoriteSubmission?.getIconDrawableRes(),
                 titleRes = com.kyu.jiu_jitsu.ui.R.string.common_my_favorite,
                 itemName = favoriteSubmission?.name ?: stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null),
                 onClickEvent = onSaveMyStyleClick

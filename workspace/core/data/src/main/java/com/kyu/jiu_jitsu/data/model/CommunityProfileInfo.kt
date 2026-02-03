@@ -100,61 +100,73 @@ val GENDER_LIST = listOf(
 sealed class SUBMISSION(
     open val name: String,
     open val displayName: String = "",
+    open val cardInfo: String = "",
 ) {
     data class CHOKES(
         override val name: String = "CHOKES",
         override val displayName: String = "조르기",
-    ) : SUBMISSION(name, displayName)
+        override val cardInfo: String = "내 몸은 아나콘다, 넌 그냥 먹잇감. 탭이 늦으면, 네 뼈가 먼저 비명을 지를 거다.",
+    ) : SUBMISSION(name, displayName, cardInfo)
 
     data class ARM_LOCKS(
         override val name: String = "ARM_LOCKS",
         override val displayName: String = "팔 관절기",
-    ) : SUBMISSION(name, displayName)
+        override val cardInfo: String = "도망갈 곳은 없어. 네 팔은 내 손아귀에 완벽히 잡혔으니까. 남은 건 네 결정뿐.",
+    ) : SUBMISSION(name, displayName, cardInfo)
 
     data class LEG_LOCKS(
         override val name: String = "LEG_LOCKS",
-        override val displayName: String = "팔 관절기",
-    ): SUBMISSION(name, displayName)
+        override val displayName: String = "하체 관절기",
+        override val cardInfo: String = "네가 아무리 발버둥 쳐도 소용없어. 네 하체는 이제 완벽하게 내 통제하에 들어왔으니까.",
+    ): SUBMISSION(name, displayName, cardInfo)
 }
 
 sealed class TECHNIQUE(
     open val name: String,
     open val displayName: String = "",
+    open val cardInfo: String = "",
 ) {
     data class SWEEPS(
         override val name: String = "SWEEPS",
-        override val displayName: String = "스윕·뒤집기"
-    ) : TECHNIQUE(name, displayName)
+        override val displayName: String = "스윕·뒤집기",
+        override val cardInfo: String = "지금 네가 보는 천장, 곧 네 등이 마주할 매트가 될 거다. 세상이 뒤집히는 기분을 즐겨보라고.",
+    ) : TECHNIQUE(name, displayName, cardInfo)
 
     data class GUARD_PASSES(
         override val name: String = "GUARD_PASSES",
-        override val displayName: String = "가드패스"
-    ) : TECHNIQUE(name, displayName)
+        override val displayName: String = "가드패스",
+        override val cardInfo: String = "계속 막아봐. 네 다리는 고작 두 개뿐이지만, 내가 뚫을 패스는 무한하거든.",
+    ) : TECHNIQUE(name, displayName, cardInfo)
 
     data class TAKE_DOWNS(
         override val name: String = "TAKE_DOWNS",
-        override val displayName: String = "테이크다운"
-    ): TECHNIQUE(name, displayName)
+        override val displayName: String = "테이크다운",
+        override val cardInfo: String = "이 매트 위에서 '선다'는 건 없어. '아직 넘어지지 않았다'만 있을 뿐. 그리고 그 시간은, 이제 끝났어.",
+    ): TECHNIQUE(name, displayName, cardInfo)
 
     data class ESCAPES(
         override val name: String = "ESCAPES",
-        override val displayName: String = "이스케이프\n디펜스"
-    ): TECHNIQUE(name, displayName)
+        override val displayName: String = "이스케이프\n디펜스",
+        override val cardInfo: String = "계속 그렇게 힘을 낭비해. 네가 헛된 그림자에 매달려 있을 때, 난 이미 사라지고 없을 걸?",
+    ): TECHNIQUE(name, displayName, cardInfo)
 }
 
 sealed class POSITION(
     open val name: String,
     open val displayName: String = "",
+    open val cardInfo: String = "",
 ) {
     data class TOP(
         override val name: String = "TOP",
         override val displayName: String = "탑 포지션",
-    ) : POSITION(name, displayName)
+        override val cardInfo: String = "이 매트 위에서 '선다'는 건 없어. '아직 넘어지지 않았다'만 있을 뿐. 그리고 그 시간은, 이제 끝났어.",
+    ) : POSITION(name, displayName, cardInfo)
 
     data class GUARD(
         override val name: String = "GUARD",
         override val displayName: String = "가드 포지션",
-    ) : POSITION(name, displayName)
+        override val cardInfo: String = "이 매트 위에서 '선다'는 건 없어. '아직 넘어지지 않았다'만 있을 뿐. 그리고 그 시간은, 이제 끝났어.",
+    ) : POSITION(name, displayName, cardInfo)
 }
 
 sealed class COMPETITION_RANK(

@@ -2,7 +2,7 @@ package com.kyu.jiu_jitsu.data.api.common
 
 sealed interface ApiError {
     data class Http(
-        val code: Int,
+        val code: Int?,
         val message: String?,
         val body: ServerError?
     ) : ApiError

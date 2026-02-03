@@ -8,6 +8,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -79,13 +80,13 @@ fun DraggableFlipCard(
         modifier = modifier
             .onSizeChanged { size = it }
             .pointerInput(size) {
-                detectDragGestures(
+                detectHorizontalDragGestures (
                     onDragEnd = { scope.launch { snapToNearestHalfTurn() } }
                 ) { change, drag ->
                     change.consume()
-                    val w = size.width.takeIf { it > 0 } ?: return@detectDragGestures
+                    val w = size.width.takeIf { it > 0 } ?: return@detectHorizontalDragGestures
                     // 좌↔우 어느 쪽이든 각도를 누적 (제자리에서 뒤집힘)
-                    val deltaAngle = (drag.x / w) * degreesPerWidth
+                    val deltaAngle = (drag / w) * degreesPerWidth
                     scope.launch {
                         rotationDeg.snapTo(rotationDeg.value + deltaAngle)
                     }
@@ -114,7 +115,7 @@ fun DraggableFlipCard(
                 .graphicsLayer {
                     transformOrigin = TransformOrigin(0.5f, 0.5f)
                     rotationY = angleMod + 180f
-                    scaleX = -1f
+                    scaleX = 1f
                     cameraDistance = cameraDistancePx
                 }
                 .graphicsLayer { alpha = backAlpha }
@@ -123,15 +124,15 @@ fun DraggableFlipCard(
         }
 
         // 진행 기반 그라데이션 음영(살짝 입체감)
-        Canvas(Modifier.fillMaxSize()) {
-            drawRect(
-                brush = Brush.linearGradient(
-                    0f to Color.Black.copy(alpha = shadeAlpha),
-                    1f to Color.Transparent
-                ),
-                size = Size(size.width.toFloat(), size.height.toFloat())
-            )
-        }
+//        Canvas(Modifier.fillMaxSize()) {
+//            drawRect(
+//                brush = Brush.linearGradient(
+//                    0f to Color.Black.copy(alpha = shadeAlpha),
+//                    1f to Color.Transparent
+//                ),
+//                size = Size(size.width.toFloat(), size.height.toFloat())
+//            )
+//        }
     }
 }
 

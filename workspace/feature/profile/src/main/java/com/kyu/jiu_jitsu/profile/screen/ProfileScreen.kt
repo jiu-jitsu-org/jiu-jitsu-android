@@ -199,6 +199,7 @@ fun ProfileScreen(
                 item {
                     Row(
                         modifier = Modifier
+                            .height(55.dp)
                             .fillMaxWidth()
                             .background(color = profileBgColor)
                     ) {
@@ -363,16 +364,10 @@ fun ProfileScreen(
                 enter = fadeIn() + slideInVertically(),
                 exit = fadeOut() + slideOutVertically()
             ) {
-//                Spacer(
-//                    modifier = Modifier
-//                        .height(55.dp)
-//                        .fillMaxWidth()
-//                        .background(color = White)
-//                        .align(Alignment.TopCenter)
-//                )
+                // TODO chan 상단 상태바 높이를 동적으로 구해볼 수 있을까?
                 Spacer(
                     modifier = Modifier
-                        .windowInsetsTopHeight(WindowInsets.statusBars)
+                        .height(55.dp)
                         .fillMaxWidth()
                         .background(color = White)
                         .align(Alignment.TopCenter)

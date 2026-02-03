@@ -8,17 +8,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,6 +23,7 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,17 +33,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.kyu.jiu_jitsu.data.api.common.UiState
 import com.kyu.jiu_jitsu.profile.ProfileViewModel
 import com.kyu.jiu_jitsu.profile.R
+import com.kyu.jiu_jitsu.profile.components.style.CardBackLayout
+import com.kyu.jiu_jitsu.profile.components.style.CardFrontLayout
 import com.kyu.jiu_jitsu.profile.components.style.CardIndicatorLayout
 import com.kyu.jiu_jitsu.profile.components.style.SegmentedPositionTabBar
 import com.kyu.jiu_jitsu.profile.model.POSITION_INDICATOR_LIST
@@ -56,6 +57,7 @@ import com.kyu.jiu_jitsu.profile.model.StyleCardIndicator
 import com.kyu.jiu_jitsu.profile.model.TECHNIQUE_INDICATOR_LIST
 import com.kyu.jiu_jitsu.profile.model.TECHNIQUE_LIST
 import com.kyu.jiu_jitsu.ui.components.button.PrimaryButton
+import com.kyu.jiu_jitsu.ui.components.button.TintButton
 import com.kyu.jiu_jitsu.ui.components.card.DraggableFlipCard
 import com.kyu.jiu_jitsu.ui.routes.SkillStyleScreenType
 import com.kyu.jiu_jitsu.ui.theme.Blue500
@@ -63,6 +65,8 @@ import com.kyu.jiu_jitsu.ui.theme.ColorComponents
 import com.kyu.jiu_jitsu.ui.theme.TrueWhite
 import com.kyu.jiu_jitsu.ui.theme.White
 import com.kyu.jiu_jitsu.ui.theme.WhiteOpacity40
+import com.kyu.jiu_jitsu.ui.theme.getBgDrawableRes
+import com.kyu.jiu_jitsu.ui.theme.getIconDrawableRes
 
 sealed class StyleTabItem(open val type: String, open val selectedItem: String) {
     data class Best(
@@ -94,15 +98,20 @@ fun ModifyMyStyleScreen(
     val viewModel = hiltViewModel<ProfileViewModel>()
 
     /** Screen Info **/
+    val isTypeNeedSelectAll = type == SkillStyleScreenType.ALL.screenName
     var screenType by remember { mutableStateOf<SkillStyleScreenType>(SkillStyleScreenType.ALL) }
     var screenTitleRes by remember { mutableStateOf<Int?>(null) }
     var screenSelectedItem by remember { mutableStateOf("") }
     var screenIndicatorItems by remember { mutableStateOf<List<StyleCardIndicator>>(listOf()) }
 
-    /** Tab Index **/
+    /** Tab Index ( 0 == Best, 1 == Favorite ) **/
     var styleTabIndex by remember { mutableIntStateOf(0) }
+    var bestTabTitle by remember { mutableStateOf<String?>(null) }
+    var favoriteTabTitle by remember { mutableStateOf<String?>(null) }
 
-    /** Page Index (case ScreenType == ALL, 0==Position, 1==Technique, 2==Submission) **/
+    // TODO chan type == SkillStyleScreenType.ALL 일때는 특정 Flag 값으로 수정하고 모든경우를 pageIndex로 구분해야할까?
+    // TODO chan 여기저기 구분값 다름 type == SkillStyleScreenType 으로 구분하다가 ALL인경우 pageIndex로 구분해보니 복잡도 증가
+    /** Page Index ( 0==Position, 1==Technique, 2==Submission) **/
     var pageIndex by remember { mutableIntStateOf(0) }
 
     /** Select Position Value **/
@@ -119,51 +128,103 @@ fun ModifyMyStyleScreen(
 
     val cardShape = RoundedCornerShape(16.dp)
 
+    val configuration = LocalConfiguration.current
+    val targetHeightDp = (configuration.screenHeightDp * 0.5).dp
+
     /** 뒤로가기 컨트롤 **/
     val onHistoryBackClick: () -> Unit = {
-        when (type) {
-            SkillStyleScreenType.ALL.screenName -> {
-                // ALL > 포지션, 기술, 서브미션 모두 선택 > 시작은 포지션부터
-                when (pageIndex) {
-                    1 -> { pageIndex = 0 }
-                    2 -> { pageIndex = 1 }
-                    else -> { onBackClick() }
+        if (isTypeNeedSelectAll) {
+            // ALL > 포지션, 기술, 서브미션 모두 선택 > 시작은 포지션부터
+            when (pageIndex) {
+                1 -> { pageIndex = 0 }
+                2 -> { pageIndex = 1 }
+                else -> { onBackClick() }
+            }
+        } else {
+            onBackClick()
+        }
+    }
+
+    /** 상단 탭 타이틀  **/
+    fun setTabTitle() {
+        when(pageIndex) {
+            0 -> { // POSITION
+                bestTabTitle = POSITION_LIST[bestPositionIndex?:0].displayName
+                if (styleTabIndex == 0) {
+                    favoriteTabTitle = if(favoritePositionIndex == null) "입력해주세요" else POSITION_LIST[favoritePositionIndex?:0].displayName
+                } else {
+                    favoriteTabTitle = POSITION_LIST[favoritePositionIndex?:0].displayName
+                    if (favoritePositionIndex == null)
+                        favoritePositionIndex = 0
                 }
-            } else -> {
-                onBackClick()
+            }
+            1 -> { // TECHNIQUE
+                bestTabTitle = TECHNIQUE_LIST[bestTechniqueIndex?:0].displayName
+                if (styleTabIndex == 0) {
+                    favoriteTabTitle = if(favoriteTechniqueIndex == null) "입력해주세요" else TECHNIQUE_LIST[favoriteTechniqueIndex?:0].displayName
+                } else {
+                    favoriteTabTitle = TECHNIQUE_LIST[favoriteTechniqueIndex?:0].displayName
+                    if (favoriteTechniqueIndex == null)
+                        favoriteTechniqueIndex = 0
+                }
+            }
+            2 -> { // SUBMISSION
+                bestTabTitle = SUBMISSION_LIST[bestSubmissionIndex?:0].displayName
+                if (styleTabIndex == 0) {
+                    favoriteTabTitle = if(favoriteSubmissionIndex == null) "입력해주세요" else SUBMISSION_LIST[favoriteSubmissionIndex?:0].displayName
+                } else {
+                    favoriteTabTitle = SUBMISSION_LIST[favoriteSubmissionIndex?:0].displayName
+                    if (favoriteSubmissionIndex == null)
+                        favoriteSubmissionIndex = 0
+                }
+            }
+        }
+    }
+
+    /** 나중에 하기 버튼 클릭 **/
+    val onSkipBtnClick: () -> Unit = {
+        when (pageIndex) {
+            0 -> { // POSITION
+
+            }
+            1 -> { // TECHNIQUE
+
+            }
+            2 -> { // SUBMISSION
+
             }
         }
     }
 
     /** 하단 버튼 컨트롤 **/
+    // TODO chan 하단 버튼 누름 > REST API Success > Next Step
     val onBottomBtnClick: () -> Unit = {
-        when (type) {
-            SkillStyleScreenType.ALL.screenName -> {
-                // ALL > 포지션, 기술, 서브미션 모두 선택 > 시작은 포지션부터
-                when (pageIndex) {
-                    0 -> { pageIndex = 1 }
-                    1 -> { pageIndex = 2 }
-                    2 -> {
-                        viewModel.updateProfileMyStyle(
-                            bestPositionIndex = bestPositionIndex ?: 0,
-                            favoritePositionIndex = favoritePositionIndex ?: 0,
-                            bestTechniqueIndex = bestTechniqueIndex ?: 0,
-                            favoriteTechniqueIndex = favoriteTechniqueIndex ?: 0,
-                            bestSubmissionIndex = bestSubmissionIndex ?: 0,
-                            favoriteSubmissionIndex = favoriteSubmissionIndex ?: 0,
-                        )
-                    }
+        if (isTypeNeedSelectAll) {
+            // ALL > 포지션, 기술, 서브미션 모두 선택 > 시작은 포지션부터
+            when (pageIndex) {
+                0 -> { pageIndex = 1 }
+                1 -> { pageIndex = 2 }
+                2 -> {
+                    viewModel.updateProfileMyStyle(
+                        bestPositionIndex = bestPositionIndex ?: 0,
+                        favoritePositionIndex = favoritePositionIndex ?: 0,
+                        bestTechniqueIndex = bestTechniqueIndex ?: 0,
+                        favoriteTechniqueIndex = favoriteTechniqueIndex ?: 0,
+                        bestSubmissionIndex = bestSubmissionIndex ?: 0,
+                        favoriteSubmissionIndex = favoriteSubmissionIndex ?: 0,
+                    )
                 }
-            } else -> {
-                viewModel.updateProfileMyStyle(
-                    bestPositionIndex = bestPositionIndex ?: 0,
-                    favoritePositionIndex = favoritePositionIndex ?: 0,
-                    bestTechniqueIndex = bestTechniqueIndex ?: 0,
-                    favoriteTechniqueIndex = favoriteTechniqueIndex ?: 0,
-                    bestSubmissionIndex = bestSubmissionIndex ?: 0,
-                    favoriteSubmissionIndex = favoriteSubmissionIndex ?: 0,
-                )
             }
+        } else {
+            // TODO chan 각각 어떤 스크린의 값인지 구분 필요
+            viewModel.updateProfileMyStyle(
+                bestPositionIndex = bestPositionIndex ?: 0,
+                favoritePositionIndex = favoritePositionIndex ?: 0,
+                bestTechniqueIndex = bestTechniqueIndex ?: 0,
+                favoriteTechniqueIndex = favoriteTechniqueIndex ?: 0,
+                bestSubmissionIndex = bestSubmissionIndex ?: 0,
+                favoriteSubmissionIndex = favoriteSubmissionIndex ?: 0,
+            )
         }
     }
 
@@ -192,32 +253,133 @@ fun ModifyMyStyleScreen(
                 }
             }
         }
+        setTabTitle()
+    }
+
+    /** 카드 배경 반환 **/
+    fun returnCardBgRes (): Int = when(pageIndex) {
+        0 -> { // POSITION
+            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            POSITION_LIST[itemIndex ?: 0].getBgDrawableRes()
+        }
+
+        1 -> { // TECHNIQUE
+            val itemIndex = if (styleTabIndex==0) bestTechniqueIndex else favoriteTechniqueIndex
+            TECHNIQUE_LIST[itemIndex ?: 0].getBgDrawableRes()
+        }
+
+        2 -> { // SUBMISSION
+            val itemIndex = if (styleTabIndex==0) bestSubmissionIndex else favoriteSubmissionIndex
+            SUBMISSION_LIST[itemIndex ?: 0].getBgDrawableRes()
+        }
+
+        else -> {
+            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            POSITION_LIST[itemIndex ?: 0].getBgDrawableRes()
+        }
+    }
+
+    /** 카드 타입 반환 **/
+    fun returnCardType(): String = when(pageIndex) {
+        // POSITION
+        0 -> "포지션"
+        // TECHNIQUE
+        1 -> "기술"
+        // SUBMISSION
+        2 -> "서브 미션"
+        else -> ""
+    }
+
+    /** 카드 이름 반환 **/
+    fun returnCardTitle (): String = when(pageIndex) {
+        0 -> { // POSITION
+            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            POSITION_LIST[itemIndex ?: 0].displayName
+        }
+
+        1 -> { // TECHNIQUE
+            val itemIndex = if (styleTabIndex==0) bestTechniqueIndex else favoriteTechniqueIndex
+            TECHNIQUE_LIST[itemIndex ?: 0].displayName
+        }
+
+        2 -> { // SUBMISSION
+            val itemIndex = if (styleTabIndex==0) bestSubmissionIndex else favoriteSubmissionIndex
+            SUBMISSION_LIST[itemIndex ?: 0].displayName
+        }
+
+        else -> {
+            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            POSITION_LIST[itemIndex ?: 0].displayName
+        }
+    }
+
+    /** 카드 설명 반환 **/
+    fun returnCardInfo (): String = when(pageIndex) {
+        0 -> { // POSITION
+            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            POSITION_LIST[itemIndex ?: 0].cardInfo
+        }
+
+        1 -> { // TECHNIQUE
+            val itemIndex = if (styleTabIndex==0) bestTechniqueIndex else favoriteTechniqueIndex
+            TECHNIQUE_LIST[itemIndex ?: 0].cardInfo
+        }
+
+        2 -> { // SUBMISSION
+            val itemIndex = if (styleTabIndex==0) bestSubmissionIndex else favoriteSubmissionIndex
+            SUBMISSION_LIST[itemIndex ?: 0].cardInfo
+        }
+
+        else -> {
+            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            POSITION_LIST[itemIndex ?: 0].cardInfo
+        }
+    }
+
+    /** 카드 아이콘 반환 **/
+    fun returnCardIconRes (): Int = when(pageIndex) {
+        0 -> { // POSITION
+            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            POSITION_LIST[itemIndex ?: 0].getIconDrawableRes()
+        }
+
+        1 -> { // TECHNIQUE
+            val itemIndex = if (styleTabIndex==0) bestTechniqueIndex else favoriteTechniqueIndex
+            TECHNIQUE_LIST[itemIndex ?: 0].getIconDrawableRes()
+        }
+
+        2 -> { // SUBMISSION
+            val itemIndex = if (styleTabIndex==0) bestSubmissionIndex else favoriteSubmissionIndex
+            SUBMISSION_LIST[itemIndex ?: 0].getIconDrawableRes()
+        }
+
+        else -> {
+            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            POSITION_LIST[itemIndex ?: 0].getIconDrawableRes()
+        }
     }
 
     LaunchedEffect(Unit) {
         // 스크린 타입 - 포지션, 기술, 서브미션
         when (type) {
             SkillStyleScreenType.Position.screenName -> {
-                screenType = SkillStyleScreenType.Position
                 pageIndex = 0
             }
 
             SkillStyleScreenType.Technique.screenName -> {
-                screenType = SkillStyleScreenType.Technique
                 pageIndex = 1
             }
 
             SkillStyleScreenType.Submission.screenName -> {
-                screenType = SkillStyleScreenType.Submission
                 pageIndex = 2
             }
 
             else -> {
                 // ALL > 포지션, 기술, 서브미션 모두 선택 > 시작은 포지션부터
-                screenType = SkillStyleScreenType.ALL
                 pageIndex = 0
             }
         }
+        setTabTitle()
     }
 
     LaunchedEffect(pageIndex) {
@@ -244,6 +406,7 @@ fun ModifyMyStyleScreen(
                     screenIndicatorItems = SUBMISSION_INDICATOR_LIST
                 }
             }
+            setTabTitle()
         }
     }
 
@@ -288,47 +451,47 @@ fun ModifyMyStyleScreen(
                     SegmentedPositionTabBar(
                         modifier = Modifier.fillMaxWidth(),
                         tabs = listOf(
-                            StyleTabItem.Best(selectedItem = "입력해주세요"),
-                            StyleTabItem.Favorite(selectedItem = "입력해주세요"),
+                            StyleTabItem.Best(selectedItem = bestTabTitle?:"입력해주세요"),
+                            StyleTabItem.Favorite(selectedItem = favoriteTabTitle?:"입력해주세요"),
                         ),
                         selectedIndex = styleTabIndex,
                         onTabSelected = { index ->
                             styleTabIndex = index
+                            if (index == 1 && favoriteTabTitle == "입력해주세요")
+                                setTabTitle()
                         }
                     )
                 }
 
                 item {
                     // Selected Card
-                    DraggableFlipCard(
-                        modifier = Modifier
-                            .size(240.dp, 150.dp)
-                            .clip(cardShape),
+                    key(styleTabIndex, pageIndex) {
+                        DraggableFlipCard(
+                            modifier = Modifier
+                                .height(targetHeightDp)
+                                .aspectRatio(10f / 16f)
+                                .clip(cardShape),
 
-                        front = {
-                            Card(shape = cardShape) {
-                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Text("Front", style = MaterialTheme.typography.headlineMedium)
-                                }
+                            front = {
+                                CardFrontLayout(
+                                    modifier = Modifier.fillMaxSize(),
+                                    cardShape = cardShape,
+                                    backgroundRes = returnCardBgRes(),
+                                    iconRes = returnCardIconRes(),
+                                    title = returnCardTitle(),
+                                    info = returnCardInfo(),
+                                )
+                            },
+                            back = {
+                                CardBackLayout(
+                                    modifier = Modifier.fillMaxSize(),
+                                    cardShape = cardShape,
+                                    type = returnCardType(),
+                                    title = returnCardTitle(),
+                                )
                             }
-
-                        },
-                        back = {
-                            Card(
-                                shape = cardShape,
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFF243042))
-                            ) {
-                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Text(
-                                        "Back",
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.headlineMedium
-                                    )
-                                }
-                            }
-
-                        }
-                    )
+                        )
+                    }
                 }
 
                 item {
@@ -336,7 +499,7 @@ fun ModifyMyStyleScreen(
                     CardIndicatorLayout(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(),
+                            .height(70.dp),
                         items = screenIndicatorItems,
                         selectedIndex = when (pageIndex) {
                             0 -> {
@@ -365,38 +528,57 @@ fun ModifyMyStyleScreen(
             }
 
             // Top App Bar
-            Row(
+            Box(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
                     .background(color = WhiteOpacity40)
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .padding(horizontal = 16.dp)
             ) {
-                Box(
+                Row(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .paint(
-                            painter = painterResource(com.kyu.jiu_jitsu.ui.R.drawable.ic_blue_left_back_button),
-                            contentScale = ContentScale.Crop,
+                        .fillMaxWidth()
+                        .align(Alignment.CenterStart),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .paint(
+                                painter = painterResource(com.kyu.jiu_jitsu.ui.R.drawable.ic_gray_left_back_button),
+                                contentScale = ContentScale.Crop,
+                            )
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = ripple(bounded = true),
+                                role = Role.Button,
+                                onClick = onHistoryBackClick
+                            )
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    if (isTypeNeedSelectAll) {
+                        TintButton(
+                            text = "나중에 하기",
+                            onClick = {}
                         )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = ripple(bounded = true),
-                            role = Role.Button,
-                            onClick = onHistoryBackClick
-                        )
-                )
+                    } else {
+
+                    }
+                }
+                // Center Title
                 Text(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = 48.dp),
                     text = stringResource(
                         screenTitleRes ?: R.string.profile_my_style_position_title
                     ),
                     style = MaterialTheme.typography.titleSmall,
                     color = ColorComponents.Header.Header.Text,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.width(36.dp))
             }
 
             // Bottom Button

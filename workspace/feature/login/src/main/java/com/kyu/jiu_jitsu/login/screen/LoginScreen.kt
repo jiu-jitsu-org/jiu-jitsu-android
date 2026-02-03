@@ -99,6 +99,30 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            // Kakao Test
+            PressableButton(
+                modifier = Modifier
+                    .height(52.dp)
+                    .fillMaxWidth(),
+                text = "KAKAO TEST",
+                disabledBgColor = KakaoBg,
+                enabledBgColor = KakaoBg,
+                pressedBgColor = KakaoBg,
+                enableTextColor = Color1F1F1F,
+                pressedTextColor = Color1F1F1F,
+                disabledTextColor = Color1F1F1F,
+                roundedCorner = 12.dp,
+                leadingIcon = {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_login_kakao),
+                        contentDescription = "LoginKakao"
+                    )
+                },
+                onClick = {
+                    viewModel.loginType = LoginType.KAKAO_ACCOUNT
+                    viewModel.startKakaoTestLogin()
+                },
+            )
             // Kakao
             PressableButton(
                 modifier = Modifier

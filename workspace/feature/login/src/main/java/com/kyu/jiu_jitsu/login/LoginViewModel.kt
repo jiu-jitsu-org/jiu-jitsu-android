@@ -39,6 +39,14 @@ class LoginViewModel @Inject constructor(
     var loginUiState by mutableStateOf<UiState<SnsLoginSucceedType>>(UiState.Idle)
 
     /**
+     * Test
+     */
+    fun startKakaoTestLogin() {
+        loginType = LoginType.KAKAO_ACCOUNT.apply { snsLoginToken = "kakaoTest" }
+        getSnsLoginInfo()
+    }
+
+    /**
      * SNS Login
      */
     fun startSnsLogin(

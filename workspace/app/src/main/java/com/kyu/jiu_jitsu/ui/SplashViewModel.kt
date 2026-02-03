@@ -71,7 +71,7 @@ class SplashViewModel @Inject constructor(
                     if (uiState.code != null) {
                         when(uiState.code) {
                             500 -> autoLoginState = UiState.Error(code = uiState.code, message = uiState.message, retryable =  false)
-                            else -> autoLoginState = UiState.Error(message = uiState.message, retryable =  false)
+                            else -> autoLoginState = UiState.Error(code = uiState.code, message = uiState.message, retryable =  false)
                         }
                     }
 
