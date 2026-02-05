@@ -8,7 +8,6 @@ import com.kyu.jiu_jitsu.data.api.common.UiState
 import com.kyu.jiu_jitsu.data.model.SplashModel
 import com.kyu.jiu_jitsu.data.model.UserProfileInfo
 import com.kyu.jiu_jitsu.domain.usecase.GetBootStrapInfoUseCase
-import com.kyu.jiu_jitsu.domain.usecase.community.GetCommunityProfileUseCase
 import com.kyu.jiu_jitsu.domain.usecase.login.CheckAutoLoginUseCase
 import com.kyu.jiu_jitsu.domain.usecase.user.GetUserProfileUseCase
 import com.kyu.jiu_jitsu.domain.usecase.user.SaveLocalUserInfoUseCase
@@ -23,7 +22,6 @@ class SplashViewModel @Inject constructor(
     private val checkAutoLoginUseCase: CheckAutoLoginUseCase,
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val saveLocalUserInfoUseCase: SaveLocalUserInfoUseCase,
-    private val getCommunityProfile: GetCommunityProfileUseCase,
 ) : ViewModel() {
 
     var splashUiState by mutableStateOf<UiState<SplashModel>>(UiState.Idle)

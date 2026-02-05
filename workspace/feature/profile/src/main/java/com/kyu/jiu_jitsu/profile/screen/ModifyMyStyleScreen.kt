@@ -1,5 +1,6 @@
 package com.kyu.jiu_jitsu.profile.screen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,7 +43,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.profile.ProfileViewModel
+import com.kyu.jiu_jitsu.profile.viewmodel.ModifyMyStyleAction
+import com.kyu.jiu_jitsu.profile.viewmodel.ModifyMyStyleViewModel
 import com.kyu.jiu_jitsu.profile.R
 import com.kyu.jiu_jitsu.profile.components.style.CardBackLayout
 import com.kyu.jiu_jitsu.profile.components.style.CardFrontLayout
@@ -87,6 +88,7 @@ sealed class StyleTabItem(open val type: String, open val selectedItem: String) 
  * @param type 화면 타입 - 포지션, 기술, 서브미션
  * @param onBackClick
  */
+@SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun ModifyMyStyleScreen(
     modifier: Modifier,
@@ -95,192 +97,42 @@ fun ModifyMyStyleScreen(
     onCompleteClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    val viewModel = hiltViewModel<ProfileViewModel>()
+    val viewModel = hiltViewModel<ModifyMyStyleViewModel>()
 
     /** Screen Info **/
-    val isTypeNeedSelectAll = type == SkillStyleScreenType.ALL.screenName
-    var screenType by remember { mutableStateOf<SkillStyleScreenType>(SkillStyleScreenType.ALL) }
     var screenTitleRes by remember { mutableStateOf<Int?>(null) }
-    var screenSelectedItem by remember { mutableStateOf("") }
     var screenIndicatorItems by remember { mutableStateOf<List<StyleCardIndicator>>(listOf()) }
-
-    /** Tab Index ( 0 == Best, 1 == Favorite ) **/
-    var styleTabIndex by remember { mutableIntStateOf(0) }
-    var bestTabTitle by remember { mutableStateOf<String?>(null) }
-    var favoriteTabTitle by remember { mutableStateOf<String?>(null) }
-
-    // TODO chan type == SkillStyleScreenType.ALL 일때는 특정 Flag 값으로 수정하고 모든경우를 pageIndex로 구분해야할까?
-    // TODO chan 여기저기 구분값 다름 type == SkillStyleScreenType 으로 구분하다가 ALL인경우 pageIndex로 구분해보니 복잡도 증가
-    /** Page Index ( 0==Position, 1==Technique, 2==Submission) **/
-    var pageIndex by remember { mutableIntStateOf(0) }
-
-    /** Select Position Value **/
-    var bestPositionIndex by remember { mutableStateOf<Int?>(null) }
-    var favoritePositionIndex by remember { mutableStateOf<Int?>(null) }
-
-    /** Select Technique Value **/
-    var bestTechniqueIndex by remember { mutableStateOf<Int?>(null) }
-    var favoriteTechniqueIndex by remember { mutableStateOf<Int?>(null) }
-
-    /** Select Submission Value **/
-    var bestSubmissionIndex by remember { mutableStateOf<Int?>(null) }
-    var favoriteSubmissionIndex by remember { mutableStateOf<Int?>(null) }
-
+    /** Card Shape **/
     val cardShape = RoundedCornerShape(16.dp)
 
     val configuration = LocalConfiguration.current
     val targetHeightDp = (configuration.screenHeightDp * 0.5).dp
 
-    /** 뒤로가기 컨트롤 **/
-    val onHistoryBackClick: () -> Unit = {
-        if (isTypeNeedSelectAll) {
-            // ALL > 포지션, 기술, 서브미션 모두 선택 > 시작은 포지션부터
-            when (pageIndex) {
-                1 -> { pageIndex = 0 }
-                2 -> { pageIndex = 1 }
-                else -> { onBackClick() }
-            }
-        } else {
-            onBackClick()
-        }
-    }
-
-    /** 상단 탭 타이틀  **/
-    fun setTabTitle() {
-        when(pageIndex) {
-            0 -> { // POSITION
-                bestTabTitle = POSITION_LIST[bestPositionIndex?:0].displayName
-                if (styleTabIndex == 0) {
-                    favoriteTabTitle = if(favoritePositionIndex == null) "입력해주세요" else POSITION_LIST[favoritePositionIndex?:0].displayName
-                } else {
-                    favoriteTabTitle = POSITION_LIST[favoritePositionIndex?:0].displayName
-                    if (favoritePositionIndex == null)
-                        favoritePositionIndex = 0
-                }
-            }
-            1 -> { // TECHNIQUE
-                bestTabTitle = TECHNIQUE_LIST[bestTechniqueIndex?:0].displayName
-                if (styleTabIndex == 0) {
-                    favoriteTabTitle = if(favoriteTechniqueIndex == null) "입력해주세요" else TECHNIQUE_LIST[favoriteTechniqueIndex?:0].displayName
-                } else {
-                    favoriteTabTitle = TECHNIQUE_LIST[favoriteTechniqueIndex?:0].displayName
-                    if (favoriteTechniqueIndex == null)
-                        favoriteTechniqueIndex = 0
-                }
-            }
-            2 -> { // SUBMISSION
-                bestTabTitle = SUBMISSION_LIST[bestSubmissionIndex?:0].displayName
-                if (styleTabIndex == 0) {
-                    favoriteTabTitle = if(favoriteSubmissionIndex == null) "입력해주세요" else SUBMISSION_LIST[favoriteSubmissionIndex?:0].displayName
-                } else {
-                    favoriteTabTitle = SUBMISSION_LIST[favoriteSubmissionIndex?:0].displayName
-                    if (favoriteSubmissionIndex == null)
-                        favoriteSubmissionIndex = 0
-                }
-            }
-        }
-    }
-
-    /** 나중에 하기 버튼 클릭 **/
-    val onSkipBtnClick: () -> Unit = {
-        when (pageIndex) {
-            0 -> { // POSITION
-
-            }
-            1 -> { // TECHNIQUE
-
-            }
-            2 -> { // SUBMISSION
-
-            }
-        }
-    }
-
-    /** 하단 버튼 컨트롤 **/
-    // TODO chan 하단 버튼 누름 > REST API Success > Next Step
-    val onBottomBtnClick: () -> Unit = {
-        if (isTypeNeedSelectAll) {
-            // ALL > 포지션, 기술, 서브미션 모두 선택 > 시작은 포지션부터
-            when (pageIndex) {
-                0 -> { pageIndex = 1 }
-                1 -> { pageIndex = 2 }
-                2 -> {
-                    viewModel.updateProfileMyStyle(
-                        bestPositionIndex = bestPositionIndex ?: 0,
-                        favoritePositionIndex = favoritePositionIndex ?: 0,
-                        bestTechniqueIndex = bestTechniqueIndex ?: 0,
-                        favoriteTechniqueIndex = favoriteTechniqueIndex ?: 0,
-                        bestSubmissionIndex = bestSubmissionIndex ?: 0,
-                        favoriteSubmissionIndex = favoriteSubmissionIndex ?: 0,
-                    )
-                }
-            }
-        } else {
-            // TODO chan 각각 어떤 스크린의 값인지 구분 필요
-            viewModel.updateProfileMyStyle(
-                bestPositionIndex = bestPositionIndex ?: 0,
-                favoritePositionIndex = favoritePositionIndex ?: 0,
-                bestTechniqueIndex = bestTechniqueIndex ?: 0,
-                favoriteTechniqueIndex = favoriteTechniqueIndex ?: 0,
-                bestSubmissionIndex = bestSubmissionIndex ?: 0,
-                favoriteSubmissionIndex = favoriteSubmissionIndex ?: 0,
-            )
-        }
-    }
-
-    /** 카드 선택 콜백 **/
-    val onSelectedCardItem: (index: Int) -> Unit = { index ->
-        when (pageIndex) {
-            0 -> {
-                if (styleTabIndex == 0) {
-                    bestPositionIndex = index
-                } else {
-                    favoritePositionIndex = index
-                }
-            }
-            1 -> {
-                if (styleTabIndex == 0) {
-                    bestTechniqueIndex = index
-                } else {
-                    favoriteTechniqueIndex = index
-                }
-            }
-            2 -> {
-                if (styleTabIndex == 0) {
-                    bestSubmissionIndex = index
-                } else {
-                    favoriteSubmissionIndex = index
-                }
-            }
-        }
-        setTabTitle()
-    }
-
     /** 카드 배경 반환 **/
-    fun returnCardBgRes (): Int = when(pageIndex) {
+    fun returnCardBgRes (): Int = when(viewModel.pageIndex) {
         0 -> { // POSITION
-            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
             POSITION_LIST[itemIndex ?: 0].getBgDrawableRes()
         }
 
         1 -> { // TECHNIQUE
-            val itemIndex = if (styleTabIndex==0) bestTechniqueIndex else favoriteTechniqueIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestTechniqueIndex else viewModel.favoriteTechniqueIndex
             TECHNIQUE_LIST[itemIndex ?: 0].getBgDrawableRes()
         }
 
         2 -> { // SUBMISSION
-            val itemIndex = if (styleTabIndex==0) bestSubmissionIndex else favoriteSubmissionIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestSubmissionIndex else viewModel.favoriteSubmissionIndex
             SUBMISSION_LIST[itemIndex ?: 0].getBgDrawableRes()
         }
 
         else -> {
-            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
             POSITION_LIST[itemIndex ?: 0].getBgDrawableRes()
         }
     }
 
     /** 카드 타입 반환 **/
-    fun returnCardType(): String = when(pageIndex) {
+    fun returnCardType(): String = when(viewModel.pageIndex) {
         // POSITION
         0 -> "포지션"
         // TECHNIQUE
@@ -291,130 +143,107 @@ fun ModifyMyStyleScreen(
     }
 
     /** 카드 이름 반환 **/
-    fun returnCardTitle (): String = when(pageIndex) {
+    fun returnCardTitle (): String = when(viewModel.pageIndex) {
         0 -> { // POSITION
-            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
             POSITION_LIST[itemIndex ?: 0].displayName
         }
 
         1 -> { // TECHNIQUE
-            val itemIndex = if (styleTabIndex==0) bestTechniqueIndex else favoriteTechniqueIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestTechniqueIndex else viewModel.favoriteTechniqueIndex
             TECHNIQUE_LIST[itemIndex ?: 0].displayName
         }
 
         2 -> { // SUBMISSION
-            val itemIndex = if (styleTabIndex==0) bestSubmissionIndex else favoriteSubmissionIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestSubmissionIndex else viewModel.favoriteSubmissionIndex
             SUBMISSION_LIST[itemIndex ?: 0].displayName
         }
 
         else -> {
-            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
             POSITION_LIST[itemIndex ?: 0].displayName
         }
     }
 
     /** 카드 설명 반환 **/
-    fun returnCardInfo (): String = when(pageIndex) {
+    fun returnCardInfo (): String = when(viewModel.pageIndex) {
         0 -> { // POSITION
-            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
             POSITION_LIST[itemIndex ?: 0].cardInfo
         }
 
         1 -> { // TECHNIQUE
-            val itemIndex = if (styleTabIndex==0) bestTechniqueIndex else favoriteTechniqueIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestTechniqueIndex else viewModel.favoriteTechniqueIndex
             TECHNIQUE_LIST[itemIndex ?: 0].cardInfo
         }
 
         2 -> { // SUBMISSION
-            val itemIndex = if (styleTabIndex==0) bestSubmissionIndex else favoriteSubmissionIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestSubmissionIndex else viewModel.favoriteSubmissionIndex
             SUBMISSION_LIST[itemIndex ?: 0].cardInfo
         }
 
         else -> {
-            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
             POSITION_LIST[itemIndex ?: 0].cardInfo
         }
     }
 
     /** 카드 아이콘 반환 **/
-    fun returnCardIconRes (): Int = when(pageIndex) {
+    fun returnCardIconRes (): Int = when(viewModel.pageIndex) {
         0 -> { // POSITION
-            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
             POSITION_LIST[itemIndex ?: 0].getIconDrawableRes()
         }
 
         1 -> { // TECHNIQUE
-            val itemIndex = if (styleTabIndex==0) bestTechniqueIndex else favoriteTechniqueIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestTechniqueIndex else viewModel.favoriteTechniqueIndex
             TECHNIQUE_LIST[itemIndex ?: 0].getIconDrawableRes()
         }
 
         2 -> { // SUBMISSION
-            val itemIndex = if (styleTabIndex==0) bestSubmissionIndex else favoriteSubmissionIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestSubmissionIndex else viewModel.favoriteSubmissionIndex
             SUBMISSION_LIST[itemIndex ?: 0].getIconDrawableRes()
         }
 
         else -> {
-            val itemIndex = if (styleTabIndex==0) bestPositionIndex else favoritePositionIndex
+            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
             POSITION_LIST[itemIndex ?: 0].getIconDrawableRes()
         }
     }
 
     LaunchedEffect(Unit) {
-        // 스크린 타입 - 포지션, 기술, 서브미션
-        when (type) {
-            SkillStyleScreenType.Position.screenName -> {
-                pageIndex = 0
-            }
-
-            SkillStyleScreenType.Technique.screenName -> {
-                pageIndex = 1
-            }
-
-            SkillStyleScreenType.Submission.screenName -> {
-                pageIndex = 2
-            }
-
-            else -> {
-                // ALL > 포지션, 기술, 서브미션 모두 선택 > 시작은 포지션부터
-                pageIndex = 0
-            }
-        }
-        setTabTitle()
+        viewModel.initScreenType(type)
     }
 
-    LaunchedEffect(pageIndex) {
-        pageIndex?.let { index ->
-            when (index) {
-                0 -> {
-                    // Position
-                    styleTabIndex = 0
-                    screenTitleRes = R.string.profile_my_style_position_title
-                    screenIndicatorItems = POSITION_INDICATOR_LIST
-                }
-
-                1 -> {
-                    // Technique
-                    styleTabIndex = 0
-                    screenTitleRes = R.string.profile_my_style_technique_title
-                    screenIndicatorItems = TECHNIQUE_INDICATOR_LIST
-                }
-
-                2 -> {
-                    // Submission
-                    styleTabIndex = 0
-                    screenTitleRes = R.string.profile_my_style_submission_title
-                    screenIndicatorItems = SUBMISSION_INDICATOR_LIST
-                }
+    LaunchedEffect(viewModel.pageIndex) {
+        viewModel.styleTabIndex = 0
+        when (viewModel.pageIndex) {
+            0 -> {
+                // Position
+                screenTitleRes = R.string.profile_my_style_position_title
+                screenIndicatorItems = POSITION_INDICATOR_LIST
             }
-            setTabTitle()
+
+            1 -> {
+                // Technique
+                screenTitleRes = R.string.profile_my_style_technique_title
+                screenIndicatorItems = TECHNIQUE_INDICATOR_LIST
+            }
+
+            2 -> {
+                // Submission
+                screenTitleRes = R.string.profile_my_style_submission_title
+                screenIndicatorItems = SUBMISSION_INDICATOR_LIST
+            }
         }
+        viewModel.setTabTitle()
     }
 
     LaunchedEffect(viewModel.profileUiState) {
         val uiState = viewModel.profileUiState
         when(uiState) {
             is UiState.Success -> {
-                onCompleteClick()
+//                onCompleteClick()
             }
             is UiState.Error -> {
 
@@ -451,21 +280,21 @@ fun ModifyMyStyleScreen(
                     SegmentedPositionTabBar(
                         modifier = Modifier.fillMaxWidth(),
                         tabs = listOf(
-                            StyleTabItem.Best(selectedItem = bestTabTitle?:"입력해주세요"),
-                            StyleTabItem.Favorite(selectedItem = favoriteTabTitle?:"입력해주세요"),
+                            StyleTabItem.Best(selectedItem = viewModel.bestTabTitle?:"입력해주세요"),
+                            StyleTabItem.Favorite(selectedItem = viewModel.favoriteTabTitle?:"입력해주세요"),
                         ),
-                        selectedIndex = styleTabIndex,
+                        selectedIndex = viewModel.styleTabIndex,
                         onTabSelected = { index ->
-                            styleTabIndex = index
-                            if (index == 1 && favoriteTabTitle == "입력해주세요")
-                                setTabTitle()
+                            viewModel.styleTabIndex = index
+                            if (index == 1 && viewModel.favoriteTabTitle == "입력해주세요")
+                                viewModel.setTabTitle()
                         }
                     )
                 }
 
                 item {
                     // Selected Card
-                    key(styleTabIndex, pageIndex) {
+                    key(viewModel.styleTabIndex, viewModel.pageIndex) {
                         DraggableFlipCard(
                             modifier = Modifier
                                 .height(targetHeightDp)
@@ -501,19 +330,19 @@ fun ModifyMyStyleScreen(
                             .fillMaxWidth()
                             .height(70.dp),
                         items = screenIndicatorItems,
-                        selectedIndex = when (pageIndex) {
+                        selectedIndex = when (viewModel.pageIndex) {
                             0 -> {
-                                if (styleTabIndex == 0) bestPositionIndex ?: 0 else favoritePositionIndex ?: 0
+                                if (viewModel.styleTabIndex == 0) viewModel.bestPositionIndex ?: 0 else viewModel.favoritePositionIndex ?: 0
                             }
                             1 -> {
-                                if (styleTabIndex == 0) bestTechniqueIndex ?: 0 else favoriteTechniqueIndex ?: 0
+                                if (viewModel.styleTabIndex == 0) viewModel.bestTechniqueIndex ?: 0 else viewModel.favoriteTechniqueIndex ?: 0
                             }
                             2 -> {
-                                if (styleTabIndex == 0) bestSubmissionIndex ?: 0 else favoriteSubmissionIndex ?: 0
+                                if (viewModel.styleTabIndex == 0) viewModel.bestSubmissionIndex ?: 0 else viewModel.favoriteSubmissionIndex ?: 0
                             }
                             else -> 0
                         },
-                        onTabSelected = onSelectedCardItem
+                        onTabSelected = { index -> viewModel.onAction(ModifyMyStyleAction.CardItemSelected(index)) }
                     )
                 }
 
@@ -552,14 +381,16 @@ fun ModifyMyStyleScreen(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = ripple(bounded = true),
                                 role = Role.Button,
-                                onClick = onHistoryBackClick
+                                onClick = {
+                                    viewModel.onAction(ModifyMyStyleAction.BackClicked(onBackClick))
+                                }
                             )
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    if (isTypeNeedSelectAll) {
+                    if (viewModel.screenType is SkillStyleScreenType.ALL) {
                         TintButton(
                             text = "나중에 하기",
-                            onClick = {}
+                            onClick = { viewModel.onAction(ModifyMyStyleAction.SkipClicked(onCompleteClick)) }
                         )
                     } else {
 
@@ -611,7 +442,7 @@ fun ModifyMyStyleScreen(
                             .fillMaxWidth()
                             .height(50.dp),
                         text = "Bottom Button",
-                        onClick = onBottomBtnClick
+                        onClick = { viewModel.onAction(ModifyMyStyleAction.BottomBtnClicked(onCompleteClick)) }
                     )
                 }
             }

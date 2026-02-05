@@ -19,7 +19,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,11 +35,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.kyu.jiu_jitsu.data.model.GENDER_LIST
+import com.kyu.jiu_jitsu.data.model.COMPETITION_RANK
 import com.kyu.jiu_jitsu.domain.yearsDescending
-import com.kyu.jiu_jitsu.profile.ProfileViewModel
 import com.kyu.jiu_jitsu.profile.R
-import com.kyu.jiu_jitsu.profile.model.COMPETITION_LIST
+import com.kyu.jiu_jitsu.profile.model.COMPETITION_RANK_LIST
+import com.kyu.jiu_jitsu.profile.viewmodel.ModifyCompetitionAction
+import com.kyu.jiu_jitsu.profile.viewmodel.ModifyCompetitionViewModel
 import com.kyu.jiu_jitsu.ui.components.button.PrimaryButton
 import com.kyu.jiu_jitsu.ui.components.picker.VerticalWheelPicker
 import com.kyu.jiu_jitsu.ui.components.textfield.TransparentOutlinedTextField
@@ -67,48 +67,17 @@ fun ModifyCompetitionScreen(
     onCompleteClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    val viewModel = hiltViewModel<ProfileViewModel>()
+    val viewModel = hiltViewModel<ModifyCompetitionViewModel>()
 
-    /** Screen Index **/
-    var screenIndex by remember { mutableStateOf<CompetitionScreenType>(CompetitionScreenType.TypeDate) }
     /** Selected Value **/
     var typeYearValueIndex by remember { mutableIntStateOf(0) }
     var typeMonthValueIndex by remember { mutableIntStateOf(0) }
     var typeTitleValue by remember { mutableStateOf("") }
-    var typeResultValueIndex by remember { mutableIntStateOf(0) }
+    var typeRankValueIndex by remember { mutableIntStateOf(0) }
     /** Date Picker List **/
-    var yearList: List<Int> by remember { mutableStateOf(listOf()) }
-    var monthList: List<Int> by remember { mutableStateOf(listOf()) }
-
-    // 상단 뒤로가기 클릭
-    val onBackArrowClick: () -> Unit = {
-        when(screenIndex) {
-            CompetitionScreenType.TypeDate -> {
-                onBackClick()
-            }
-            CompetitionScreenType.TypeTitle -> {
-                screenIndex = CompetitionScreenType.TypeDate
-            }
-            CompetitionScreenType.TypeResult -> {
-                screenIndex = CompetitionScreenType.TypeTitle
-            }
-        }
-    }
-
-    // 하단 버튼 클릭
-    val onBottomBtnClick: () -> Unit = {
-        when(screenIndex) {
-            CompetitionScreenType.TypeDate -> {
-                screenIndex = CompetitionScreenType.TypeTitle
-            }
-            CompetitionScreenType.TypeTitle -> {
-                screenIndex = CompetitionScreenType.TypeResult
-            }
-            CompetitionScreenType.TypeResult -> {
-                onCompleteClick()
-            }
-        }
-    }
+    val yearList = yearsDescending(20)
+    val monthList = (1..12).toList()
+    val rankList = COMPETITION_RANK_LIST
 
     Surface(
         modifier = modifier
@@ -138,7 +107,7 @@ fun ModifyCompetitionScreen(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = ripple(bounded = true),
                             role = Role.Button,
-                            onClick = onBackArrowClick
+                            onClick = { viewModel.onAction(ModifyCompetitionAction.BackClicked(onBackClick)) }
                         )
                 )
                 Text(
@@ -151,15 +120,20 @@ fun ModifyCompetitionScreen(
                 Spacer(modifier = Modifier.width(36.dp))
             }
             // 대회 정보 입력
-            when(screenIndex) {
+            when(viewModel.screenIndex) {
                 CompetitionScreenType.TypeDate -> {
                     TypeDateLayout(
                         selectedYearIndex = typeYearValueIndex,
                         selectedMonthIndex = typeMonthValueIndex,
+                        yearList = yearList,
+                        monthList = monthList,
                     ) { yearIndex, monthIndex ->
                         typeYearValueIndex = yearIndex
                         typeMonthValueIndex = monthIndex
-                        onBottomBtnClick()
+
+                        viewModel.selectedYear = yearList[yearIndex]
+                        viewModel.selectedMonth = monthList[monthIndex]
+                        viewModel.onAction(ModifyCompetitionAction.BottomBtnClicked())
                     }
                 }
                 CompetitionScreenType.TypeTitle -> {
@@ -167,15 +141,20 @@ fun ModifyCompetitionScreen(
                         inputTitle = typeTitleValue,
                     ) { title ->
                         typeTitleValue = title
-                        onBottomBtnClick()
+
+                        viewModel.selectedName = title
+                        viewModel.onAction(ModifyCompetitionAction.BottomBtnClicked())
                     }
                 }
                 CompetitionScreenType.TypeResult -> {
-                    TypeResultLayout(
-                        selectedResultIndex = typeResultValueIndex,
+                    TypeRankLayout(
+                        selectedRankIndex = typeRankValueIndex,
+                        resultList = rankList,
                     ) { resultIndex ->
-                        typeResultValueIndex = resultIndex
-                        onBottomBtnClick()
+                        typeRankValueIndex = resultIndex
+
+                        viewModel.selectedRank = rankList[resultIndex].name
+                        viewModel.onAction(ModifyCompetitionAction.BottomBtnClicked(onCompleteClick))
                     }
                 }
             }
@@ -193,13 +172,13 @@ fun ModifyCompetitionScreen(
 private fun TypeDateLayout(
     selectedYearIndex: Int = 0,
     selectedMonthIndex: Int = 0,
+    yearList: List<Int>,
+    monthList: List<Int>,
     onBottomBtnClick: (
         selectedYearIndex: Int,
         selectedMonthIndex: Int,
     ) -> Unit,
 ) {
-    val yearList = yearsDescending(20)
-    val monthList = (1..12).toList()
 
     var selectedYearIndex by remember { mutableIntStateOf(selectedYearIndex) }
     var selectedMonthIndex by remember { mutableIntStateOf(selectedMonthIndex) }
@@ -296,14 +275,14 @@ private fun TypeTitleLayout(
 }
 
 @Composable
-private fun TypeResultLayout(
-    selectedResultIndex: Int = 0,
+private fun TypeRankLayout(
+    selectedRankIndex: Int = 0,
+    resultList: List<COMPETITION_RANK>,
     onBottomBtnClick: (
-        selectedResultIndex: Int,
+        selectedRankIndex: Int,
     ) -> Unit,
 ) {
-    val resultList = COMPETITION_LIST
-    var selectedIndex by remember { mutableIntStateOf(selectedResultIndex) }
+    var selectedIndex by remember { mutableIntStateOf(selectedRankIndex) }
 
     Column(
         modifier = Modifier.fillMaxSize(),

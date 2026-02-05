@@ -158,7 +158,7 @@ fun AppNavHost(
                 modifier = modifier,
                 padding = padding,
                 academyName = args.academyName,
-                onCompleteClick = {
+                onCompleted = {
                     nav.previousBackStackEntry?.savedStateHandle?.set("isCompetitionUpdated", "AcademyName")
                     nav.popBackStack()
                 },

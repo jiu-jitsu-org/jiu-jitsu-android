@@ -36,7 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.profile.ProfileViewModel
+import com.kyu.jiu_jitsu.profile.viewmodel.ProfileViewModel
 import com.kyu.jiu_jitsu.profile.R
 import com.kyu.jiu_jitsu.ui.components.button.PrimaryCTAButton
 import com.kyu.jiu_jitsu.ui.components.textfield.TransparentOutlinedTextField
@@ -48,7 +48,7 @@ import com.kyu.jiu_jitsu.ui.theme.White
  * @param modifier Modifier
  * @param padding PaddingValues
  * @param academyName 도장 이름
- * @param onCompleteClick 완료
+ * @param onCompleted 완료
  * @param onBackClick 뒤로 가기
  */
 @Composable
@@ -56,7 +56,7 @@ fun ModifyAcademyScreen(
     modifier: Modifier,
     padding: PaddingValues,
     academyName: String = "",
-    onCompleteClick: () -> Unit,
+    onCompleted: () -> Unit,
     onBackClick: () -> Unit,
 ) {
     val viewModel = hiltViewModel<ProfileViewModel>()
@@ -73,7 +73,7 @@ fun ModifyAcademyScreen(
         val uiState = viewModel.profileUiState
         when(uiState) {
             is UiState.Success -> {
-                onCompleteClick()
+                onCompleted()
             }
             is UiState.Error -> {
 

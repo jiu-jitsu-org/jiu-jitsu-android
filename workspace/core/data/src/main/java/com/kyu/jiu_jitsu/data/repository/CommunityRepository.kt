@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface CommunityRepository{
 
-    suspend fun getCommunityProfile(): Flow<ApiResult<CommunityProfileResponse>>
+    fun getCommunityProfile(): Flow<ApiResult<CommunityProfileResponse>>
 
     suspend fun modifyCommunityProfile(
         body: UpdateCommunityProfileRequest

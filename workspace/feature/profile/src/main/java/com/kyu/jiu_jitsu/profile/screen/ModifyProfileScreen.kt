@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
@@ -44,23 +43,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.model.BELT_RANK
 import com.kyu.jiu_jitsu.data.model.CommunityProfileInfo
-import com.kyu.jiu_jitsu.profile.ProfileViewModel
+import com.kyu.jiu_jitsu.profile.viewmodel.ProfileViewModel
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightBottomSheet
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightLayout
-import com.kyu.jiu_jitsu.profile.components.CompetitionLayout
-import com.kyu.jiu_jitsu.profile.components.MySkillLayout
 import com.kyu.jiu_jitsu.ui.R
-import com.kyu.jiu_jitsu.ui.components.button.PressableTextButton
 import com.kyu.jiu_jitsu.ui.components.button.TintButton
-import com.kyu.jiu_jitsu.ui.routes.SkillStyleScreenType
-import com.kyu.jiu_jitsu.ui.theme.Blue300
-import com.kyu.jiu_jitsu.ui.theme.Blue500
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents
 import com.kyu.jiu_jitsu.ui.theme.CoolGray25
 import com.kyu.jiu_jitsu.ui.theme.CoolGray75
@@ -92,7 +83,7 @@ fun ModifyProfileScreen(
     var openBottomSheet by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        viewModel.initProfileData()
+//        viewModel.initProfileData()
     }
 
     LaunchedEffect(savedStateHandle) {

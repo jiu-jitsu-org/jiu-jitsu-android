@@ -45,12 +45,13 @@ fun CompetitionLayout(
                 style = MaterialTheme.typography.titleMedium,
                 color = CoolGray75
             )
-            if (isModifyMode) {
+            if (competitionItemList != null && competitionItemList.isNotEmpty()) {
                 PressableTextButton(
                     text = "add",
                     onClick = onAddCompetitionClickEvent
                 )
             }
+
         }
         Spacer(modifier = Modifier.height(10.dp))
         /** 출전한 대회 정보 */

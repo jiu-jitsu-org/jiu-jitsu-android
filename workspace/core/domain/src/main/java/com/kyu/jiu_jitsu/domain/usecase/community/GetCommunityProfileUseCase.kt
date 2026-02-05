@@ -14,7 +14,7 @@ import javax.inject.Inject
 class GetCommunityProfileUseCase @Inject constructor(
     private val communityRepository: CommunityRepository
 ) {
-    suspend operator fun invoke(): Flow<UiState<CommunityProfileInfo>> =
+    operator fun invoke(): Flow<UiState<CommunityProfileInfo>> =
         communityRepository.getCommunityProfile().map { res ->
             when(res) {
                 is ApiResult.Success -> {

@@ -177,6 +177,22 @@ sealed class COMPETITION_RANK(
         override val name: String = "GOLD",
         override val displayName: String = "금메달",
     ): COMPETITION_RANK(name, displayName)
+
+    data class SILVER(
+        override val name: String = "SILVER",
+        override val displayName: String = "은메달",
+    ): COMPETITION_RANK(name, displayName)
+
+    data class BRONZE(
+        override val name: String = "BRONZE",
+        override val displayName: String = "동메달",
+    ): COMPETITION_RANK(name, displayName)
+
+    data class PARTICIPATION(
+        override val name: String = "PARTICIPATION",
+        override val displayName: String = "참가",
+    ): COMPETITION_RANK(name, displayName)
+
 }
 
 fun String?.toBeltRank(): BELT_RANK? {
@@ -223,6 +239,7 @@ fun String?.toSubmission(): SUBMISSION? {
     returnValue = when (this) {
         "CHOKES" -> SUBMISSION.CHOKES()
         "ARM_LOCKS" -> SUBMISSION.ARM_LOCKS()
+        "LEG_LOCKS" -> SUBMISSION.LEG_LOCKS()
         else -> null
     }
     return returnValue
@@ -234,6 +251,8 @@ fun String?.toTechnique(): TECHNIQUE? {
     returnValue = when (this) {
         "SWEEPS" -> TECHNIQUE.SWEEPS()
         "GUARD_PASSES" -> TECHNIQUE.GUARD_PASSES()
+        "TAKE_DOWNS" -> TECHNIQUE.TAKE_DOWNS()
+        "ESCAPES" -> TECHNIQUE.ESCAPES()
         else -> null
     }
     return returnValue

@@ -3,9 +3,6 @@ package com.kyu.jiu_jitsu.profile.screen
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -15,14 +12,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -51,11 +45,13 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kyu.jiu_jitsu.data.api.common.UiState
 import com.kyu.jiu_jitsu.data.model.CommunityProfileInfo
 import com.kyu.jiu_jitsu.data.model.isShowModify
 import com.kyu.jiu_jitsu.data.model.singleton.ProfileSingleton
-import com.kyu.jiu_jitsu.profile.ProfileViewModel
+import com.kyu.jiu_jitsu.profile.viewmodel.ProfileAction
+import com.kyu.jiu_jitsu.profile.viewmodel.ProfileViewModel
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightBottomSheet
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightLayout
 import com.kyu.jiu_jitsu.profile.components.CompetitionLayout
@@ -92,6 +88,8 @@ fun ProfileScreen(
     onCompetitionClick: () -> Unit = {},
 ) {
     val viewModel = hiltViewModel<ProfileViewModel>()
+
+//    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     /** 프로필 UI BG Color */
     var profileBgColor by remember { mutableStateOf(ProfileSingleton.getBeltRank?.color() ?: ColorComponents.MyProfileHeader.Bg.Default) }
@@ -149,7 +147,7 @@ fun ProfileScreen(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.initProfileData()
+        viewModel.onAction(ProfileAction.FetchProfileData)
     }
 
     LaunchedEffect(savedStateHandle) {
