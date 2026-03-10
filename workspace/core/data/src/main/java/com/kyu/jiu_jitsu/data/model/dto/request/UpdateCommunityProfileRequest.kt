@@ -13,7 +13,7 @@ data class UpdateCommunityProfileRequest(
     val gender: String? = null,
     val weightKg: Double? = null,
     val academyName: String? = null,
-    val competitions: List<Competition>? = null,
+    val competitionInfoList: List<Competition>? = null,
     var bestSubmission: String? = null,
     var favoriteSubmission: String? = null,
     var bestTechnique: String? = null,

@@ -1,4 +1,4 @@
-package com.kyu.jiu_jitsu.domain.usecase.login
+package com.kyu.jiu_jitsu.domain.usecase.local
 
 import com.kyu.jiu_jitsu.data.datastore.PrefKeys
 import com.kyu.jiu_jitsu.data.datastore.SecurePreferences

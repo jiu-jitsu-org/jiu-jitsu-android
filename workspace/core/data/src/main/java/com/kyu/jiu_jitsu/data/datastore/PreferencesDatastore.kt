@@ -28,6 +28,12 @@ class SecurePreferences @Inject constructor (
     @ApplicationContext private val context: Context
 ) {
 
+    suspend fun clear() {
+        context.appPrefs.edit { prefs ->
+            prefs.clear()
+        }
+    }
+
     suspend fun setValueToEncrypt(
         key: Preferences.Key<String>,
         plainStr: String?,

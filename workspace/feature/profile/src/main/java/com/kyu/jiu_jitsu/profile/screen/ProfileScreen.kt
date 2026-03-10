@@ -46,16 +46,13 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.model.CommunityProfileInfo
 import com.kyu.jiu_jitsu.data.model.isShowModify
-import com.kyu.jiu_jitsu.data.model.singleton.ProfileSingleton
-import com.kyu.jiu_jitsu.profile.viewmodel.ProfileAction
 import com.kyu.jiu_jitsu.profile.viewmodel.ProfileViewModel
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightBottomSheet
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightLayout
 import com.kyu.jiu_jitsu.profile.components.CompetitionLayout
 import com.kyu.jiu_jitsu.profile.components.MySkillLayout
+import com.kyu.jiu_jitsu.profile.viewmodel.ProfileAction
 import com.kyu.jiu_jitsu.ui.R
 import com.kyu.jiu_jitsu.ui.components.button.PressableTextButton
 import com.kyu.jiu_jitsu.ui.components.button.TintButton
@@ -88,22 +85,15 @@ fun ProfileScreen(
     onCompetitionClick: () -> Unit = {},
 ) {
     val viewModel = hiltViewModel<ProfileViewModel>()
-
-//    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    /** Collect State **/
+    val loadingState by viewModel.loadingUiState.collectAsStateWithLifecycle()
+    val profileInfoState by viewModel.profileInfoUiState.collectAsStateWithLifecycle()
+    val errorState by viewModel.errorUiState.collectAsStateWithLifecycle()
 
     /** 프로필 UI BG Color */
-    var profileBgColor by remember { mutableStateOf(ProfileSingleton.getBeltRank?.color() ?: ColorComponents.MyProfileHeader.Bg.Default) }
-    /** 프로필 User Academy Name*/
-    var profileAcademyName by remember { mutableStateOf<String?>(ProfileSingleton.getAcademyName) }
-    /** 프로필 Uer Nickname */
-    var profileUserNickName by remember { mutableStateOf<String?>(ProfileSingleton.getNickName) }
-    /** 프로필 Uer ProfileImg */
-    var profileUserProfileImg by remember { mutableStateOf<String?>(ProfileSingleton.getProfileImage) }
-    /** 프로필 나의 주짓수 (특기, 포지션, 기술) */
-    var profileMyStyle by remember { mutableStateOf<CommunityProfileInfo?>(null) }
-
-    /** 수정버튼 노출 여부 */
-    var showModifyBtn by remember { mutableStateOf(ProfileSingleton.isShowModifyBtn) }
+    var profileBgColor by remember {
+        mutableStateOf(profileInfoState?.beltRank?.color() ?: ColorComponents.MyProfileHeader.Bg.Default)
+    }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var openBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -118,64 +108,19 @@ fun ProfileScreen(
         }
     }
 
-    /** Init UI */
-    val initProfileUi: (data: CommunityProfileInfo?) -> Unit = { data ->
-        data?.let {
-            /** NickName */
-            if (profileUserNickName != it.nickname) {
-                val newName = it.nickname.ifEmpty { viewModel.localNickname }
-                profileUserNickName = newName
-            }
-            /** Profile Image */
-            if (profileUserProfileImg != it.profileImageUrl) {
-                val newUrl = it.profileImageUrl?.ifEmpty { null }
-                profileUserProfileImg = newUrl
-            }
-            /** AcademyName */
-            if (profileAcademyName != it.academyName) {
-                val newName = it.academyName.ifEmpty { null }
-                profileAcademyName = newName
-            }
-            /** Profile Bg Color */
-            profileBgColor = it.beltRank?.color() ?: ColorComponents.MyProfileHeader.Bg.Default
-            if(profileMyStyle != it) {
-                profileMyStyle = it
-            }
-            /** Set Modify Btn */
-            showModifyBtn = it.isShowModify()
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.onAction(ProfileAction.FetchProfileData)
-    }
-
+    /** Navigation Backstack 대응
+     *  ex) 프로필 정보 등록 이후 Navigation popup > 정보 갱신 필요
+     **/
     LaunchedEffect(savedStateHandle) {
         savedStateHandle
             .getStateFlow<String?>("isCompetitionUpdated", null)
             .collect { isCompetitionUpdated ->
                 isCompetitionUpdated?.let {
                     if (it.isNotEmpty()) {
-                        initProfileUi(ProfileSingleton.profileInfo)
+                        viewModel.onAction(ProfileAction.FetchProfileData)
                     }
                 }
             }
-    }
-
-    LaunchedEffect(viewModel.profileUiState) {
-        val uiState = viewModel.profileUiState
-        when(uiState) {
-            is UiState.Success -> {
-                initProfileUi(uiState.result)
-            }
-            is UiState.Error -> {
-                profileUserNickName = viewModel.localNickname
-            }
-            is UiState.Loading -> {
-
-            }
-            else -> {}
-        }
     }
 
     Surface(
@@ -202,7 +147,7 @@ fun ProfileScreen(
                             .background(color = profileBgColor)
                     ) {
                         Spacer(modifier = Modifier.weight(1f))
-                        if (showModifyBtn) {
+                        if (profileInfoState?.isShowModify() ?: false) {
                             PressableTextButton(
                                 text = stringResource(R.string.common_modify),
                                 onClick = onModifyClick,
@@ -230,7 +175,8 @@ fun ProfileScreen(
                                 ),
                             contentAlignment = Alignment.Center,
                         ) {
-                            if (profileUserProfileImg == null) {
+                            if (profileInfoState?.profileImageUrl == null) {
+                                // TODO chan Profile Image Url
                                 Icon(
                                     modifier = Modifier.size(64.dp),
                                     painter = painterResource(R.drawable.ic_profile_default),
@@ -249,16 +195,16 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         /** 닉네임 */
                         Text(
-                            text = profileUserNickName ?: "",
+                            text = profileInfoState?.nickname ?: "",
                             style = MaterialTheme.typography.titleMedium,
                             color = ColorComponents.List.Setting.Background
                         )
                         Spacer(modifier = Modifier.height(15.dp))
                         /** 도장 정보 입력 / 도장 이름  */
-                        if ((profileAcademyName?:"").isEmpty()) {
+                        if ((profileInfoState?.academyName?:"").isEmpty()) {
                             TintButton(
                                 text = stringResource(com.kyu.jiu_jitsu.profile.R.string.profile_input_academy),
-                                onClick = { onAcademyClick(profileAcademyName ?: "") },
+                                onClick = { onAcademyClick(profileInfoState?.academyName ?: "") },
                             )
                         } else {
 //                        Text(
@@ -267,11 +213,11 @@ fun ProfileScreen(
 //                            color = CoolGray75,
 //                        )
                             TintButton(
-                                text = profileAcademyName ?: "",
+                                text = profileInfoState?.academyName ?: "",
                                 textStyle = MaterialTheme.typography.titleMedium,
                                 enableTextColor = CoolGray75,
                                 pressedTextColor = CoolGray75,
-                                onClick = { onAcademyClick(profileAcademyName ?: "") },
+                                onClick = { onAcademyClick(profileInfoState?.academyName ?: "") },
                             )
                         }
 
@@ -320,10 +266,10 @@ fun ProfileScreen(
                             color = ColorComponents.List.Setting.Background,
                         ) {
                             BeltRankAndWeightLayout(
-                                beltRank = profileMyStyle?.beltRank,
-                                beltStripe = profileMyStyle?.beltStripe,
-                                weightKg = profileMyStyle?.weightKg,
-                                isWeightHidden = profileMyStyle?.isWeightHidden ?: false,
+                                beltRank = profileInfoState?.beltRank,
+                                beltStripe = profileInfoState?.beltStripe,
+                                weightKg = profileInfoState?.weightKg,
+                                isWeightHidden = profileInfoState?.isWeightHidden ?: false,
                                 onSaveBeltWeightClick = { openBottomSheet = true },
                                 onSaveWeightHiddenClick = { isWeightHidden ->
                                     viewModel.changeBeltAndWeight(
@@ -340,10 +286,8 @@ fun ProfileScreen(
                 item {
                     Spacer(modifier = Modifier.height(10.dp))
                     MySkillLayout(
-                        info = profileMyStyle,
-                        onSaveMyStyleClick = {
-                            onMyStyleClick(SkillStyleScreenType.ALL.screenName)
-                        }
+                        info = profileInfoState,
+                        onSaveMyStyleClick = onMyStyleClick
                     )
                 }
                 /** 대회 정보 */

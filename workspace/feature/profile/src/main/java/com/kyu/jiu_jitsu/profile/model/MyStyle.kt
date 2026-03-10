@@ -13,6 +13,21 @@ val POSITION_LIST = listOf(
     POSITION.GUARD(),
 )
 
+fun POSITION.getIndex(): Int {
+    var returnValue = 0
+
+    run loop@ {
+        POSITION_LIST.forEachIndexed { index, position ->
+            if (this.name == position.name) {
+                returnValue = index
+                return@loop
+            }
+        }
+    }
+
+    return returnValue
+}
+
 val POSITION_INDICATOR_LIST = listOf(
     StyleCardIndicator.POSITION_TOP(),
     StyleCardIndicator.POSITION_GUARD(),
@@ -24,6 +39,21 @@ val TECHNIQUE_LIST = listOf(
     TECHNIQUE.TAKE_DOWNS(),
     TECHNIQUE.ESCAPES(),
 )
+
+fun TECHNIQUE.getIndex(): Int {
+    var returnValue = 0
+
+    run loop@ {
+        TECHNIQUE_LIST.forEachIndexed { index, position ->
+            if (this.name == position.name) {
+                returnValue = index
+                return@loop
+            }
+        }
+    }
+
+    return returnValue
+}
 
 val TECHNIQUE_INDICATOR_LIST = listOf(
     StyleCardIndicator.TECHNIQUE_SWEEPS(),
@@ -37,6 +67,21 @@ val SUBMISSION_LIST = listOf(
     SUBMISSION.ARM_LOCKS(),
     SUBMISSION.LEG_LOCKS(),
 )
+
+fun SUBMISSION.getIndex(): Int {
+    var returnValue = 0
+
+    run loop@ {
+        SUBMISSION_LIST.forEachIndexed { index, position ->
+            if (this.name == position.name) {
+                returnValue = index
+                return@loop
+            }
+        }
+    }
+
+    return returnValue
+}
 
 val SUBMISSION_INDICATOR_LIST = listOf(
     StyleCardIndicator.SUBMISSION_CHOKES(),

@@ -8,9 +8,10 @@ import com.kyu.jiu_jitsu.data.api.common.UiState
 import com.kyu.jiu_jitsu.data.model.SplashModel
 import com.kyu.jiu_jitsu.data.model.UserProfileInfo
 import com.kyu.jiu_jitsu.domain.usecase.GetBootStrapInfoUseCase
+import com.kyu.jiu_jitsu.domain.usecase.local.ClearLocalDataUseCase
 import com.kyu.jiu_jitsu.domain.usecase.login.CheckAutoLoginUseCase
 import com.kyu.jiu_jitsu.domain.usecase.user.GetUserProfileUseCase
-import com.kyu.jiu_jitsu.domain.usecase.user.SaveLocalUserInfoUseCase
+import com.kyu.jiu_jitsu.domain.usecase.local.SaveLocalUserInfoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -22,10 +23,15 @@ class SplashViewModel @Inject constructor(
     private val checkAutoLoginUseCase: CheckAutoLoginUseCase,
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val saveLocalUserInfoUseCase: SaveLocalUserInfoUseCase,
+    private val clearLocalDataUseCase: ClearLocalDataUseCase,
 ) : ViewModel() {
 
     var splashUiState by mutableStateOf<UiState<SplashModel>>(UiState.Idle)
     var autoLoginState by mutableStateOf<UiState<UserProfileInfo?>>(UiState.Idle)
+
+    init {
+
+    }
 
     // BootStrap + Check Auto Login (Check Local Token)
     suspend fun startFirstLogic() {
@@ -66,6 +72,7 @@ class SplashViewModel @Inject constructor(
                 }
                 is UiState.Error -> {
                     // TODO chan refresh token
+                    // TODO chan 로그아웃 진행 시 로컬 데이터 비우기
                     if (uiState.code != null) {
                         when(uiState.code) {
                             500 -> autoLoginState = UiState.Error(code = uiState.code, message = uiState.message, retryable =  false)

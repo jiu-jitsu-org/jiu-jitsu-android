@@ -3,8 +3,6 @@ package com.kyu.jiu_jitsu.nickname.model
 sealed interface NickNameState {
     /** 닉네임 입력 상태 - 기본 */
     data object Idle : NickNameState
-    /** Loading */
-    data object Loading: NickNameState
     /** 닉네임 입력 상태 - 유효성 검사 실패 */
     data object ValidationError : NickNameState
     /** 닉네임 입력 상태 - 유효성 검사 성공 */

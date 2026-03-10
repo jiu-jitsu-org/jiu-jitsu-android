@@ -15,14 +15,12 @@ import com.kyu.jiu_jitsu.data.model.dto.request.UpdateCommunityProfileRequest
 import com.kyu.jiu_jitsu.data.model.singleton.ProfileSingleton
 import com.kyu.jiu_jitsu.domain.usecase.community.GetCommunityProfileUseCase
 import com.kyu.jiu_jitsu.domain.usecase.community.UpdateCommunityProfileUseCase
-import com.kyu.jiu_jitsu.domain.usecase.user.GetLocalNickNameUseCase
+import com.kyu.jiu_jitsu.domain.usecase.local.GetLocalNickNameUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -40,46 +38,60 @@ class ProfileViewModel @Inject constructor(
     var profileUiState by mutableStateOf<UiState<CommunityProfileInfo>>(UiState.Idle)
     var localNickname by mutableStateOf<String?>(null)
 
+    private var _errorUiState = MutableStateFlow<String?>(null)
+    var errorUiState = _errorUiState.asStateFlow()
+
+    private var _loadingUiState = MutableStateFlow(false)
+    var loadingUiState = _loadingUiState.asStateFlow()
+
+    private var _profileInfoUiState = MutableStateFlow<CommunityProfileInfo?>(null)
+    var profileInfoUiState = _profileInfoUiState.asStateFlow()
+
+    init {
+        initProfileData()
+    }
+
     fun onAction(action: ProfileAction) {
         when (action) {
             ProfileAction.FetchProfileData -> { initProfileData() }
         }
     }
 
-//    val uiState: StateFlow<UiState<CommunityProfileInfo>> =
-//        getCommunityProfile().stateIn(
-//            scope = viewModelScope,
-//            started = SharingStarted.WhileSubscribed(5000),
-//            initialValue = UiState.Loading
-//        )
-
     private fun initProfileData() {
         viewModelScope.launch {
             profileUiState = UiState.Loading
-            combine(
-                getLocalNickNameUseCase(),
-                getCommunityProfile()
-            ) { nickNameState, uiState ->
-                localNickname = nickNameState
+//            combine(
+//                getLocalNickNameUseCase(),
+//                getCommunityProfile()
+//            ) { nickNameState, uiState ->
+//                localNickname = nickNameState
+//
+//                when(uiState) {
+//                    is UiState.Success -> {
+//                        ProfileSingleton.profileInfo = uiState.result
+//                        profileUiState = UiState.Success(uiState.result)
+//                    }
+//                    is UiState.Error -> {
+//                        _errorUiState.value = uiState.message
+//                    }
+//                    else -> {}
+//                }
+//            }.collect()
 
+            getCommunityProfile().onStart {
+                _loadingUiState.value = true
+                _errorUiState.value = null
+            }.collectLatest { uiState ->
+                _loadingUiState.value = false
                 when(uiState) {
                     is UiState.Success -> {
                         ProfileSingleton.profileInfo = uiState.result
-                        profileUiState = UiState.Success(uiState.result)
+                        _profileInfoUiState.value = uiState.result
                     }
-                    is UiState.Error -> profileUiState = UiState.Error(message = uiState.message, retryable =  false)
+                    is UiState.Error -> _errorUiState.value = uiState.message
                     else -> {}
                 }
-            }.collectLatest { it ->
-
             }
-//            getCommunityProfile().collectLatest { uiState ->
-//                when(uiState) {
-//                    is UiState.Success -> profileUiState =  UiState.Success(uiState.result)
-//                    is UiState.Error -> profileUiState = UiState.Error(message = uiState.message, retryable =  false)
-//                    else -> {}
-//                }
-//            }
         }
 
     }
@@ -120,13 +132,17 @@ class ProfileViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             profileUiState = UiState.Loading
-            updateCommunityProfileUseCase(requestData).collectLatest { uiState ->
+            updateCommunityProfileUseCase(requestData).onStart {
+                _loadingUiState.value = true
+                _errorUiState.value = null
+            }.collectLatest { uiState ->
+                _loadingUiState.value = false
                 when(uiState) {
                     is UiState.Success -> {
                         ProfileSingleton.profileInfo = uiState.result
-                        profileUiState = UiState.Success(uiState.result)
+                        _profileInfoUiState.value = uiState.result
                     }
-                    is UiState.Error -> profileUiState = UiState.Error(message = uiState.message, retryable =  false)
+                    is UiState.Error -> _errorUiState.value = uiState.message
                     else -> {}
                 }
             }

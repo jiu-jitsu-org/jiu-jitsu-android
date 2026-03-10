@@ -15,11 +15,9 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.user.UserApiClient
 import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.model.dto.response.SnsLoginResponse
 import com.kyu.jiu_jitsu.data.module.NetworkModule.setUserToken
-import com.kyu.jiu_jitsu.data.utils.NetworkConfig
 import com.kyu.jiu_jitsu.domain.usecase.login.GetSnsLoginUseCase
-import com.kyu.jiu_jitsu.domain.usecase.user.SaveLocalUserInfoUseCase
+import com.kyu.jiu_jitsu.domain.usecase.local.SaveLocalUserInfoUseCase
 import com.kyu.jiu_jitsu.domain.usecase.user.SignupUseCase
 import com.kyu.jiu_jitsu.login.model.LoginType
 import com.kyu.jiu_jitsu.login.model.SnsLoginSucceedType

@@ -78,7 +78,7 @@ class ModifyCompetitionViewModel @Inject constructor(
 
                     val requestData = UpdateCommunityProfileRequest(
                         profileRequestType = PROFILE_REQUEST_TYPE.COMPETITION().name,
-                        competitions = listOf(
+                        competitionInfoList = listOf(
                             Competition(
                                 competitionYear = selectedYear,
                                 competitionMonth = selectedMonth,

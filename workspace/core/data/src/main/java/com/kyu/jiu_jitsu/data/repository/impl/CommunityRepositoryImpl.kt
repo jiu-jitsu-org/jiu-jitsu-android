@@ -17,7 +17,7 @@ class CommunityRepositoryImpl @Inject constructor(
     private val communityService: CommunityService
 ): CommunityRepository {
 
-    override suspend fun getCommunityProfile(): Flow<ApiResult<CommunityProfileResponse>> = flow {
+    override fun getCommunityProfile(): Flow<ApiResult<CommunityProfileResponse>> = flow {
         emit(
             safeApiCall {
                 communityService.reqCommunityProfile()

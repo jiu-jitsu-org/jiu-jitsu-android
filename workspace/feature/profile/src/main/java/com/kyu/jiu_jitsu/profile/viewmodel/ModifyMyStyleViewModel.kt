@@ -15,6 +15,7 @@ import com.kyu.jiu_jitsu.domain.usecase.community.UpdateCommunityProfileUseCase
 import com.kyu.jiu_jitsu.profile.model.POSITION_LIST
 import com.kyu.jiu_jitsu.profile.model.SUBMISSION_LIST
 import com.kyu.jiu_jitsu.profile.model.TECHNIQUE_LIST
+import com.kyu.jiu_jitsu.profile.model.getIndex
 import com.kyu.jiu_jitsu.ui.routes.SkillStyleScreenType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -78,16 +79,25 @@ class ModifyMyStyleViewModel @Inject constructor(
                 SkillStyleScreenType.Position.screenName -> {
                     pageIndex = 0
                     screenType = SkillStyleScreenType.Position
+
+                    bestPositionIndex = ProfileSingleton.profileInfo?.bestPosition?.getIndex()
+                    favoritePositionIndex = ProfileSingleton.profileInfo?.favoritePosition?.getIndex()
                 }
 
                 SkillStyleScreenType.Technique.screenName -> {
                     pageIndex = 1
                     screenType = SkillStyleScreenType.Technique
+
+                    bestTechniqueIndex = ProfileSingleton.profileInfo?.bestTechnique?.getIndex()
+                    favoriteTechniqueIndex = ProfileSingleton.profileInfo?.favoriteTechnique?.getIndex()
                 }
 
                 SkillStyleScreenType.Submission.screenName -> {
                     pageIndex = 2
                     screenType = SkillStyleScreenType.Submission
+
+                    bestSubmissionIndex = ProfileSingleton.profileInfo?.bestSubmission?.getIndex()
+                    favoriteSubmissionIndex = ProfileSingleton.profileInfo?.favoriteSubmission?.getIndex()
                 }
 
                 else -> {
@@ -187,17 +197,24 @@ class ModifyMyStyleViewModel @Inject constructor(
     private fun changeUiIndex(completeClick: () -> Unit) {
         viewModelScope.launch {
             if (screenType == SkillStyleScreenType.ALL) {
-
-            }
-            if (styleTabIndex == 1) {
-                // 스타일 인덱스 마지막 값 >> 페이지 인덱스 변경
-                pageIndex++
+                if (styleTabIndex == 1) {
+                    // 스타일 인덱스 마지막 값(최애 탭) >> 페이지 인덱스 변경
+                    pageIndex++
+                } else {
+                    if (pageIndex == 2) {
+                        // 페이지 인덱스 마지막
+                        completeClick()
+                    } else {
+                        // 스타일 인덱스(특기->최애) 변경
+                        styleTabIndex++
+                    }
+                }
             } else {
-                if (pageIndex == 2) {
-                    // 페이지 인덱스 마지막
+                if (styleTabIndex == 1) {
+                    // 스타일 인덱스 마지막 값(최애 탭) >> 수정 하기
                     completeClick()
                 } else {
-                    // 스타일 인덱스 변경
+                    // 스타일 인덱스(특기->최애) 변경
                     styleTabIndex++
                 }
             }
