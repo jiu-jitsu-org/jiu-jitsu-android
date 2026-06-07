@@ -1,5 +1,6 @@
 package com.kyu.jiu_jitsu.data.api
 
+import com.kyu.jiu_jitsu.data.model.dto.request.AppInfoRequest
 import com.kyu.jiu_jitsu.data.model.dto.request.SignupRequest
 import com.kyu.jiu_jitsu.data.model.dto.request.UpdateProfileRequest
 import com.kyu.jiu_jitsu.data.model.dto.response.CheckNicknameResponse
@@ -35,4 +36,9 @@ interface UserService {
         @Query("nickname") nickname: String
     ): CheckNicknameResponse
 
+    // APP INFO
+    @POST(NetworkConfig.User.USER_APP_INFO)
+    suspend fun appInfo(
+        @Body appInfoRequest: AppInfoRequest
+    ): Boolean
 }

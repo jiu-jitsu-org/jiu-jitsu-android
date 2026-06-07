@@ -19,6 +19,7 @@ object NetworkConfig {
     object User {
         const val USER = "api/user"
         const val CHECK_NICKNAME = "api/user/check/nickname"
+        const val USER_APP_INFO = "api/user/appInfo"
     }
 
     object UserController {

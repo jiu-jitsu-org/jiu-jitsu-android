@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.jjs.android.compose.application)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.secrets)
+    alias(libs.plugins.gms)
 }
 
 val properties = Properties()
@@ -65,6 +66,9 @@ dependencies {
     implementation(libs.androidx.compose.navigation)
     implementation(libs.androidx.compose.material.iconsExtended)
     implementation(libs.androidx.hilt.navigation.compose)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     implementation(libs.kakao.user)
 

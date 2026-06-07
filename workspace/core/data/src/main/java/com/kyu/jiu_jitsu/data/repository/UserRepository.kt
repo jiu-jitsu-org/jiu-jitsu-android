@@ -25,4 +25,10 @@ interface UserRepository {
         nickname: String,
     ): Flow<ApiResult<CheckNicknameResponse>>
 
+    suspend fun appInfo(
+        fcmToken: String,
+        deviceId: String,
+        osVersion: String
+    ): Flow<ApiResult<Boolean>>
+
 }

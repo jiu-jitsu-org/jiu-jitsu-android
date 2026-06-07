@@ -3,6 +3,7 @@ package com.kyu.jiu_jitsu.data.repository.impl
 import com.kyu.jiu_jitsu.data.api.UserService
 import com.kyu.jiu_jitsu.data.api.common.ApiResult
 import com.kyu.jiu_jitsu.data.api.common.safeApiCall
+import com.kyu.jiu_jitsu.data.model.dto.request.AppInfoRequest
 import com.kyu.jiu_jitsu.data.model.dto.request.SignupRequest
 import com.kyu.jiu_jitsu.data.model.dto.request.UpdateProfileRequest
 import com.kyu.jiu_jitsu.data.model.dto.response.CheckNicknameResponse
@@ -68,5 +69,23 @@ class UserRepositoryImpl @Inject constructor(
             }
         )
     }.flowOn(Dispatchers.IO)
+
+    override suspend fun appInfo(
+        fcmToken: String,
+        deviceId: String,
+        osVersion: String
+    ): Flow<ApiResult<Boolean>> = flow {
+        emit(
+            safeApiCall {
+                userService.appInfo(
+                    AppInfoRequest(
+                        fcmToken = fcmToken,
+                        deviceId = deviceId,
+                        osVersion = osVersion
+                    )
+                )
+            }
+        )
+    }
 
 }
