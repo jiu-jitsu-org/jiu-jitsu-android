@@ -5,11 +5,11 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class UserProfileResponse(
-    val success: Boolean?,
-    val code: String?,
-    val message: String?,
-    val data: UserProfileResponseData?,
-)
+    override val success: Boolean?,
+    override val code: String?,
+    override val message: String?,
+    override val data: UserProfileResponseData?,
+) : ApiResponse<UserProfileResponseData>
 
 @JsonClass(generateAdapter = true)
 data class UserProfileResponseData (

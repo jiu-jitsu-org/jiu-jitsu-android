@@ -34,7 +34,6 @@ import com.kyu.jiu_jitsu.domain.combineToDouble
 import com.kyu.jiu_jitsu.ui.R
 import com.kyu.jiu_jitsu.ui.components.button.PrimaryButton
 import com.kyu.jiu_jitsu.ui.components.picker.VerticalWheelPicker
-import com.kyu.jiu_jitsu.ui.components.picker.WheelPicker
 import com.kyu.jiu_jitsu.ui.components.toggle.CommonToggleButton
 import com.kyu.jiu_jitsu.ui.theme.Blue500
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents
@@ -69,7 +68,7 @@ fun BeltRankAndWeightBottomSheet(
             onIntChange = { weightInt = it },
             decValue = weightDec,
             onDecChange = { weightDec = it },
-            onGenderChange = { selectedIndex -> gender = GENDER_LIST[selectedIndex] },
+            onGenderChange = { selectedGender -> gender = selectedGender },
             onWeightHiddenChange = { isHidden -> isWeightHidden = isHidden },
             onBottomBtnClick = {
                 onFinished(beltRank, beltStripe, gender, combineToDouble(weightInt, weightDec), isWeightHidden)
@@ -77,8 +76,8 @@ fun BeltRankAndWeightBottomSheet(
         )
     } else {
         InputBeltRank(
-            onRankChange = { selectedIndex -> beltRank = BELT_RANK_LIST[selectedIndex] },
-            onStripeChange = { selectedIndex -> beltStripe = BELT_STRIPE_LIST[selectedIndex] },
+            onRankChange = { selectedRank -> beltRank = selectedRank },
+            onStripeChange = { selectedStripe -> beltStripe = selectedStripe },
             onBottomBtnClick = { isStepOneFinished = true }
         )
     }
@@ -87,8 +86,8 @@ fun BeltRankAndWeightBottomSheet(
 /** 벨트 정보 입력 */
 @Composable
 private fun InputBeltRank(
-    onRankChange: (selectedIndex: Int) -> Unit = {},
-    onStripeChange: (selectedIndex: Int) -> Unit = {},
+    onRankChange: (BELT_RANK) -> Unit = {},
+    onStripeChange: (BELT_STRIPE) -> Unit = {},
     onBottomBtnClick: () -> Unit = {},
 ) {
     Column(
@@ -117,8 +116,8 @@ private fun InputBeltRank(
             onRankChange = onRankChange,
             stripeValue = 0,
             onStripeChange = onStripeChange,
-            beltRankList = BELT_RANK_LIST.map { item -> item.displayName },
-            beltStripeList = BELT_STRIPE_LIST.map { item -> item.displayName},
+            beltRankList = BELT_RANK_LIST,
+            beltStripeList = BELT_STRIPE_LIST,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -139,7 +138,7 @@ private fun InputWeight(
     onIntChange: (Int) -> Unit,
     decValue: Int,
     onDecChange: (Int) -> Unit,
-    onGenderChange: (Int) -> Unit,
+    onGenderChange: (GENDER) -> Unit,
     onWeightHiddenChange: (Boolean) -> Unit,
     onBottomBtnClick: () -> Unit = {},
 ) {
@@ -209,11 +208,11 @@ private fun InputWeight(
 @Composable
 private fun BeltRankWheel(
     rankValue: Int,
-    onRankChange: (Int) -> Unit,
+    onRankChange: (BELT_RANK) -> Unit,
     stripeValue: Int,
-    onStripeChange: (Int) -> Unit,
-    beltRankList: List<String>,
-    beltStripeList: List<String>,
+    onStripeChange: (BELT_STRIPE) -> Unit,
+    beltRankList: List<BELT_RANK>,
+    beltStripeList: List<BELT_STRIPE>,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().wrapContentHeight(),
@@ -224,18 +223,20 @@ private fun BeltRankWheel(
         VerticalWheelPicker(
             items = beltRankList,
             initialIndex = rankValue,
-            onSelected = { i, value -> onRankChange(i) },
+            onSelected = { _, rank -> onRankChange(rank) },
             itemHeight = 44.dp,
-            itemWidth  = 86.dp
+            itemWidth  = 86.dp,
+            itemText = { rank -> rank.displayName },
         )
         Spacer(modifier = Modifier.width(8.dp))
         // Belt Stripe
         VerticalWheelPicker(
             items = beltStripeList,
             initialIndex = stripeValue,
-            onSelected = { i, value -> onStripeChange(i) },
+            onSelected = { _, stripe -> onStripeChange(stripe) },
             itemHeight = 44.dp,
-            itemWidth  = 86.dp
+            itemWidth  = 86.dp,
+            itemText = { stripe -> stripe.displayName },
         )
     }
 }
@@ -246,27 +247,30 @@ private fun WeightWheel(
     onIntChange: (Int) -> Unit,
     decValue: Int,
     onDecChange: (Int) -> Unit,
-    onGenderChange: (Int) -> Unit,
+    onGenderChange: (GENDER) -> Unit,
     intRange: IntRange = 40..150,
     decRange: IntRange = 0..9,
 ) {
     val unitTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+    val intList = intRange.toList()
+    val decList = decRange.toList()
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         // 성별 휠
         VerticalWheelPicker(
-            items = GENDER_LIST.map { it.displayName },
+            items = GENDER_LIST,
             initialIndex = 0,
-            onSelected = { i, value -> onGenderChange(i) },
+            onSelected = { _, gender -> onGenderChange(gender) },
             itemHeight = 44.dp,
             itemWidth  = 86.dp,
+            itemText = { gender -> gender.displayName },
         )
         Spacer(modifier = Modifier.width(8.dp))
         // 정수 휠
         VerticalWheelPicker(
-            items = intRange.map { it.toString() },
-            initialIndex = intValue,
-            onSelected = { i, value -> onIntChange(value.toInt()) },
+            items = intList,
+            initialIndex = (intValue - intRange.first).coerceIn(0, intList.lastIndex),
+            onSelected = { _, value -> onIntChange(value) },
             itemHeight = 44.dp,
             itemWidth  = 86.dp
         )
@@ -278,9 +282,9 @@ private fun WeightWheel(
         )
         // 소수 휠
         VerticalWheelPicker(
-            items = decRange.map { it.toString() },
-            initialIndex = decValue,
-            onSelected = { i, value -> onDecChange(value.toInt()) },
+            items = decList,
+            initialIndex = (decValue - decRange.first).coerceIn(0, decList.lastIndex),
+            onSelected = { _, value -> onDecChange(value) },
             itemHeight = 44.dp,
             itemWidth  = 86.dp
         )
