@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.Copy
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Properties
 
 plugins {
@@ -10,6 +13,39 @@ plugins {
 
 val properties = Properties()
 properties.load(project.rootProject.file("local.properties").inputStream())
+
+val ossOutputTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS")
+val ossOutputDirectory = rootProject.layout.projectDirectory.dir("outputs")
+
+fun ossArtifactFileName(buildType: String, extension: String): String =
+    "oss_project_${buildType}_(${LocalDateTime.now().format(ossOutputTimestampFormatter)}).$extension"
+
+fun registerOssArtifactCopyTask(
+    copyTaskName: String,
+    buildTaskName: String,
+    buildType: String,
+    artifactDirectory: String,
+    extension: String,
+) {
+    val sourceDirectory = layout.buildDirectory.dir(artifactDirectory)
+    val copyTask = tasks.register<Copy>(copyTaskName) {
+        from(sourceDirectory) {
+            include("*.$extension")
+        }
+        into(ossOutputDirectory)
+        rename { ossArtifactFileName(buildType, extension) }
+        outputs.upToDateWhen { false }
+        onlyIf {
+            sourceDirectory.get().asFile
+                .listFiles { file -> file.isFile && file.extension == extension }
+                ?.isNotEmpty() == true
+        }
+    }
+
+    tasks.named(buildTaskName).configure {
+        finalizedBy(copyTask)
+    }
+}
 
 android {
     namespace = "com.kyu.jiu_jitsu"
@@ -82,4 +118,38 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+afterEvaluate {
+    registerOssArtifactCopyTask(
+        copyTaskName = "copyDebugApkToOssOutputs",
+        buildTaskName = "assembleDebug",
+        buildType = "debug",
+        artifactDirectory = "outputs/apk/debug",
+        extension = "apk",
+    )
+
+    registerOssArtifactCopyTask(
+        copyTaskName = "copyReleaseApkToOssOutputs",
+        buildTaskName = "assembleRelease",
+        buildType = "release",
+        artifactDirectory = "outputs/apk/release",
+        extension = "apk",
+    )
+
+    registerOssArtifactCopyTask(
+        copyTaskName = "copyDebugAabToOssOutputs",
+        buildTaskName = "bundleDebug",
+        buildType = "debug",
+        artifactDirectory = "outputs/bundle/debug",
+        extension = "aab",
+    )
+
+    registerOssArtifactCopyTask(
+        copyTaskName = "copyReleaseAabToOssOutputs",
+        buildTaskName = "bundleRelease",
+        buildType = "release",
+        artifactDirectory = "outputs/bundle/release",
+        extension = "aab",
+    )
 }
