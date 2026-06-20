@@ -56,6 +56,7 @@ import com.kyu.jiu_jitsu.profile.viewmodel.ProfileAction
 import com.kyu.jiu_jitsu.ui.R
 import com.kyu.jiu_jitsu.ui.components.button.PressableTextButton
 import com.kyu.jiu_jitsu.ui.components.button.TintButton
+import com.kyu.jiu_jitsu.ui.insets.StatusBarBackground
 import com.kyu.jiu_jitsu.ui.routes.SkillStyleScreenType
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents
 import com.kyu.jiu_jitsu.ui.theme.CoolGray25
@@ -91,9 +92,7 @@ fun ProfileScreen(
     val errorState by viewModel.errorUiState.collectAsStateWithLifecycle()
 
     /** 프로필 UI BG Color */
-    var profileBgColor by remember {
-        mutableStateOf(profileInfoState?.beltRank?.color() ?: ColorComponents.MyProfileHeader.Bg.Default)
-    }
+    val profileBgColor = profileInfoState?.beltRank?.color() ?: ColorComponents.MyProfileHeader.Bg.Default
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var openBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -302,18 +301,12 @@ fun ProfileScreen(
 
             /** 상단 흰 상태바 (스크롤 최상단이 아닐 경우에만 노출) */
             AnimatedVisibility(
+                modifier = Modifier.align(Alignment.TopCenter),
                 visible = !isFirstItemFullyVisible,
                 enter = fadeIn() + slideInVertically(),
                 exit = fadeOut() + slideOutVertically()
             ) {
-                // TODO chan 상단 상태바 높이를 동적으로 구해볼 수 있을까?
-                Spacer(
-                    modifier = Modifier
-                        .height(55.dp)
-                        .fillMaxWidth()
-                        .background(color = White)
-                        .align(Alignment.TopCenter)
-                )
+                StatusBarBackground(color = White)
             }
         }
 
