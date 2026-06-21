@@ -55,8 +55,8 @@ fun SegmentedPositionTabBar(
 ) {
     BoxWithConstraints(
         modifier = modifier
-            .height(80.dp)
-            .clip(RoundedCornerShape(40.dp))
+            .height(68.dp)
+            .clip(RoundedCornerShape(34.dp))
             .background(containerColor)
     ) {
         val tabCount = tabs.size
@@ -77,8 +77,8 @@ fun SegmentedPositionTabBar(
                 .fillMaxHeight()
                 .width(tabWidth)
                 .offset(x = indicatorOffset)
-                .padding(6.dp)
-                .clip(RoundedCornerShape(36.dp))
+                .padding(5.dp)
+                .clip(RoundedCornerShape(30.dp))
                 .background(indicatorColor)
         )
 

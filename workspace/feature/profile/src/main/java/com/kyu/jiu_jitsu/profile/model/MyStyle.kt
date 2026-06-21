@@ -7,6 +7,7 @@ import com.kyu.jiu_jitsu.data.model.SUBMISSION
 import com.kyu.jiu_jitsu.data.model.TECHNIQUE
 import com.kyu.jiu_jitsu.ui.theme.Blue500
 import com.kyu.jiu_jitsu.ui.theme.CoolGray25
+import com.kyu.jiu_jitsu.ui.theme.CoolGray200
 
 val POSITION_LIST = listOf(
     POSITION.TOP(),
@@ -114,22 +115,22 @@ sealed class StyleCardIndicator(
     // Technique Card Indicator Info
     data class TECHNIQUE_SWEEPS(
         override val title: String = "SWEEPS",
-        override val color: Color = Blue500,
+        override val color: Color = Color(0xFFF2C4E8),
     ): StyleCardIndicator(title = title, color = color)
 
     data class TECHNIQUE_GUARD_PASSES(
         override val title: String = "GUARD_PASSES",
-        override val color: Color = CoolGray25,
+        override val color: Color = CoolGray200,
     ): StyleCardIndicator(title = title, color = color)
 
     data class TECHNIQUE_TAKE_DOWNS(
         override val title: String = "TAKE_DOWNS",
-        override val color: Color = CoolGray25,
+        override val color: Color = Color(0xFFB1DFE6),
     ): StyleCardIndicator(title = title, color = color)
 
     data class TECHNIQUE_ESCAPES(
         override val title: String = "ESCAPES",
-        override val color: Color = CoolGray25,
+        override val color: Color = Color(0xFFFF7A1A),
     ): StyleCardIndicator(title = title, color = color)
 
     // Submission Card Indicator Info

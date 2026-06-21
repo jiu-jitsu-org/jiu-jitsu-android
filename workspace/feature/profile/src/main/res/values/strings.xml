@@ -20,6 +20,7 @@
     <string name="profile_my_style_position_title">포지션 설정</string>
     <string name="profile_my_style_technique_title">기술 설정</string>
     <string name="profile_my_style_submission_title">서브미션 설정</string>
+    <string name="profile_my_style_complete">수정 완료</string>
 
     <string name="profile_competition_input_hint">출전한 대회 정보를 입력해주세요</string>
 

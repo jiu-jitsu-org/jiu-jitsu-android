@@ -1,10 +1,10 @@
 package com.kyu.jiu_jitsu.profile.screen
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,7 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -32,9 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -61,10 +62,8 @@ import com.kyu.jiu_jitsu.ui.components.button.PrimaryButton
 import com.kyu.jiu_jitsu.ui.components.button.TintButton
 import com.kyu.jiu_jitsu.ui.components.card.DraggableFlipCard
 import com.kyu.jiu_jitsu.ui.routes.SkillStyleScreenType
-import com.kyu.jiu_jitsu.ui.theme.Blue500
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents
-import com.kyu.jiu_jitsu.ui.theme.TrueWhite
-import com.kyu.jiu_jitsu.ui.theme.White
+import com.kyu.jiu_jitsu.ui.theme.CoolGray25
 import com.kyu.jiu_jitsu.ui.theme.WhiteOpacity40
 import com.kyu.jiu_jitsu.ui.theme.getBgDrawableRes
 import com.kyu.jiu_jitsu.ui.theme.getIconDrawableRes
@@ -88,7 +87,6 @@ sealed class StyleTabItem(open val type: String, open val selectedItem: String) 
  * @param type 화면 타입 - 포지션, 기술, 서브미션
  * @param onBackClick
  */
-@SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun ModifyMyStyleScreen(
     modifier: Modifier,
@@ -103,10 +101,7 @@ fun ModifyMyStyleScreen(
     var screenTitleRes by remember { mutableStateOf<Int?>(null) }
     var screenIndicatorItems by remember { mutableStateOf<List<StyleCardIndicator>>(listOf()) }
     /** Card Shape **/
-    val cardShape = RoundedCornerShape(16.dp)
-
-    val configuration = LocalConfiguration.current
-    val targetHeightDp = (configuration.screenHeightDp * 0.5).dp
+    val cardShape = RoundedCornerShape(24.dp)
 
     /** 카드 배경 반환 **/
     fun returnCardBgRes (): Int = when(viewModel.pageIndex) {
@@ -258,108 +253,88 @@ fun ModifyMyStyleScreen(
     Surface(
         modifier = modifier
             .fillMaxSize(),
-        color = White,
+        color = CoolGray25,
     ) {
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize(),
         ) {
-            LazyColumn(
+            val cardAspectRatio = 262f / 394f
+            val cardMaxHeight = (maxHeight * 0.49f).coerceAtMost(420.dp)
+            val cardWidth = minOf(maxWidth * 0.76f, cardMaxHeight * cardAspectRatio)
+            val topContentPadding = (maxHeight * 0.09f).coerceIn(52.dp, 92.dp)
+            val tabCardSpacing = (maxHeight * 0.035f).coerceIn(20.dp, 32.dp)
+
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .align(Alignment.TopCenter),
+                    .padding(bottom = 124.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                item {
-                    Spacer(modifier = Modifier.height(60.dp))
-                }
+                Spacer(modifier = Modifier.height(topContentPadding))
 
-                item {
-                    // 특기/최애 탭
-                    SegmentedPositionTabBar(
-                        modifier = Modifier.fillMaxWidth(),
-                        tabs = listOf(
-                            StyleTabItem.Best(selectedItem = viewModel.bestTabTitle?:"입력해주세요"),
-                            StyleTabItem.Favorite(selectedItem = viewModel.favoriteTabTitle?:"입력해주세요"),
-                        ),
-                        selectedIndex = viewModel.styleTabIndex,
-                        onTabSelected = { index ->
-                            viewModel.styleTabIndex = index
-                            if (index == 1 && viewModel.favoriteTabTitle == "입력해주세요")
-                                viewModel.setTabTitle()
+                // 특기/최애 탭
+                SegmentedPositionTabBar(
+                    modifier = Modifier
+                        .fillMaxWidth(0.78f)
+                        .widthIn(max = 360.dp),
+                    tabs = listOf(
+                        StyleTabItem.Best(selectedItem = viewModel.bestTabTitle?:"입력해주세요"),
+                        StyleTabItem.Favorite(selectedItem = viewModel.favoriteTabTitle?:"입력해주세요"),
+                    ),
+                    selectedIndex = viewModel.styleTabIndex,
+                    onTabSelected = { index ->
+                        viewModel.styleTabIndex = index
+                        if (index == 1 && viewModel.favoriteTabTitle == "입력해주세요")
+                            viewModel.setTabTitle()
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(tabCardSpacing))
+
+                // Selected Card
+                key(viewModel.styleTabIndex, viewModel.pageIndex) {
+                    DraggableFlipCard(
+                        modifier = Modifier
+                            .width(cardWidth)
+                            .aspectRatio(cardAspectRatio)
+                            .shadow(
+                                elevation = 18.dp,
+                                shape = cardShape,
+                                clip = false,
+                            )
+                            .clip(cardShape),
+
+                        front = {
+                            CardFrontLayout(
+                                modifier = Modifier.fillMaxSize(),
+                                cardShape = cardShape,
+                                backgroundRes = returnCardBgRes(),
+                                iconRes = returnCardIconRes(),
+                                title = returnCardTitle(),
+                                info = returnCardInfo(),
+                            )
+                        },
+                        back = {
+                            CardBackLayout(
+                                modifier = Modifier.fillMaxSize(),
+                                cardShape = cardShape,
+                                type = returnCardType(),
+                                title = returnCardTitle(),
+                            )
                         }
                     )
                 }
 
-                item {
-                    // Selected Card
-                    key(viewModel.styleTabIndex, viewModel.pageIndex) {
-                        DraggableFlipCard(
-                            modifier = Modifier
-                                .height(targetHeightDp)
-                                .aspectRatio(10f / 16f)
-                                .clip(cardShape),
-
-                            front = {
-                                CardFrontLayout(
-                                    modifier = Modifier.fillMaxSize(),
-                                    cardShape = cardShape,
-                                    backgroundRes = returnCardBgRes(),
-                                    iconRes = returnCardIconRes(),
-                                    title = returnCardTitle(),
-                                    info = returnCardInfo(),
-                                )
-                            },
-                            back = {
-                                CardBackLayout(
-                                    modifier = Modifier.fillMaxSize(),
-                                    cardShape = cardShape,
-                                    type = returnCardType(),
-                                    title = returnCardTitle(),
-                                )
-                            }
-                        )
-                    }
-                }
-
-                item {
-                    // Card Indicator
-                    CardIndicatorLayout(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(70.dp),
-                        items = screenIndicatorItems,
-                        selectedIndex = when (viewModel.pageIndex) {
-                            0 -> {
-                                if (viewModel.styleTabIndex == 0) viewModel.bestPositionIndex ?: 0 else viewModel.favoritePositionIndex ?: 0
-                            }
-                            1 -> {
-                                if (viewModel.styleTabIndex == 0) viewModel.bestTechniqueIndex ?: 0 else viewModel.favoriteTechniqueIndex ?: 0
-                            }
-                            2 -> {
-                                if (viewModel.styleTabIndex == 0) viewModel.bestSubmissionIndex ?: 0 else viewModel.favoriteSubmissionIndex ?: 0
-                            }
-                            else -> 0
-                        },
-                        onTabSelected = { index -> viewModel.onAction(ModifyMyStyleAction.CardItemSelected(index)) }
-                    )
-                }
-
-                item {
-                    Box(
-                        modifier = Modifier
-                            .height(800.dp)
-                            .fillMaxWidth()
-                            .background(color = Blue500)
-                    )
-                }
+                Spacer(modifier = Modifier.weight(1f))
             }
 
             // Top App Bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(56.dp)
                     .background(color = WhiteOpacity40)
                     .padding(horizontal = 16.dp)
             ) {
@@ -413,35 +388,55 @@ fun ModifyMyStyleScreen(
             }
 
             // Bottom Button
-            Column(
+            Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .height(132.dp),
             ) {
-                Spacer(
+                // Card Indicator
+                CardIndicatorLayout(
                     modifier = Modifier
-                        .height(25.dp)
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .height(94.dp),
+                    items = screenIndicatorItems,
+                    selectedIndex = when (viewModel.pageIndex) {
+                        0 -> {
+                            if (viewModel.styleTabIndex == 0) viewModel.bestPositionIndex ?: 0 else viewModel.favoritePositionIndex ?: 0
+                        }
+                        1 -> {
+                            if (viewModel.styleTabIndex == 0) viewModel.bestTechniqueIndex ?: 0 else viewModel.favoriteTechniqueIndex ?: 0
+                        }
+                        2 -> {
+                            if (viewModel.styleTabIndex == 0) viewModel.bestSubmissionIndex ?: 0 else viewModel.favoriteSubmissionIndex ?: 0
+                        }
+                        else -> 0
+                    },
+                    onTabSelected = { index -> viewModel.onAction(ModifyMyStyleAction.CardItemSelected(index)) }
+                )
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                         .background(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    TrueWhite.copy(alpha = 0f),
-                                    TrueWhite.copy(alpha = 0.9f)
+                                    CoolGray25.copy(alpha = 0f),
+                                    CoolGray25,
                                 )
                             )
                         )
-                )
-                Box(
-                    modifier = Modifier
-                        .background(color = TrueWhite)
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = 20.dp)
                         .padding(bottom = 10.dp)
                 ) {
                     PrimaryButton(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp),
-                        text = "Bottom Button",
+                            .height(56.dp),
+                        text = stringResource(R.string.profile_my_style_complete),
+                        roundedCorner = 16.dp,
                         onClick = { viewModel.onAction(ModifyMyStyleAction.BottomBtnClicked(onCompleteClick)) }
                     )
                 }
