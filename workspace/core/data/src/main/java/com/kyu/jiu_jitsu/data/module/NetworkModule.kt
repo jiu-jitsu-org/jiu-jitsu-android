@@ -1,7 +1,7 @@
 package com.kyu.jiu_jitsu.data.module
 
 import com.kyu.jiu_jitsu.data.BuildConfig
-import com.kyu.jiu_jitsu.data.datastore.PrefKeys
+import com.kyu.jiu_jitsu.data.api.interceptor.TokenRefreshInterceptor
 import com.kyu.jiu_jitsu.data.datastore.SecurePreferences
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -10,7 +10,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.nerdythings.okhttp.profiler.OkHttpProfilerInterceptor
-import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -88,7 +87,7 @@ object NetworkModule {
     @Singleton
     @BaseNetworkIncludeToken
     fun provideBaseOkHttpClient(
-        securePreferences: SecurePreferences,
+        tokenRefreshInterceptor: TokenRefreshInterceptor,
     ): OkHttpClient =
         if (PRINT_LOG) {
             OkHttpClient.Builder()
@@ -106,6 +105,9 @@ object NetworkModule {
                             .build()
                     )
                 }
+                // Authorization 헤더를 붙인 뒤 TokenRefreshInterceptor를 실행해야 한다.
+                // 그래야 refresh 완료 후 원 요청을 재시도할 때 기존 요청 토큰과 최신 저장 토큰을 비교할 수 있다.
+                .addInterceptor(tokenRefreshInterceptor)
 //                .addInterceptor(getLoggingInterceptor())
                 .addInterceptor(OkHttpProfilerInterceptor())
                 .build()
@@ -126,17 +128,39 @@ object NetworkModule {
                             .build()
                     )
                 }
+                // Authorization 헤더를 붙인 뒤 TokenRefreshInterceptor를 실행해야 한다.
+                // 그래야 refresh 완료 후 원 요청을 재시도할 때 기존 요청 토큰과 최신 저장 토큰을 비교할 수 있다.
+                .addInterceptor(tokenRefreshInterceptor)
 //                .addInterceptor(getLoggingInterceptor())
                 .build()
         }
 
     @Provides
     @Singleton
-    fun provideMoshiConverterFactory() : MoshiConverterFactory = MoshiConverterFactory.create(
+    fun provideTokenRefreshInterceptor(
+        securePreferences: SecurePreferences,
+        @BaseNetworkExceptToken refreshClient: OkHttpClient,
+        moshi: Moshi,
+    ): TokenRefreshInterceptor =
+        TokenRefreshInterceptor(
+            securePreferences = securePreferences,
+            refreshClient = refreshClient,
+            moshi = moshi,
+            baseUrl = BASE_URL,
+        )
+
+    @Provides
+    @Singleton
+    fun provideMoshi(): Moshi =
         Moshi.Builder()
             .addLast(KotlinJsonAdapterFactory())
             .build()
-    )
+
+    @Provides
+    @Singleton
+    fun provideMoshiConverterFactory(
+        moshi: Moshi,
+    ) : MoshiConverterFactory = MoshiConverterFactory.create(moshi)
 
     @Provides
     @Singleton
