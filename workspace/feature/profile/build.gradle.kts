@@ -33,6 +33,7 @@ dependencies {
     implementation(projects.core.domain)
 
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

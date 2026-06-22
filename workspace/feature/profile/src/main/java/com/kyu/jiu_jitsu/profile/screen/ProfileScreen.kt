@@ -1,11 +1,26 @@
 package com.kyu.jiu_jitsu.profile.screen
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +43,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,19 +55,27 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kyu.jiu_jitsu.data.model.isShowModify
-import com.kyu.jiu_jitsu.profile.viewmodel.ProfileViewModel
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightBottomSheet
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightLayout
 import com.kyu.jiu_jitsu.profile.components.CompetitionLayout
 import com.kyu.jiu_jitsu.profile.components.MySkillLayout
+import com.kyu.jiu_jitsu.profile.components.ProfileImageBottomSheet
+import com.kyu.jiu_jitsu.profile.viewmodel.ProfileViewModel
 import com.kyu.jiu_jitsu.profile.viewmodel.ProfileAction
 import com.kyu.jiu_jitsu.ui.R
 import com.kyu.jiu_jitsu.ui.components.button.PressableTextButton
@@ -60,9 +84,13 @@ import com.kyu.jiu_jitsu.ui.insets.StatusBarBackground
 import com.kyu.jiu_jitsu.ui.routes.SkillStyleScreenType
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents
 import com.kyu.jiu_jitsu.ui.theme.CoolGray25
+import com.kyu.jiu_jitsu.ui.theme.CoolGray100
+import com.kyu.jiu_jitsu.ui.theme.CoolGray500
 import com.kyu.jiu_jitsu.ui.theme.CoolGray75
 import com.kyu.jiu_jitsu.ui.theme.White
 import com.kyu.jiu_jitsu.ui.theme.color
+import java.io.File
+import kotlin.math.roundToInt
 
 /**
  * 프로필 화면
@@ -85,6 +113,7 @@ fun ProfileScreen(
     onMyStyleClick: (screenName: String) -> Unit = {},
     onCompetitionClick: () -> Unit = {},
 ) {
+    val context = LocalContext.current
     val viewModel = hiltViewModel<ProfileViewModel>()
     /** Collect State **/
     val loadingState by viewModel.loadingUiState.collectAsStateWithLifecycle()
@@ -94,8 +123,76 @@ fun ProfileScreen(
     /** 프로필 UI BG Color */
     val profileBgColor = profileInfoState?.beltRank?.color() ?: ColorComponents.MyProfileHeader.Bg.Default
 
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-    var openBottomSheet by rememberSaveable { mutableStateOf(false) }
+    val beltSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val profileImageSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    var openBeltBottomSheet by rememberSaveable { mutableStateOf(false) }
+    var openProfileImageBottomSheet by rememberSaveable { mutableStateOf(false) }
+    var pendingCameraImageUri by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedProfileBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val cameraPermissionDeniedMessage = stringResource(
+        com.kyu.jiu_jitsu.profile.R.string.profile_camera_permission_denied
+    )
+    val galleryPermissionDeniedMessage = stringResource(
+        com.kyu.jiu_jitsu.profile.R.string.profile_gallery_permission_denied
+    )
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri: Uri? ->
+        selectedProfileBitmap = uri?.let { context.loadProfileBitmap(it) } ?: selectedProfileBitmap
+    }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+    ) { isSuccess: Boolean ->
+        if (isSuccess) {
+            pendingCameraImageUri
+                ?.let(Uri::parse)
+                ?.let { selectedProfileBitmap = context.loadProfileBitmap(it) }
+        }
+    }
+    val galleryPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { isGranted ->
+        if (isGranted) {
+            galleryLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        } else {
+            Toast.makeText(context, galleryPermissionDeniedMessage, Toast.LENGTH_SHORT).show()
+        }
+    }
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { isGranted ->
+        if (isGranted) {
+            val cameraImageUri = context.createProfileImageUri()
+            pendingCameraImageUri = cameraImageUri.toString()
+            cameraLauncher.launch(cameraImageUri)
+        } else {
+            Toast.makeText(context, cameraPermissionDeniedMessage, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun openGallery() {
+        val galleryPermission = getGalleryPermission()
+        if (galleryPermission == null || context.hasPermission(galleryPermission)) {
+            galleryLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        } else {
+            galleryPermissionLauncher.launch(galleryPermission)
+        }
+    }
+
+    fun openCamera() {
+        if (context.hasPermission(Manifest.permission.CAMERA)) {
+            val cameraImageUri = context.createProfileImageUri()
+            pendingCameraImageUri = cameraImageUri.toString()
+            cameraLauncher.launch(cameraImageUri)
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     val listState = rememberLazyListState()
     val isFirstItemFullyVisible by remember {
@@ -165,32 +262,10 @@ fun ProfileScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         /** 프로필 이미지 */
-                        Box(
-                            modifier = Modifier
-                                .size(90.dp)
-                                .background(
-                                    color = White,
-                                    shape = RoundedCornerShape(24.dp),
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (profileInfoState?.profileImageUrl == null) {
-                                // TODO chan Profile Image Url
-                                Icon(
-                                    modifier = Modifier.size(64.dp),
-                                    painter = painterResource(R.drawable.ic_profile_default),
-                                    contentDescription = "Profile Image",
-                                    tint = CoolGray25,
-                                )
-                            } else {
-                                Icon(
-                                    modifier = Modifier.size(64.dp),
-                                    painter = painterResource(R.drawable.ic_profile_default),
-                                    contentDescription = "Profile Image",
-                                    tint = CoolGray25,
-                                )
-                            }
-                        }
+                        EditableProfileImage(
+                            selectedProfileBitmap = selectedProfileBitmap,
+                            onClick = { openProfileImageBottomSheet = true },
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                         /** 닉네임 */
                         Text(
@@ -269,7 +344,7 @@ fun ProfileScreen(
                                 beltStripe = profileInfoState?.beltStripe,
                                 weightKg = profileInfoState?.weightKg,
                                 isWeightHidden = profileInfoState?.isWeightHidden ?: false,
-                                onSaveBeltWeightClick = { openBottomSheet = true },
+                                onSaveBeltWeightClick = { openBeltBottomSheet = true },
                                 onSaveWeightHiddenClick = { isWeightHidden ->
                                     viewModel.changeBeltAndWeight(
                                         isWeightHidden = isWeightHidden
@@ -311,14 +386,14 @@ fun ProfileScreen(
         }
 
         /** 벨트/체급 선택 바텀 시트 */
-        if (openBottomSheet) {
+        if (openBeltBottomSheet) {
             ModalBottomSheet(
                 containerColor = ColorComponents.BottomSheet.Selected.Container.Background,
                 contentColor = ColorComponents.BottomSheet.Selected.Container.Title,
                 scrimColor = ColorComponents.BottomSheet.Selected.Container.Scrim,
-                sheetState = sheetState,
+                sheetState = beltSheetState,
                 onDismissRequest = {
-                    openBottomSheet = false
+                    openBeltBottomSheet = false
                 },
                 shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp),
                 dragHandle = {
@@ -330,11 +405,194 @@ fun ProfileScreen(
                 },
             ) {
                 BeltRankAndWeightBottomSheet { beltRank, beltStripe, gender, weightKg, isWeightHidden ->
-                    openBottomSheet = false
+                    openBeltBottomSheet = false
                     viewModel.changeBeltAndWeight(beltRank, beltStripe, gender, weightKg, isWeightHidden)
                 }
             }
         }
 
+        /** 프로필 이미지 선택 바텀 시트 */
+        if (openProfileImageBottomSheet) {
+            ModalBottomSheet(
+                containerColor = ColorComponents.BottomSheet.Selected.Container.Background,
+                contentColor = ColorComponents.BottomSheet.Selected.Container.Title,
+                scrimColor = ColorComponents.BottomSheet.Selected.Container.Scrim,
+                sheetState = profileImageSheetState,
+                onDismissRequest = {
+                    openProfileImageBottomSheet = false
+                },
+                shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp),
+                dragHandle = {
+                    BottomSheetDefaults.DragHandle(
+                        width = 48.dp,
+                        height = 4.dp,
+                        color = ColorComponents.BottomSheet.Selected.Container.Handle
+                    )
+                },
+            ) {
+                ProfileImageBottomSheet(
+                    onCameraClick = {
+                        openProfileImageBottomSheet = false
+                        openCamera()
+                    },
+                    onGalleryClick = {
+                        openProfileImageBottomSheet = false
+                        openGallery()
+                    },
+                    onDeleteClick = {
+                        selectedProfileBitmap = null
+                        openProfileImageBottomSheet = false
+                    },
+                    onCancelClick = {
+                        openProfileImageBottomSheet = false
+                    },
+                )
+            }
+        }
+
     }
 }
+
+@Composable
+private fun EditableProfileImage(
+    selectedProfileBitmap: Bitmap?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(108.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(bounded = false),
+                role = Role.Button,
+                onClick = onClick,
+            ),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(96.dp)
+                .align(Alignment.TopCenter)
+                .clip(RoundedCornerShape(28.dp))
+                .background(color = White),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (selectedProfileBitmap == null) {
+                Icon(
+                    modifier = Modifier.size(68.dp),
+                    painter = painterResource(R.drawable.ic_profile_default),
+                    contentDescription = "Profile Image",
+                    tint = CoolGray100,
+                )
+            } else {
+                Image(
+                    bitmap = selectedProfileBitmap.asImageBitmap(),
+                    contentDescription = "Profile Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .align(Alignment.BottomEnd)
+                .clip(RoundedCornerShape(14.dp))
+                .background(color = CoolGray25),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                modifier = Modifier.size(24.dp),
+                painter = painterResource(com.kyu.jiu_jitsu.profile.R.drawable.ic_profile_camera),
+                contentDescription = null,
+                tint = CoolGray500,
+            )
+        }
+    }
+}
+
+private fun Context.hasPermission(permission: String): Boolean =
+    ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+
+private fun getGalleryPermission(): String? =
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+        Manifest.permission.READ_EXTERNAL_STORAGE
+    } else {
+        null
+    }
+
+private fun Context.loadProfileBitmap(uri: Uri): Bitmap? = runCatching {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        val source = ImageDecoder.createSource(contentResolver, uri)
+        ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+            val imageWidth = info.size.width
+            val imageHeight = info.size.height
+            val scale = minOf(
+                PROFILE_IMAGE_DECODE_SIZE / imageWidth.toFloat(),
+                PROFILE_IMAGE_DECODE_SIZE / imageHeight.toFloat(),
+                1f,
+            )
+            if (scale < 1f) {
+                decoder.setTargetSize(
+                    (imageWidth * scale).roundToInt(),
+                    (imageHeight * scale).roundToInt(),
+                )
+            }
+        }
+    } else {
+        decodeBitmapFromStream(uri)
+    }
+}.getOrNull()
+
+private fun Context.createProfileImageUri(): Uri {
+    val imageDir = File(cacheDir, PROFILE_IMAGE_CACHE_DIR).apply {
+        mkdirs()
+    }
+    val imageFile = File.createTempFile(
+        PROFILE_IMAGE_FILE_PREFIX,
+        PROFILE_IMAGE_FILE_SUFFIX,
+        imageDir,
+    )
+    return FileProvider.getUriForFile(
+        this,
+        "$packageName.fileprovider",
+        imageFile,
+    )
+}
+
+private fun Context.decodeBitmapFromStream(uri: Uri): Bitmap? {
+    val boundsOptions = BitmapFactory.Options().apply {
+        inJustDecodeBounds = true
+    }
+    contentResolver.openInputStream(uri)?.use { input ->
+        BitmapFactory.decodeStream(input, null, boundsOptions)
+    }
+
+    val decodeOptions = BitmapFactory.Options().apply {
+        inSampleSize = calculateInSampleSize(
+            width = boundsOptions.outWidth,
+            height = boundsOptions.outHeight,
+            targetSize = PROFILE_IMAGE_DECODE_SIZE,
+        )
+    }
+    return contentResolver.openInputStream(uri)?.use { input ->
+        BitmapFactory.decodeStream(input, null, decodeOptions)
+    }
+}
+
+private fun calculateInSampleSize(
+    width: Int,
+    height: Int,
+    targetSize: Int,
+): Int {
+    var sampleSize = 1
+    while (width / sampleSize > targetSize || height / sampleSize > targetSize) {
+        sampleSize *= 2
+    }
+    return sampleSize
+}
+
+private const val PROFILE_IMAGE_DECODE_SIZE = 512
+private const val PROFILE_IMAGE_CACHE_DIR = "profile_images"
+private const val PROFILE_IMAGE_FILE_PREFIX = "profile_image_"
+private const val PROFILE_IMAGE_FILE_SUFFIX = ".jpg"
