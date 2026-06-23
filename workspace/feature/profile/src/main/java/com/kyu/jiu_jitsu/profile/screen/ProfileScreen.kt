@@ -139,7 +139,10 @@ fun ProfileScreen(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { uri: Uri? ->
-        selectedProfileBitmap = uri?.let { context.loadProfileBitmap(it) } ?: selectedProfileBitmap
+        uri?.let {
+            selectedProfileBitmap = context.loadProfileBitmap(it) ?: selectedProfileBitmap
+            viewModel.uploadCommunityImage(it)
+        }
     }
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
@@ -147,7 +150,10 @@ fun ProfileScreen(
         if (isSuccess) {
             pendingCameraImageUri
                 ?.let(Uri::parse)
-                ?.let { selectedProfileBitmap = context.loadProfileBitmap(it) }
+                ?.let {
+                    selectedProfileBitmap = context.loadProfileBitmap(it)
+                    viewModel.uploadCommunityImage(it)
+                }
         }
     }
     val galleryPermissionLauncher = rememberLauncherForActivityResult(

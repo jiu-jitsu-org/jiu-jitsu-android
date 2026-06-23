@@ -2,6 +2,8 @@ package com.kyu.jiu_jitsu.data.module
 
 import com.kyu.jiu_jitsu.data.api.BootStrapService
 import com.kyu.jiu_jitsu.data.api.CommunityService
+import com.kyu.jiu_jitsu.data.api.ImageKitService
+import com.kyu.jiu_jitsu.data.api.ImageService
 import com.kyu.jiu_jitsu.data.api.LoginService
 import com.kyu.jiu_jitsu.data.api.UserService
 import dagger.Module
@@ -34,5 +36,15 @@ object ApiModule {
     @Singleton
     fun communityService(@NetworkModule.BaseNetworkIncludeToken baseRetrofit: Retrofit): CommunityService =
         baseRetrofit.create(CommunityService::class.java)
+
+    @Provides
+    @Singleton
+    fun imageService(@NetworkModule.BaseNetworkIncludeToken baseRetrofit: Retrofit): ImageService =
+        baseRetrofit.create(ImageService::class.java)
+
+    @Provides
+    @Singleton
+    fun imageKitService(@NetworkModule.ImageKitNetwork imageKitRetrofit: Retrofit): ImageKitService =
+        imageKitRetrofit.create(ImageKitService::class.java)
 
 }

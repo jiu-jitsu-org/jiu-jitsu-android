@@ -16,6 +16,11 @@ object NetworkConfig {
         const val LOGOUT = "api/auth/logout"
     }
 
+    object Image {
+        const val AUTH = "api/image/auth"
+        const val IMAGE = "api/image"
+    }
+
     object User {
         const val USER = "api/user"
         const val CHECK_NICKNAME = "api/user/check/nickname"

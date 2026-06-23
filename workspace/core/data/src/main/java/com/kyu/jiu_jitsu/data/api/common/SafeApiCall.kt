@@ -21,6 +21,8 @@ suspend inline fun <T> safeApiCall(
     ApiResult.Failure(ApiError.Network(e))
 } catch (e: JsonDataException) {
     ApiResult.Failure(ApiError.Serialization(e))
+} catch (e: ServerApiException) {
+    ApiResult.Failure(ApiError.Server(e.code, e.message))
 } catch (t: Throwable) {
     // 코루틴 취소는 그대로 전파
     if (t is CancellationException) throw t

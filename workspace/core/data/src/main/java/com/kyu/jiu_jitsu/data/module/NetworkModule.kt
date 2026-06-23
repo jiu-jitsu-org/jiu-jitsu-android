@@ -41,6 +41,10 @@ object NetworkModule {
     @Retention(AnnotationRetention.BINARY)
     annotation class BaseNetworkIncludeToken
 
+    @Qualifier
+    @Retention(AnnotationRetention.BINARY)
+    annotation class ImageKitNetwork
+
     @Provides
     @Singleton
     @BaseNetworkExceptToken
@@ -187,4 +191,19 @@ object NetworkModule {
             .client(okHttpClient)
             .addConverterFactory(moshiConverterFactory)                 // MoshiConverter 적용
             .build()
+
+    @Provides
+    @Singleton
+    @ImageKitNetwork
+    fun providerImageKitRetrofit(
+        @BaseNetworkExceptToken okHttpClient: OkHttpClient,
+        moshiConverterFactory: MoshiConverterFactory,
+    ): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(IMAGE_KIT_UPLOAD_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(moshiConverterFactory)
+            .build()
+
+    private const val IMAGE_KIT_UPLOAD_BASE_URL = "https://upload.imagekit.io/"
 }
