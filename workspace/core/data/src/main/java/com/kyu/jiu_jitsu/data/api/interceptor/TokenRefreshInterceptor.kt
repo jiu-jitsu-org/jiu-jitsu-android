@@ -28,14 +28,14 @@ import javax.inject.Inject
  *
  * {
  *   "success": false,
- *   "code": "U0001",
+ *   "code": "A0003",
  *   "message": "로그인이 필요한 서비스입니다. 로그인을 해주세요.",
  *   "data": null
  * }
  *
  * 처리 순서:
- * 1. 원 REST API 응답 바디에서 code == U0001 여부를 확인한다.
- * 2. U0001이면 로컬에 저장된 refreshToken으로 POST /auth/refresh를 호출한다.
+ * 1. 원 REST API 응답 바디에서 code == A0003 여부를 확인한다.
+ * 2. A0003이면 로컬에 저장된 refreshToken으로 POST /auth/refresh를 호출한다.
  * 3. refresh 응답의 accessToken, refreshToken을 SecurePreferences에 먼저 저장한다.
  * 4. 메모리 토큰(NetworkModule.userToken)도 새 accessToken으로 갱신한다.
  * 5. 저장이 끝난 뒤 원 요청을 새 Authorization 헤더로 1회만 재호출한다.
@@ -60,7 +60,7 @@ class TokenRefreshInterceptor @Inject constructor(
         val response = chain.proceed(request)
         val responseBodySnapshot = response.bodySnapshot()
 
-        // refresh 후 재시도한 요청까지 U0001이면 refresh token 자체가 만료된 상태일 가능성이 높다.
+        // refresh 후 재시도한 요청까지 A0003이면 refresh token 자체가 만료된 상태일 가능성이 높다.
         // 이 경우 무한 루프를 막기 위해 추가 refresh 없이 서버 응답을 그대로 상위 계층으로 전달한다.
         if (responseBodySnapshot == null || !responseBodySnapshot.isLoginRequiredError() || request.isTokenRefreshRetry()) {
             return response
@@ -76,7 +76,7 @@ class TokenRefreshInterceptor @Inject constructor(
                 securePreferences.getValueToDecrypt(PrefKeys.USER_TOKEN).first()
             }
 
-            // 동시에 여러 API가 U0001을 받으면 첫 번째 요청만 refresh를 수행한다.
+            // 동시에 여러 API가 A0003을 받으면 첫 번째 요청만 refresh를 수행한다.
             // 락 대기 중 다른 요청이 이미 토큰을 갱신했다면, 현재 요청은 저장된 최신 accessToken으로 바로 재시도한다.
             if (!latestAccessToken.isNullOrBlank() && latestAccessToken != currentAccessToken && latestAccessToken != requestAccessToken) {
                 TokenRefreshResult.Success(latestAccessToken)
@@ -87,7 +87,7 @@ class TokenRefreshInterceptor @Inject constructor(
 
         val retryAccessToken = (refreshResult as? TokenRefreshResult.Success)?.accessToken
         if (retryAccessToken.isNullOrBlank()) {
-            // refresh 실패 시 원래 U0001 응답을 유지해야 Retrofit/도메인 계층이 기존 에러 흐름대로 처리할 수 있다.
+            // refresh 실패 시 원래 A0003 응답을 유지해야 Retrofit/도메인 계층이 기존 에러 흐름대로 처리할 수 있다.
             // 다만 원 응답은 아래에서 close 하므로, peek 해둔 문자열로 동일한 응답 바디를 다시 구성한다.
             val rebuiltResponse = response.rebuildWithBody(responseBodySnapshot)
             response.close()
@@ -182,7 +182,7 @@ class TokenRefreshInterceptor @Inject constructor(
     private object TokenRefreshRetryMarker
 
     companion object {
-        private const val TOKEN_EXPIRED_CODE = "U0001"
+        private const val TOKEN_EXPIRED_CODE = "A0003"
         private const val TOKEN_ERROR_BODY_PEEK_BYTES = 1024L * 1024L
         private const val ACCEPT_HEADER = "Accept"
         private const val AUTHORIZATION_HEADER = "Authorization"
