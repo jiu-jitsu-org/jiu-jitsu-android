@@ -1,8 +1,7 @@
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.jjs.android.feaure)
-    alias(libs.plugins.jjs.android.compose.library)
+    alias(libs.plugins.jjs.android.feature)
     alias(libs.plugins.secrets)
 }
 
@@ -46,10 +45,8 @@ dependencies {
     implementation(projects.core.domain)
 
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.androidx.hilt.navigation.compose)
 
     // SNS Login
     implementation(libs.kakao.user)

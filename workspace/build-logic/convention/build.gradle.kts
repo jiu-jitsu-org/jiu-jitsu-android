@@ -57,7 +57,7 @@ gradlePlugin {
             implementationClass = "AndroidLibraryComposeConventionPlugin"
         }
         register("androidFeature") {
-            id = libs.plugins.jjs.android.feaure.get().pluginId
+            id = libs.plugins.jjs.android.feature.get().pluginId
             implementationClass = "AndroidFeatureConventionPlugin"
         }
         register("androidApplicationFirebase") {
