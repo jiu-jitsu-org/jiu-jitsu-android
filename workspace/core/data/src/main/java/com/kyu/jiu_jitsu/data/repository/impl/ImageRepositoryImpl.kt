@@ -5,6 +5,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import com.kyu.jiu_jitsu.data.api.ImageKitService
 import com.kyu.jiu_jitsu.data.api.ImageService
+import com.kyu.jiu_jitsu.data.api.UserService
 import com.kyu.jiu_jitsu.data.api.common.ApiResult
 import com.kyu.jiu_jitsu.data.api.common.ServerApiException
 import com.kyu.jiu_jitsu.data.api.common.safeApiCall
@@ -30,6 +31,7 @@ class ImageRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val imageService: ImageService,
     private val imageKitService: ImageKitService,
+    private val userService: UserService,
 ) : ImageRepository {
 
     override suspend fun uploadCommunityImage(
@@ -87,7 +89,7 @@ class ImageRepositoryImpl @Inject constructor(
                 // 3. CDN 업로드가 성공한 뒤에만 내 서버 DB에 이미지 정보를 TEMP 상태로 등록한다.
                 // /api/image 응답도 공통 래퍼(success/code/message/data) 형태이므로,
                 // success=false 이거나 data=null이면 서버 message를 보존한 실패로 변환한다.
-                // 사용자 프로필 이미지 업데이트는 다음 단계에서 이 응답의 data.imageUrl을 사용해 이어 붙인다.
+                // 다음 단계의 사용자 프로필 이미지 업데이트는 이 응답의 data.id를 request parameter로 사용한다.
                 val registerResponse = imageService.registerImage(
                     RegisterImageRequest(
                         cdnId = cdnId,
@@ -106,6 +108,33 @@ class ImageRepositoryImpl @Inject constructor(
                         message = registerResponse.message ?: DEFAULT_REGISTER_IMAGE_ERROR_MESSAGE,
                     )
                 }
+                val registeredImageId = registerResponse.data.id ?: throw ServerApiException(
+                    code = registerResponse.code,
+                    message = DEFAULT_REGISTER_IMAGE_ID_ERROR_MESSAGE,
+                )
+
+                // 4. 등록된 이미지 id를 사용자 프로필 이미지로 반영한다.
+                // 서버 요구사항이 request parameter 전달이므로 PUT /api/user/profile/image?imageId={id}
+                // 형태로 호출한다. 이 API 또한 공통 래퍼 응답이므로, HTTP 200이어도 success=false 또는
+                // data=null이면 최종 프로필 반영이 실패한 것으로 보고 전체 업로드 플로우를 실패 처리한다.
+                val userProfileResponse = userService.updateUserProfileImage(
+                    imageId = registeredImageId,
+                )
+                if (userProfileResponse.success != true || userProfileResponse.code != DtoCommonCode.OK_CODE) {
+                    throw ServerApiException(
+                        code = userProfileResponse.code,
+                        message = userProfileResponse.message ?: DEFAULT_UPDATE_PROFILE_IMAGE_ERROR_MESSAGE,
+                    )
+                }
+                if (userProfileResponse.data == null) {
+                    throw ServerApiException(
+                        code = userProfileResponse.code,
+                        message = userProfileResponse.message ?: DEFAULT_UPDATE_PROFILE_IMAGE_ERROR_MESSAGE,
+                    )
+                }
+
+                // 화면은 업로드된 CDN 이미지 정보를 표시/추적하므로 기존 반환 타입(RegisterImageResponse)을 유지한다.
+                // 사용자 프로필 반영 성공 여부는 위 userProfileResponse 검증에서 보장된다.
                 registerResponse
             }
         )
@@ -191,6 +220,8 @@ class ImageRepositoryImpl @Inject constructor(
         private const val DEFAULT_IMAGE_FILE_NAME = "profile_image.jpg"
         private const val DEFAULT_IMAGE_AUTH_ERROR_MESSAGE = "ImageKit auth data is null."
         private const val DEFAULT_REGISTER_IMAGE_ERROR_MESSAGE = "Registered image data is null."
+        private const val DEFAULT_REGISTER_IMAGE_ID_ERROR_MESSAGE = "Registered image id is null."
+        private const val DEFAULT_UPDATE_PROFILE_IMAGE_ERROR_MESSAGE = "User profile image update failed."
         private const val TEXT_PLAIN_MEDIA_TYPE = "text/plain"
         private val FILE_NAME_TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS")
     }

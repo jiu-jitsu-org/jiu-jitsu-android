@@ -24,6 +24,11 @@ interface UserService {
         @Body updateProfileRequest: UpdateProfileRequest
     ): UserProfileResponse
 
+    @PUT(NetworkConfig.UserController.USER_PROFILE_IMAGE)
+    suspend fun updateUserProfileImage(
+        @Query("imageFileId") imageId: Int,
+    ): UserProfileResponse
+
     // SIGN UP
     @POST(NetworkConfig.User.USER)
     suspend fun signupUser(

@@ -78,9 +78,9 @@ class ProfileViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            // 5번 사용자 프로필 이미지 업데이트는 아직 수행하지 않는다.
-            // 여기서는 CDN 인증값 요청 -> ImageKit 직접 업로드 -> 내 서버 이미지 TEMP 등록까지만 완료하고,
-            // 등록 결과의 imageUrl은 다음 단계에서 user/profile/image API에 연결할 수 있도록 state로 노출한다.
+            // CDN 인증값 요청 -> ImageKit 직접 업로드 -> 내 서버 이미지 TEMP 등록 -> 사용자 프로필 이미지 반영까지
+            // 하나의 useCase에서 순차 수행한다. 중간 단계 중 하나라도 실패하면 UiState.Error로 내려오며,
+            // 성공 시에는 서버에 등록된 CDN 이미지 정보를 state로 노출한다.
             uploadCommunityImageUseCase(
                 imageUri = imageUri.toString(),
                 publicKey = publicKey,

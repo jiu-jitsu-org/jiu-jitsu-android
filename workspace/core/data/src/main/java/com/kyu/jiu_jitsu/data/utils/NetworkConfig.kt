@@ -29,6 +29,7 @@ object NetworkConfig {
 
     object UserController {
         const val USER_PROFILE = "api/user/profile"
+        const val USER_PROFILE_IMAGE = "api/user/profile/image"
     }
 
     object CommunityProfileController {

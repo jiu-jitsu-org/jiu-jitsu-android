@@ -65,6 +65,7 @@ object RepositoryModule {
         @ApplicationContext context: Context,
         imageService: ImageService,
         imageKitService: ImageKitService,
-    ): ImageRepository = ImageRepositoryImpl(context, imageService, imageKitService)
+        userService: UserService,
+    ): ImageRepository = ImageRepositoryImpl(context, imageService, imageKitService, userService)
 
 }

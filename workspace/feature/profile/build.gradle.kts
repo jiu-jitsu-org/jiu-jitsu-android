@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout.compose)
+    implementation(libs.coil.compose)
 
     testImplementation(libs.junit)
 

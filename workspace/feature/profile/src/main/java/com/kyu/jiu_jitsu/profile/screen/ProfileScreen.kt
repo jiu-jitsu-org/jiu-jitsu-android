@@ -69,6 +69,8 @@ import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.kyu.jiu_jitsu.data.model.isShowModify
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightBottomSheet
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightLayout
@@ -270,6 +272,7 @@ fun ProfileScreen(
                         /** 프로필 이미지 */
                         EditableProfileImage(
                             selectedProfileBitmap = selectedProfileBitmap,
+                            profileImageUrl = profileInfoState?.profileImageUrl,
                             onClick = { openProfileImageBottomSheet = true },
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -462,9 +465,15 @@ fun ProfileScreen(
 @Composable
 private fun EditableProfileImage(
     selectedProfileBitmap: Bitmap?,
+    profileImageUrl: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+    val validProfileImageUrl = remember(profileImageUrl) {
+        profileImageUrl?.trim()?.takeIf(String::isNotEmpty)
+    }
+
     Box(
         modifier = modifier
             .size(108.dp)
@@ -483,20 +492,40 @@ private fun EditableProfileImage(
                 .background(color = White),
             contentAlignment = Alignment.Center,
         ) {
-            if (selectedProfileBitmap == null) {
-                Icon(
-                    modifier = Modifier.size(68.dp),
-                    painter = painterResource(R.drawable.ic_profile_default),
-                    contentDescription = "Profile Image",
-                    tint = CoolGray100,
-                )
-            } else {
-                Image(
-                    bitmap = selectedProfileBitmap.asImageBitmap(),
-                    contentDescription = "Profile Image",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
+            when {
+                selectedProfileBitmap != null -> {
+                    Image(
+                        bitmap = selectedProfileBitmap.asImageBitmap(),
+                        contentDescription = "Profile Image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+                validProfileImageUrl != null -> {
+                    // 프로필 조회 API에서 내려온 profileImage.imageUrl이 존재하면 Coil로 원격 이미지를 로드한다.
+                    // 로딩 중이거나 URL 호출이 실패한 경우에도 빈 영역이 보이지 않도록 기본 프로필 이미지를 노출한다.
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(validProfileImageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Profile Image",
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(R.drawable.ic_profile_default),
+                        error = painterResource(R.drawable.ic_profile_default),
+                        fallback = painterResource(R.drawable.ic_profile_default),
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+                else -> {
+                    // 프로필 이미지 URL이 없거나 빈 문자열이면 네트워크 요청 없이 기본 이미지를 바로 표시한다.
+                    Icon(
+                        modifier = Modifier.size(68.dp),
+                        painter = painterResource(R.drawable.ic_profile_default),
+                        contentDescription = "Profile Image",
+                        tint = CoolGray100,
+                    )
+                }
             }
         }
         Box(

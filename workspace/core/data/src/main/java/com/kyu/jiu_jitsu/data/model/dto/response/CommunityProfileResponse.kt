@@ -24,6 +24,7 @@ data class CommunityProfileResponse(
 data class CommunityProfileData(
     val nickname: String? = null,
     val profileImageUrl: String? = null,
+    val profileImage: CommunityProfileImage? = null,
     val beltRank: String? = null,
     val beltStripe: String? = null,
     val gender: String? = null,
@@ -44,6 +45,12 @@ data class CommunityProfileData(
 )
 
 @JsonClass(generateAdapter = true)
+data class CommunityProfileImage(
+    val id: Int? = null,
+    val imageUrl: String? = null,
+)
+
+@JsonClass(generateAdapter = true)
 data class Competition(
     var competitionYear: Int? = null,
     var competitionMonth: Int? = null,
@@ -57,7 +64,7 @@ fun CommunityProfileData?.toInfo(): CommunityProfileInfo {
     } else {
         CommunityProfileInfo(
             nickname = nickname ?:"",
-            profileImageUrl = profileImageUrl ?: "",
+            profileImageUrl = profileImage?.imageUrl ?: profileImageUrl ?: "",
             beltRank = beltRank.toBeltRank(),
             beltStripe = beltStripe?.toBeltStripe(),
             gender = gender?.toGender(),
