@@ -1,14 +1,11 @@
 package com.kyu.jiu_jitsu.domain.usecase.user
 
-import com.kyu.jiu_jitsu.data.api.common.ApiResult
 import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.api.common.toUiError
 import com.kyu.jiu_jitsu.data.model.UserProfileInfo
-import com.kyu.jiu_jitsu.data.model.dto.DtoCommonCode
 import com.kyu.jiu_jitsu.data.model.dto.response.toInfo
 import com.kyu.jiu_jitsu.data.repository.UserRepository
+import com.kyu.jiu_jitsu.domain.mapApiResponseToUiState
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class UpdateUserProfileUseCase @Inject constructor(
@@ -21,22 +18,6 @@ class UpdateUserProfileUseCase @Inject constructor(
         userRepository.updateUserProfileInfo(
             nickname,
             profileImageUrl
-        ).map { res ->
-            when (res) {
-                is ApiResult.Success -> {
-                    if (res.data.success ?: false && res.data.code == DtoCommonCode.OK_CODE) {
-                        UiState.Success(
-                            res.data.data.toInfo()
-                        )
-                    }
-                    else {
-                        UiState.Error(message = res.data.message ?: "", retryable = false)
-                    }
-                }
-                is ApiResult.Failure -> res.error.toUiError()
-                else -> UiState.Loading
-
-            }
-        }
+        ).mapApiResponseToUiState { data -> data.toInfo() }
 
 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents
 import com.kyu.jiu_jitsu.ui.theme.CoolGray25
@@ -42,41 +44,54 @@ fun StyleCardItem(
                 onClick = onClickEvent,
             ),
         shadowElevation = 3.dp,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(24.dp),
         color = ColorComponents.List.Setting.Background,
     ) {
-        Column(
-            modifier = Modifier.padding(15.dp)
-        ) {
-            // 아이템 아이콘
-            Box(
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val contentPadding = (maxWidth * 0.10f).coerceIn(15.dp, 26.dp)
+            val iconSize = (maxWidth * 0.245f).coerceIn(40.dp, 62.dp)
+            val iconShape = RoundedCornerShape((iconSize * 0.23f).coerceIn(12.dp, 16.dp))
+            val labelTopSpacing = (maxWidth * 0.095f).coerceIn(14.dp, 26.dp)
+
+            Column(
                 modifier = Modifier
-                    .size(40.dp)
-                    .background(color = CoolGray25, shape = RoundedCornerShape(14.dp))
+                    .fillMaxSize()
+                    .padding(contentPadding)
             ) {
-                iconRes?.let {
-                    Image(
-                        modifier = Modifier.fillMaxSize(),
-                        painter = painterResource(it),
-                        contentDescription = "MyStyleDefault",
-                        contentScale = ContentScale.Fit,
-                    )
+                // 아이템 아이콘
+                Box(
+                    modifier = Modifier
+                        .size(iconSize)
+                        .background(color = CoolGray25, shape = iconShape)
+                ) {
+                    iconRes?.let {
+                        Image(
+                            modifier = Modifier.fillMaxSize(),
+                            painter = painterResource(it),
+                            contentDescription = "MyStyleDefault",
+                            contentScale = ContentScale.Fit,
+                        )
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(labelTopSpacing))
+                // Title
+                Text(
+                    text = stringResource(titleRes),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = CoolGray75,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = itemName ?: "",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = CoolGray75,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
-
-            Spacer(modifier = Modifier.height(10.dp))
-            // Title
-            Text(
-                text = stringResource(titleRes),
-                style = MaterialTheme.typography.titleMedium,
-                color = CoolGray75
-            )
-
-            Text(
-                text = itemName ?: "",
-                style = MaterialTheme.typography.titleMedium,
-                color = CoolGray75
-            )
         }
     }
 }

@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.kyu.jiu_jitsu.data.api.common.UiState
+import com.kyu.jiu_jitsu.data.model.AppVersionInfo
+import com.kyu.jiu_jitsu.data.model.BootStrapInfo
 import com.kyu.jiu_jitsu.data.model.SplashModel
 import com.kyu.jiu_jitsu.data.model.UserProfileInfo
 import com.kyu.jiu_jitsu.domain.usecase.GetBootStrapInfoUseCase
@@ -36,21 +38,29 @@ class SplashViewModel @Inject constructor(
     // BootStrap + Check Auto Login (Check Local Token)
     suspend fun startFirstLogic() {
         splashUiState = UiState.Loading
-        combine(
-            getBootStrapInfoUseCase(),
-            checkAutoLoginUseCase()
-        ) { bootState, autoLogin ->
-            when (bootState) {
-                is UiState.Success -> UiState.Success(
-                    SplashModel(bootState.result, autoLogin)
+        checkAutoLoginUseCase().collectLatest { isSuccessAutoLogin ->
+            splashUiState = UiState.Success(
+                SplashModel(
+                    BootStrapInfo(AppVersionInfo("", "", false)),
+                    isSuccessAutoLogin
                 )
-
-                is UiState.Error -> bootState
-                else -> UiState.Idle
-            }
-        }.collectLatest { newState ->
-            splashUiState = newState
+            )
         }
+//        combine(
+//            getBootStrapInfoUseCase(),
+//            checkAutoLoginUseCase()
+//        ) { bootState, autoLogin ->
+//            when (bootState) {
+//                is UiState.Success -> UiState.Success(
+//                    SplashModel(bootState.result, autoLogin)
+//                )
+//
+//                is UiState.Error -> bootState
+//                else -> UiState.Idle
+//            }
+//        }.collectLatest { newState ->
+//            splashUiState = newState
+//        }
     }
 
     /**

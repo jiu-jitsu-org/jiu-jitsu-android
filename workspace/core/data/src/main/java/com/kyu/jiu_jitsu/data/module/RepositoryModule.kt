@@ -1,21 +1,27 @@
 package com.kyu.jiu_jitsu.data.module
 
+import android.content.Context
 import com.kyu.jiu_jitsu.data.api.BootStrapService
 import com.kyu.jiu_jitsu.data.api.CommunityService
+import com.kyu.jiu_jitsu.data.api.ImageKitService
+import com.kyu.jiu_jitsu.data.api.ImageService
 import com.kyu.jiu_jitsu.data.api.LoginService
 import com.kyu.jiu_jitsu.data.api.UserService
 import com.kyu.jiu_jitsu.data.repository.BootStrapRepository
 import com.kyu.jiu_jitsu.data.repository.CommunityRepository
+import com.kyu.jiu_jitsu.data.repository.ImageRepository
 import com.kyu.jiu_jitsu.data.repository.RefreshTokenRepository
 import com.kyu.jiu_jitsu.data.repository.SnsLoginRepository
 import com.kyu.jiu_jitsu.data.repository.UserRepository
 import com.kyu.jiu_jitsu.data.repository.impl.BootStrapInfoRepository
 import com.kyu.jiu_jitsu.data.repository.impl.CommunityRepositoryImpl
+import com.kyu.jiu_jitsu.data.repository.impl.ImageRepositoryImpl
 import com.kyu.jiu_jitsu.data.repository.impl.LoginUserRepositoryImpl
 import com.kyu.jiu_jitsu.data.repository.impl.UserRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -52,5 +58,14 @@ object RepositoryModule {
     fun provideCommunityRepository(
         communityService: CommunityService
     ): CommunityRepository = CommunityRepositoryImpl(communityService)
+
+    @Provides
+    @Singleton
+    fun provideImageRepository(
+        @ApplicationContext context: Context,
+        imageService: ImageService,
+        imageKitService: ImageKitService,
+        userService: UserService,
+    ): ImageRepository = ImageRepositoryImpl(context, imageService, imageKitService, userService)
 
 }

@@ -23,7 +23,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -39,24 +38,24 @@ import kotlinx.coroutines.flow.filter
 import kotlin.math.abs
 
 @Composable
-fun VerticalWheelPicker(
-    items: List<String>,
+fun <T> VerticalWheelPicker(
+    items: List<T>,
     initialIndex: Int = 0,                 // 0..items.lastIndex
-    onSelected: (index: Int, value: String) -> Unit,
+    onSelected: (index: Int, value: T) -> Unit,
     modifier: Modifier = Modifier,
     visibleCount: Int = 3,                 // 홀수 권장
     itemHeight: Dp = 44.dp,
     itemWidth: Dp = 72.dp,
     textSize: TextUnit = 20.sp,
-    enableHaptics: Boolean = true
+    enableHaptics: Boolean = true,
+    itemText: (T) -> String = { it.toString() },
 ) {
     require(items.isNotEmpty()) { "items must not be empty" }
     require(visibleCount % 2 == 1) { "visibleCount must be odd" }
     val haptic = LocalHapticFeedback.current
 
     val state = rememberLazyListState(
-        // 무한 루프가 아니므로 그대로 초기 포지션 사용
-        initialFirstVisibleItemIndex = initialIndex
+        initialFirstVisibleItemIndex = initialIndex.coerceIn(0, items.lastIndex)
     )
     val fling = rememberSnapFlingBehavior(state)
 
@@ -117,7 +116,7 @@ fun VerticalWheelPicker(
             horizontalAlignment = Alignment.CenterHorizontally,
             contentPadding = PaddingValues(vertical = verticalPadding)
         ) {
-            itemsIndexed(items) { index, label ->
+            itemsIndexed(items) { index, item ->
                 val dist = abs(index - centeredIndex)
                 val isCenter = dist == 0
                 val scale = if (isCenter) 1f else 0.86f
@@ -130,7 +129,7 @@ fun VerticalWheelPicker(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = label,
+                        text = itemText(item),
                         fontSize = textSize,
                         fontWeight = if (isCenter) FontWeight.SemiBold else FontWeight.Medium,
                         modifier = Modifier
@@ -149,15 +148,6 @@ fun VerticalWheelPicker(
             modifier = Modifier
                 .matchParentSize()
                 .background(Color.Transparent)
-//                .background(
-//                    Brush.verticalGradient(
-//                        0f to Color.White,
-//                        0.15f to Color.White,
-//                        0.5f to Color.Transparent,
-//                        0.85f to Color.White,
-//                        1f to Color.White
-//                    )
-//                )
         )
     }
 }
@@ -173,7 +163,8 @@ private fun currentCenteredIndex(state: LazyListState): Int {
         val itemCenter = item.offset + item.size / 2
         val d = abs(itemCenter - centerY)
         if (d < minDist) {
-            minDist = d; closestIndex = item.index
+            minDist = d
+            closestIndex = item.index
         }
     }
     return closestIndex

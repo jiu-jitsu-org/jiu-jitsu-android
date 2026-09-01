@@ -197,18 +197,18 @@ private fun TypeDateLayout(
         Row (verticalAlignment = Alignment.CenterVertically) {
             // Year
             VerticalWheelPicker(
-                items = yearList.map { it.toString() },
+                items = yearList,
                 initialIndex = selectedYearIndex,
-                onSelected = { i, value -> selectedYearIndex = i },
+                onSelected = { i, _ -> selectedYearIndex = i },
                 itemHeight = 44.dp,
                 itemWidth  = 86.dp,
             )
             Spacer(modifier = Modifier.width(8.dp))
             // Month
             VerticalWheelPicker(
-                items = monthList.map { it.toString() },
+                items = monthList,
                 initialIndex = selectedMonthIndex,
-                onSelected = { i, value -> selectedMonthIndex = i },
+                onSelected = { i, _ -> selectedMonthIndex = i },
                 itemHeight = 44.dp,
                 itemWidth  = 86.dp
             )
@@ -297,11 +297,12 @@ private fun TypeRankLayout(
         )
 
         VerticalWheelPicker(
-            items = resultList.map { it.displayName },
+            items = resultList,
             initialIndex = selectedIndex,
-            onSelected = { i, value -> selectedIndex = i },
+            onSelected = { i, _ -> selectedIndex = i },
             itemHeight = 44.dp,
             itemWidth  = 86.dp,
+            itemText = { rank -> rank.displayName },
         )
 
         // Bottom Button

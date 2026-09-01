@@ -21,9 +21,11 @@ internal fun Project.configureAndroidCompose(
         dependencies {
             val bom = libs.findLibrary("androidx-compose-bom").get()
             "implementation"(platform(bom))
-//            "androidTestImplementation"(platform(bom))
+            "implementation"(libs.findLibrary("androidx-compose-runtime").get())
+            "implementation"(libs.findLibrary("androidx-ui").get())
+            "implementation"(libs.findLibrary("androidx-ui-graphics").get())
             "implementation"(libs.findLibrary("androidx-compose-ui-tooling-preview").get())
-//            "debugImplementation"(libs.findLibrary("androidx-compose-ui-tooling").get())
+            "debugImplementation"(libs.findLibrary("androidx-compose-ui-tooling").get())
         }
 
         testOptions {
@@ -50,7 +52,9 @@ internal fun Project.configureAndroidCompose(
             .relativeToRootProject("compose-reports")
             .let(reportsDestination::set)
 
-        stabilityConfigurationFiles
-            .add(isolated.rootProject.projectDirectory.file("compose_compiler_config.conf"))
+        val stabilityConfig = isolated.rootProject.projectDirectory.file("compose_compiler_config.conf")
+        if (stabilityConfig.asFile.exists()) {
+            stabilityConfigurationFiles.add(stabilityConfig)
+        }
     }
 }

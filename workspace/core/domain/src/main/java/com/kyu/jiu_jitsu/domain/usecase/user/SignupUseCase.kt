@@ -1,13 +1,11 @@
 package com.kyu.jiu_jitsu.domain.usecase.user
 
-import com.kyu.jiu_jitsu.data.api.common.ApiResult
 import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.api.common.toUiError
 import com.kyu.jiu_jitsu.data.model.LoginInfo
 import com.kyu.jiu_jitsu.data.model.dto.response.toInfo
 import com.kyu.jiu_jitsu.data.repository.UserRepository
+import com.kyu.jiu_jitsu.domain.mapResultToUiState
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class SignupUseCase @Inject constructor(
@@ -17,11 +15,6 @@ class SignupUseCase @Inject constructor(
         nickName: String,
         isMarketingAgreed: Boolean,
     ): Flow<UiState<LoginInfo>> =
-        userRepository.signupUser(nickName, isMarketingAgreed).map { res ->
-            when(res) {
-                is ApiResult.Success -> UiState.Success(res.data.data.toInfo())
-                is ApiResult.Failure -> res.error.toUiError()
-                else -> UiState.Loading
-            }
-        }
+        userRepository.signupUser(nickName, isMarketingAgreed)
+            .mapResultToUiState { response -> response.data.toInfo() }
 }

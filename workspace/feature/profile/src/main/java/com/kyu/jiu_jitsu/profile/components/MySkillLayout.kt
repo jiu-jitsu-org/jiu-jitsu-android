@@ -2,6 +2,8 @@ package com.kyu.jiu_jitsu.profile.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,9 +19,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kyu.jiu_jitsu.data.model.CommunityProfileInfo
 import com.kyu.jiu_jitsu.data.model.POSITION
@@ -31,6 +36,9 @@ import com.kyu.jiu_jitsu.ui.routes.SkillStyleScreenType
 import com.kyu.jiu_jitsu.ui.theme.Blue500
 import com.kyu.jiu_jitsu.ui.theme.CoolGray75
 import com.kyu.jiu_jitsu.ui.theme.getIconDrawableRes
+
+private val MySkillContentMaxWidth = 560.dp
+private const val CommunityProfileCardAspectRatio = 253f / 197f
 
 /**
  * 커뮤니티 프로필 정보 - 나의 포지션, 서브미션, 기술
@@ -67,57 +75,77 @@ fun MySkillLayout(
 private fun DefaultCommunityProfileInfo(
     onSaveMyStyleClick: (screenType: String) -> Unit = {},
 ) {
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight(),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .wrapContentHeight()
     ) {
-        Spacer(modifier = Modifier.height(62.dp))
-        Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 25.dp),
-            text = stringResource(R.string.profile_my_style_title),
-            style = MaterialTheme.typography.titleSmall,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 25.dp),
-            text = stringResource(R.string.profile_my_style_sub_title),
-            style = MaterialTheme.typography.labelMedium,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(24.dp))
+        val contentWidth = maxWidth.coerceAtMost(MySkillContentMaxWidth)
+        val topPadding = (contentWidth * 0.14f).coerceIn(48.dp, 72.dp)
+        val titleHorizontalPadding = (contentWidth * 0.06f).coerceIn(20.dp, 32.dp)
+        val subtitleButtonSpacing = (contentWidth * 0.08f).coerceIn(28.dp, 48.dp)
+        val buttonImageSpacing = (contentWidth * 0.07f).coerceIn(24.dp, 40.dp)
+        val buttonWidth = (contentWidth * 0.52f)
+            .coerceIn(200.dp, 320.dp)
+            .coerceAtMost(contentWidth - titleHorizontalPadding * 2)
+        val imageWidth = (contentWidth * 0.92f).coerceAtMost(430.dp)
+        val bottomPadding = (contentWidth * 0.10f).coerceIn(36.dp, 56.dp)
 
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Blue500.copy(alpha = 0f),
-                            Blue500.copy(alpha = 0.4f)
-                        )
-                    )
-                ),
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(topPadding))
+            Text(
+                modifier = Modifier
+                    .width(contentWidth)
+                    .padding(horizontal = titleHorizontalPadding),
+                text = stringResource(R.string.profile_my_style_title),
+                style = MaterialTheme.typography.titleSmall,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                modifier = Modifier
+                    .width(contentWidth)
+                    .padding(horizontal = titleHorizontalPadding),
+                text = stringResource(R.string.profile_my_style_sub_title),
+                style = MaterialTheme.typography.labelMedium,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(subtitleButtonSpacing))
+
             /** 내 스타일 등록하기 버튼 */
             TintButton(
+                modifier = Modifier.width(buttonWidth),
                 text = stringResource(R.string.profile_my_style_button),
                 onClick = { onSaveMyStyleClick(SkillStyleScreenType.ALL.screenName) },
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            Image(
-                painter = painterResource(R.drawable.ic_my_style_default),
-                contentDescription = "MyStyleDefault"
-            )
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(buttonImageSpacing))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Blue500.copy(alpha = 0f),
+                                Blue500.copy(alpha = 0.4f)
+                            )
+                        )
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    modifier = Modifier.width(imageWidth),
+                    painter = painterResource(R.drawable.ic_my_style_default),
+                    contentDescription = "MyStyleDefault",
+                    contentScale = ContentScale.Fit
+                )
+                Spacer(modifier = Modifier.height(bottomPadding))
+            }
         }
     }
 }
@@ -131,24 +159,53 @@ private fun CommunityProfileInfoList(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight()
+            .wrapContentHeight(),
+        color = Color.Transparent
     ) {
-        Column {
-            PositionInfo(
-                info.bestPosition,
-                info.favoritePosition,
-                onSaveMyStyleClick = { onModifyMyStyleClick(SkillStyleScreenType.Position.screenName) }
-            )
-            TechniqueInfo(
-                info.bestTechnique,
-                info.favoriteTechnique,
-                onSaveMyStyleClick = { onModifyMyStyleClick(SkillStyleScreenType.Technique.screenName) }
-            )
-            SubmissionInfo(
-                info.bestSubmission,
-                info.favoriteSubmission,
-                onSaveMyStyleClick = { onModifyMyStyleClick(SkillStyleScreenType.Submission.screenName) }
-            )
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val horizontalPadding = (maxWidth * 0.046f).coerceIn(20.dp, 28.dp)
+            val contentWidth = (maxWidth - horizontalPadding * 2).coerceAtMost(MySkillContentMaxWidth)
+            val cardGap = (contentWidth * 0.024f).coerceIn(10.dp, 16.dp)
+            val cardWidth = (contentWidth - cardGap) / 2
+            val cardHeight = (cardWidth / CommunityProfileCardAspectRatio).coerceIn(132.dp, 202.dp)
+            val topPadding = (contentWidth * 0.085f).coerceIn(30.dp, 50.dp)
+            val titleCardSpacing = (contentWidth * 0.032f).coerceIn(12.dp, 20.dp)
+            val sectionSpacing = (contentWidth * 0.11f).coerceIn(34.dp, 58.dp)
+            val bottomPadding = (contentWidth * 0.05f).coerceIn(16.dp, 28.dp)
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .width(contentWidth)
+                    .padding(top = topPadding, bottom = bottomPadding)
+            ) {
+                PositionInfo(
+                    bestPosition = info.bestPosition,
+                    favoritePosition = info.favoritePosition,
+                    cardHeight = cardHeight,
+                    cardGap = cardGap,
+                    titleCardSpacing = titleCardSpacing,
+                    onSaveMyStyleClick = { onModifyMyStyleClick(SkillStyleScreenType.Position.screenName) }
+                )
+                Spacer(modifier = Modifier.height(sectionSpacing))
+                TechniqueInfo(
+                    bestTechnique = info.bestTechnique,
+                    favoriteTechnique = info.favoriteTechnique,
+                    cardHeight = cardHeight,
+                    cardGap = cardGap,
+                    titleCardSpacing = titleCardSpacing,
+                    onSaveMyStyleClick = { onModifyMyStyleClick(SkillStyleScreenType.Technique.screenName) }
+                )
+                Spacer(modifier = Modifier.height(sectionSpacing))
+                SubmissionInfo(
+                    bestSubmission = info.bestSubmission,
+                    favoriteSubmission = info.favoriteSubmission,
+                    cardHeight = cardHeight,
+                    cardGap = cardGap,
+                    titleCardSpacing = titleCardSpacing,
+                    onSaveMyStyleClick = { onModifyMyStyleClick(SkillStyleScreenType.Submission.screenName) }
+                )
+            }
         }
     }
 }
@@ -161,43 +218,22 @@ private fun CommunityProfileInfoList(
 private fun PositionInfo(
     bestPosition: POSITION?,
     favoritePosition: POSITION?,
+    cardHeight: Dp,
+    cardGap: Dp,
+    titleCardSpacing: Dp,
     onSaveMyStyleClick: () -> Unit = {},
 ) {
-    Column(
-        modifier = Modifier.padding(vertical = 15.dp)
-    ) {
-        Text(
-            modifier = Modifier.padding(horizontal = 20.dp),
-            text = stringResource(com.kyu.jiu_jitsu.ui.R.string.common_position),
-            style = MaterialTheme.typography.titleMedium,
-            color = CoolGray75
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            StyleCardItem(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 20.dp),
-                iconRes = bestPosition?.getIconDrawableRes(),
-                titleRes = com.kyu.jiu_jitsu.ui.R.string.common_my_best,
-                itemName = bestPosition?.name ?: stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null),
-                onClickEvent = onSaveMyStyleClick
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            StyleCardItem(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 20.dp),
-                iconRes = favoritePosition?.getIconDrawableRes(),
-                titleRes = com.kyu.jiu_jitsu.ui.R.string.common_my_favorite,
-                itemName = favoritePosition?.name ?: stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null),
-                onClickEvent = onSaveMyStyleClick
-            )
-        }
-    }
+    StyleInfoSection(
+        titleRes = com.kyu.jiu_jitsu.ui.R.string.common_position,
+        bestIconRes = bestPosition?.getIconDrawableRes(),
+        bestItemName = bestPosition?.displayName?.toSingleLine(),
+        favoriteIconRes = favoritePosition?.getIconDrawableRes(),
+        favoriteItemName = favoritePosition?.displayName?.toSingleLine(),
+        cardHeight = cardHeight,
+        cardGap = cardGap,
+        titleCardSpacing = titleCardSpacing,
+        onSaveMyStyleClick = onSaveMyStyleClick,
+    )
 }
 
 /** 나의 테크닉 스타일
@@ -208,88 +244,96 @@ private fun PositionInfo(
 private fun TechniqueInfo(
     bestTechnique: TECHNIQUE?,
     favoriteTechnique: TECHNIQUE?,
+    cardHeight: Dp,
+    cardGap: Dp,
+    titleCardSpacing: Dp,
     onSaveMyStyleClick: () -> Unit = {},
 ) {
-    Column(
-        modifier = Modifier.padding(vertical = 15.dp)
-    ) {
-        Text(
-            modifier = Modifier.padding(horizontal = 20.dp),
-            text = stringResource(com.kyu.jiu_jitsu.ui.R.string.common_technique),
-            style = MaterialTheme.typography.titleMedium,
-            color = CoolGray75
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            StyleCardItem(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 20.dp),
-                iconRes = bestTechnique?.getIconDrawableRes(),
-                titleRes = com.kyu.jiu_jitsu.ui.R.string.common_my_best,
-                itemName = bestTechnique?.name ?: stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null),
-                onClickEvent = onSaveMyStyleClick
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            StyleCardItem(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 20.dp),
-                iconRes = favoriteTechnique?.getIconDrawableRes(),
-                titleRes = com.kyu.jiu_jitsu.ui.R.string.common_my_favorite,
-                itemName = favoriteTechnique?.name ?: stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null),
-                onClickEvent = onSaveMyStyleClick
-            )
-        }
-    }
+    StyleInfoSection(
+        titleRes = com.kyu.jiu_jitsu.ui.R.string.common_technique,
+        bestIconRes = bestTechnique?.getIconDrawableRes(),
+        bestItemName = bestTechnique?.displayName?.toSingleLine(),
+        favoriteIconRes = favoriteTechnique?.getIconDrawableRes(),
+        favoriteItemName = favoriteTechnique?.displayName?.toSingleLine(),
+        cardHeight = cardHeight,
+        cardGap = cardGap,
+        titleCardSpacing = titleCardSpacing,
+        onSaveMyStyleClick = onSaveMyStyleClick,
+    )
 }
 
-/** 나의 테크닉 스타일
- *  @param bestTechnique 최고 테크닉
- *  @param favoriteTechnique 최애 테크닉
+/** 나의 서브미션 스타일
+ *  @param bestSubmission 최고 서브미션
+ *  @param favoriteSubmission 최애 서브미션
  */
 @Composable
 private fun SubmissionInfo(
     bestSubmission: SUBMISSION?,
     favoriteSubmission: SUBMISSION?,
+    cardHeight: Dp,
+    cardGap: Dp,
+    titleCardSpacing: Dp,
     onSaveMyStyleClick: () -> Unit = {},
 ) {
-    Column(
-        modifier = Modifier.padding(vertical = 15.dp)
-    ) {
+    StyleInfoSection(
+        titleRes = com.kyu.jiu_jitsu.ui.R.string.common_submission,
+        bestIconRes = bestSubmission?.getIconDrawableRes(),
+        bestItemName = bestSubmission?.displayName?.toSingleLine(),
+        favoriteIconRes = favoriteSubmission?.getIconDrawableRes(),
+        favoriteItemName = favoriteSubmission?.displayName?.toSingleLine(),
+        cardHeight = cardHeight,
+        cardGap = cardGap,
+        titleCardSpacing = titleCardSpacing,
+        onSaveMyStyleClick = onSaveMyStyleClick,
+    )
+}
+
+@Composable
+private fun StyleInfoSection(
+    titleRes: Int,
+    bestIconRes: Int?,
+    bestItemName: String?,
+    favoriteIconRes: Int?,
+    favoriteItemName: String?,
+    cardHeight: Dp,
+    cardGap: Dp,
+    titleCardSpacing: Dp,
+    onSaveMyStyleClick: () -> Unit = {},
+) {
+    val emptyItemName = stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null)
+
+    Column {
         Text(
-            modifier = Modifier.padding(horizontal = 20.dp),
-            text = stringResource(com.kyu.jiu_jitsu.ui.R.string.common_submission),
+            text = stringResource(titleRes),
             style = MaterialTheme.typography.titleMedium,
             color = CoolGray75
         )
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(titleCardSpacing))
 
         Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(cardGap)
         ) {
             StyleCardItem(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 20.dp),
-                iconRes = bestSubmission?.getIconDrawableRes(),
+                    .height(cardHeight),
+                iconRes = bestIconRes,
                 titleRes = com.kyu.jiu_jitsu.ui.R.string.common_my_best,
-                itemName = bestSubmission?.name ?: stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null),
+                itemName = bestItemName ?: emptyItemName,
                 onClickEvent = onSaveMyStyleClick
             )
-            Spacer(modifier = Modifier.width(10.dp))
             StyleCardItem(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 20.dp),
-                iconRes = favoriteSubmission?.getIconDrawableRes(),
+                    .height(cardHeight),
+                iconRes = favoriteIconRes,
                 titleRes = com.kyu.jiu_jitsu.ui.R.string.common_my_favorite,
-                itemName = favoriteSubmission?.name ?: stringResource(com.kyu.jiu_jitsu.ui.R.string.common_item_null),
+                itemName = favoriteItemName ?: emptyItemName,
                 onClickEvent = onSaveMyStyleClick
             )
         }
     }
 }
+
+private fun String.toSingleLine(): String = replace("\n", " ")

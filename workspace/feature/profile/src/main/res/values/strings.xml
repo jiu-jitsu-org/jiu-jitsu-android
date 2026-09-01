@@ -20,10 +20,19 @@
     <string name="profile_my_style_position_title">포지션 설정</string>
     <string name="profile_my_style_technique_title">기술 설정</string>
     <string name="profile_my_style_submission_title">서브미션 설정</string>
+    <string name="profile_my_style_complete">수정 완료</string>
 
     <string name="profile_competition_input_hint">출전한 대회 정보를 입력해주세요</string>
 
     <string name="profile_modify_title">프로필 수정</string>
+
+    <string name="profile_image_edit_title">프로필 이미지 수정</string>
+    <string name="profile_image_take_photo">사진 촬영</string>
+    <string name="profile_image_find_album">앨범에서 찾기</string>
+    <string name="profile_image_delete">삭제</string>
+    <string name="profile_image_cancel">취소</string>
+    <string name="profile_camera_permission_denied">카메라 권한이 필요합니다.</string>
+    <string name="profile_gallery_permission_denied">사진 접근 권한이 필요합니다.</string>
 
     <string name="profile_weight_hide">숨김</string>
     <string name="profile_weight_hide_btn">가리기</string>

@@ -1,8 +1,8 @@
 # Built application files
-*.apk
+!*.apk
 *.aar
 *.ap_
-*.aab
+!*.aab
 
 # Files for the ART/Dalvik VM
 *.dex
@@ -37,13 +37,14 @@ proguard/
 captures/
 .externalNativeBuild/
 .cxx/
-*.apk
 output.json
 
 # IntelliJ
 *.iml
+.idea/
 .idea/workspace.xml
 .idea/tasks.xml
+.idea/gradle.xml
 .idea/gradle.xml
 .idea/assetWizardSettings.xml
 .idea/dictionaries

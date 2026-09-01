@@ -1,137 +1,141 @@
-# 🥋 JIU JITSU Project
+# JIU JITSU Android
 
+JiuJitsu Android 프로젝트는 Kotlin, Jetpack Compose, Hilt, Retrofit, DataStore 기반의 멀티모듈 Android 애플리케이션입니다.
 
-</br>
+실제 Gradle 프로젝트 루트는 `workspace/`입니다. 최상위 디렉터리는 프로젝트 문서와 Android workspace를 감싸는 저장소 루트 역할을 합니다.
 
-## :eyes: 환경 세팅
+## 개발 환경
 
-- Android Studio Narwhal Feature Drop | 2025.1.2 Patch 2 </br>
-![alt](./img/img_as.png "Android Studio Narwhal Feature Drop")</br></br>
+- Android Studio: Narwhal Feature Drop 2025.1.2 Patch 2 기준
+- Android Gradle Plugin: 8.12.2
+- Gradle Wrapper: 8.13
+- Kotlin: 2.1.10
+- Java target: 17
+- compileSdk / targetSdk: 36
+- minSdk: 26
 
-- AGP : 8.12.2</br>
-
-</br>
-
-## 🌿 브랜치 전략 (GitHub Flow)
-
-```bash
-main (프로덕션)
-├── develop (개발 통합)
-├── feature/user-auth (기능 개발)
-├── feature/video-upload
-├── hotfix/critical-bug (긴급 수정)
-└── release/v1.0.0 (릴리스 준비)
-```
-
-## 💬 커밋 컨벤션 (Conventional Commits)
-
-```bash
-형식: <type>(scope): <description>
-
-feat(auth): 소셜 로그인 구현
-fix(video): 업로드 실패 이슈 해결
-docs(readme): 개발 환경 설정 가이드 추가
-style(ui): 메인 화면 레이아웃 개선
-refactor(api): 사용자 API 구조 개선
-test(unit): 로그인 기능 테스트 케이스 추가
-chore(deps): iOS 라이브러리 업데이트
-```
-
-## 🗂️ `workspace/`
-
-### ⚫️ 요약 
-
-**Jetpack Compose + Hilt + Retrofit + DataStore + 멀티모듈 아키텍처**를 중심으로 구성.  
-`core` 와 `feature` 분리를 통하여 기능 확장과 유지보수를 고려하여 구조 설계.
-
-### ⚫️ 프로젝트 구조
-
-`app + core + feature + build-logic` 구성된 멀티모듈 프로젝트입니다.  
-구조상 `공통 기능(core)` 과 `화면 단위 기능(feature)` 를 분리해 확장성과 유지보수성을 고려하여 구성했습니다.
-
-```bash
-workspace/
-├── app/                 # 앱 진입점, Application/MainActivity, 전체 Navigation
-├── build-logic/         # 공통 Gradle Convention Plugin 관리
-├── core/
-│   ├── data/            # API, Repository 구현, Network/DataStore/Hilt 모듈
-│   ├── domain/          # UseCase 계층
-│   └── ui/              # 공통 UI 컴포넌트, Theme, Route 정의
-├── feature/
-│   ├── login/           # 로그인 화면, SNS 로그인 로직
-│   ├── nickname/        # 닉네임 입력/검증 플로우
-│   └── profile/         # 프로필 조회/수정, 스타일/대회/소속 수정
-├── gradle/
-│   └── libs.versions.toml   # 버전 카탈로그
-└── settings.gradle.kts      # 멀티모듈 구성 정의
-```
-
-### ⚫️ 모듈별 역할
-
-| 모듈 | 역할 |
-|---|---|
-| `app` | 앱 시작점. `@HiltAndroidApp`, `MainActivity`, `AppNavHost` 를 통해 전체 화면 흐름과 바텀 네비게이션 관리 |
-| `core:data` | Retrofit/OkHttp/Moshi 기반 네트워크 계층, Repository 구현체, DataStore 기반 로컬 저장소 제공 |
-| `core:domain` | UseCase 중심의 도메인 계층. 화면 로직이 데이터 계층에 직접 의존하지 않도록 중간 계층 역할 수행 |
-| `core:ui` | 공통 Theme, Button/TextField/Dialog/Card/Picker 등 재사용 UI 컴포넌트 제공 |
-| `feature:login` | 카카오/구글 로그인, 회원가입 바텀시트 등 인증 진입 기능 담당 |
-| `feature:nickname` | 닉네임 입력 및 검증 화면 담당 |
-| `feature:profile` | 프로필 조회/수정, 아카데미/대회/스타일 수정 등 마이페이지 성격의 기능 담당 |
-| `build-logic` | 공통 Android/Compose/Hilt/Firebase Gradle 설정을 Convention Plugin 으로 관리 |
-
-### ⚫️  아키텍처 흐름
+## 프로젝트 구조
 
 ```text
-UI(Compose Screen)
-→ ViewModel(Hilt 주입)
-→ UseCase(core:domain)
-→ Repository(core:data)
-→ Retrofit / DataStore
+workspace/
+├── app/                 # Application, MainActivity, 전역 Navigation, Firebase Messaging
+├── build-logic/         # 공통 Gradle Convention Plugin
+├── core/
+│   ├── data/            # Retrofit API, Repository 구현, DataStore, Network/Hilt 모듈
+│   ├── domain/          # UseCase 계층
+│   └── ui/              # Theme, Route, 공통 Compose 컴포넌트
+├── feature/
+│   ├── login/           # Kakao/Google 로그인, 회원가입 동의 플로우
+│   ├── nickname/        # 닉네임 입력, 검증, 가입 완료 플로우
+│   └── profile/         # 커뮤니티 프로필 조회/수정, 스타일/대회/도장 정보
+├── gradle/
+│   └── libs.versions.toml
+└── settings.gradle.kts
 ```
 
-화면은 `ViewModel` 을 통해 상태를 다루고, 실제 비즈니스 로직은 `UseCase`, 데이터 접근은 `Repository` 가 담당하는 계층형 구조입니다.  
-테스트 용이성, 책임 분리, 기능별 모듈 독립성 측면을 고려하여 구성했습니다.
+## 모듈 역할
 
-### ⚫️ 사용된 Android 개발 스킬
+| 모듈 | 역할 |
+| --- | --- |
+| `:app` | 앱 진입점, `@HiltAndroidApp`, `MainActivity`, `AppNavHost`, bottom navigation, Firebase Messaging 서비스 |
+| `:core:data` | Retrofit/Moshi API, OkHttp client, Repository 구현체, Secure DataStore, DTO/model mapping |
+| `:core:domain` | 로그인, 부트스트랩, 유저, 커뮤니티 프로필, 로컬 데이터 관련 UseCase |
+| `:core:ui` | 디자인 시스템, semantic color, typography, 공통 button/text field/dialog/picker/card/navigation component |
+| `:feature:login` | Kakao/Google SNS 로그인, 신규 유저 약관 동의 bottom sheet |
+| `:feature:nickname` | 닉네임 유효성 검사, 중복 확인, 회원가입 처리 |
+| `:feature:profile` | 프로필 조회/수정, 벨트/체급, 도장명, 대회 이력, 주짓수 스타일 등록 |
+| `build-logic` | `jjs.*` convention plugin으로 Android/Compose/Hilt 설정 공통화 |
 
-####  프로젝트/빌드 구성
+## 아키텍처 흐름
 
-- `Gradle Kotlin DSL` 기반 빌드 스크립트 사용
-- `Version Catalog(libs.versions.toml)` 로 라이브러리 버전 일원화
-- `build-logic` 포함 빌드로 `Convention Plugin` 직접 관리
-- `Typesafe Project Accessors` 활성화
-- 멀티모듈 구조(`app`, `core`, `feature`) 설계
+```text
+Compose Screen
+→ Hilt ViewModel
+→ UseCase (:core:domain)
+→ Repository interface / implementation (:core:data)
+→ Retrofit API or Secure DataStore
+```
 
-####  UI 개발
+현재 구현은 실용적인 계층 분리를 따릅니다. 다만 `:core:domain`과 `:core:ui`가 `:core:data`에 직접 의존하고 있어, 엄격한 Clean Architecture라기보다는 빠른 기능 개발에 맞춘 구조입니다. 장기적으로는 domain model과 repository contract를 `:core:domain`으로 옮기면 테스트와 모듈 독립성이 좋아집니다.
 
-- `Jetpack Compose` 기반 UI 구성
-- `Material 3` 사용
-- 공통 버튼, 다이얼로그, 카드, 피커 등 `재사용 UI 컴포넌트` 설계
-- `Edge-to-Edge UI`, `WindowInsets`, 애니메이션(`AnimatedVisibility`) 적용
-- `Navigation Compose` + 타입 세이프 Route(`toRoute`, `@Serializable`) 사용
+## 아키텍처 유지 조건
 
-####  상태관리/아키텍처
+향후 기능 추가, 버그 수정, 리팩터링 작업에서는 아래 조건을 우선합니다.
 
-- `MVVM` 패턴 적용
-- `ViewModel` 기반 화면 상태 관리
-- `UseCase` 중심 Domain 계층 분리
-- `Repository Pattern` 적용
-- `UiState`, `ApiResult` 형태로 비동기 결과/에러 상태 추상화
+1. 현재의 멀티모듈 프로젝트 구성을 유지합니다. 기능 추가 시 `app`, `core`, `feature`, `build-logic`의 역할을 유지하고, 편의를 위해 모듈을 합치지 않습니다.
+2. `:core:data`와 `:core:domain` 계층 구조를 유지합니다. API, DTO, Repository 구현, DataStore, Network 설정은 `:core:data`에 두고, UseCase와 도메인 흐름 조합은 `:core:domain`에 둡니다.
+3. 위 구조 안에서 의존성 분리를 지킵니다. feature 간 직접 의존을 만들지 않고, 공통 UI는 `:core:ui`, 데이터 접근은 `:core:data`, 비즈니스 흐름은 `:core:domain`을 통해 다룹니다.
 
-#### 네트워크/데이터
+구조 개선이 필요하더라도 멀티모듈과 `core:data` / `core:domain` 분리를 깨지 않는 방향으로 진행합니다.
 
-- `Retrofit` 기반 API 통신
-- `OkHttp` 인터셉터 및 프로파일러 사용
-- `Moshi` 기반 JSON 파싱
-- `DataStore` 기반 로컬 데이터 저장
-- `BuildConfig` + `local.properties` 로 환경별 값 주입
+## 주요 기술
 
-#### 의존성 주입 및 외부 연동
+- UI: Jetpack Compose, Material 3, Navigation Compose, custom design system
+- DI: Hilt, KSP
+- Network: Retrofit, OkHttp, Moshi
+- Local storage: DataStore + Android Keystore 기반 암호화
+- Auth: Kakao SDK, Android Credentials API, Google ID
+- Push: Firebase Messaging 도입 중
+- Build: Gradle Kotlin DSL, Version Catalog, included build `build-logic`, type-safe project accessors
 
-- `Hilt` 기반 DI 구성
-- `@Module`, `@Provides`, `@HiltViewModel`, `@AndroidEntryPoint` 사용
-- `Kakao SDK` 연동
-- `Android Credentials API` + `Google ID` 기반 구글 로그인 연동
-- `Firebase`, `Secrets Gradle Plugin` 도입 흔적 존재
+## 빌드 및 검증
 
+```bash
+cd workspace
+./gradlew :app:assembleDebug --no-daemon
+```
 
+현재 로컬 분석 기준으로 `:app:assembleDebug`는 `app/google-services.json` 부재로 실패합니다. Firebase Google Services Plugin을 사용하므로 로컬 개발에는 다음 중 하나가 필요합니다.
+
+- `workspace/app/google-services.json` 또는 variant별 `workspace/app/src/debug/google-services.json` 배치
+- Firebase가 필요 없는 로컬 빌드에서 Google Services Plugin 조건부 적용
+
+Firebase 설정 파일과 별개로 아래 core/feature Kotlin 컴파일은 성공했습니다.
+
+```bash
+cd workspace
+./gradlew \
+  :core:data:compileDebugKotlin \
+  :core:domain:compileDebugKotlin \
+  :core:ui:compileDebugKotlin \
+  :feature:login:compileDebugKotlin \
+  :feature:nickname:compileDebugKotlin \
+  :feature:profile:compileDebugKotlin \
+  --no-daemon
+```
+
+## 현재 분석 기준 주의 사항
+
+- Google/Apple 로그인 버튼은 UI가 있으나 실제 로그인 시작 연결이 일부 미완성입니다.
+- 신규 가입 약관 플로우에서 마케팅 동의값 전달 로직을 확인해야 합니다.
+- `NetworkModule`의 timeout 값과 token 관리 방식은 정리가 필요합니다.
+- FCM 토큰 로그 출력은 릴리스 전에 제거해야 합니다.
+- 프로필/대회/스타일 수정 화면에는 placeholder 텍스트와 TODO가 남아 있습니다.
+- 테스트는 대부분 Android Studio 기본 예제 수준이라 핵심 UseCase, mapper, ViewModel 테스트 보강이 필요합니다.
+
+## 브랜치 전략
+
+GitHub Flow를 기본으로 사용합니다.
+
+```text
+main
+├── develop
+├── feature/*
+├── hotfix/*
+└── release/*
+```
+
+## 커밋 컨벤션
+
+Conventional Commits 형식을 사용합니다.
+
+```text
+<type>(scope): <description>
+
+feat(auth): 소셜 로그인 구현
+fix(profile): 대회 결과 매핑 오류 수정
+docs(readme): 프로젝트 구조 문서 최신화
+refactor(network): 토큰 인터셉터 구조 개선
+test(nickname): 닉네임 검증 테스트 추가
+chore(deps): Firebase Messaging 의존성 추가
+```

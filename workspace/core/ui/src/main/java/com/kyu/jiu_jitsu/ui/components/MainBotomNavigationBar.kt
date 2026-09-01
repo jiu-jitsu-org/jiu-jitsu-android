@@ -33,9 +33,9 @@ import com.kyu.jiu_jitsu.ui.theme.CoolGray500
 import com.kyu.jiu_jitsu.ui.theme.White
 
 @Composable
-fun MainBottomNavigationBar(
+fun <T : Any> MainBottomNavigationBar(
     navHostController: NavHostController,
-    navItems: List<Any>,
+    navItems: List<T>,
 ) {
     NavigationBar(
         containerColor = White,

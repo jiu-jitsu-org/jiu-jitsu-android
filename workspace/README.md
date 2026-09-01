@@ -1,38 +1,138 @@
-# JiuJitsuPjt
+# JiuJitsuPjt Workspace
 
-## 개요
-JiuJitsuPjt는 Kotlin과 Jetpack Compose로 작성된 multi-module Android application입니다. 프로젝트는 layer 단위(`core`)와 feature 단위(`feature`)로 관심사를 분리하고, `app` module이 navigation과 dependency injection을 조율합니다.
+이 디렉터리가 실제 Android Gradle 프로젝트 루트입니다.
 
-- UI layer: Jetpack Compose + Material 3 + custom design system
-- Dependency injection: Hilt (custom Gradle convention plugin)
-- Navigation: Jetpack Compose Navigation + type-safe routes
-- Build tools: `build-logic`의 custom Gradle conventions, Kotlin 2.1, AGP 8.12
+## Snapshot
 
-## Module 구조
-- `:app` — Application module. `MainActivity`, 전역 navigation(`AppRoot`, `AppNavHost`), Hilt entry point(`App`)를 포함하고 system UI(edge-to-edge), bottom navigation 표시 여부, feature graph 연결을 담당합니다.
-- `:core:ui` — Shared design system과 UI components. `Theme.kt`, semantic color map, reusable Compose widgets(button, dialog, text field, navigation bar)을 제공합니다.
-- `:core:data` — Data layer placeholder로 manifest와 ProGuard 설정만 포함하며, 추후 network/data source 구현을 수용할 예정입니다.
-- `:core:domain` — Domain layer placeholder로 use case와 business logic을 위한 공간입니다.
-- `:feature:login` — Authentication flow 담당 feature module. Login screen, agreement bottom sheet, Kakao/Google login을 처리하는 `LoginViewModel`을 제공합니다.
-- `:feature:nickname` — Nickname onboarding을 위한 module로 현재 manifest scaffolding만 포함합니다.
-- `build-logic` — `includeBuild`로 연결된 composite build. `AndroidApplicationConventionPlugin`, `AndroidLibraryConventionPlugin`, `HiltConventionPlugin` 등 custom Gradle convention plugin이 module별 Kotlin, Compose, Hilt, managed device 설정을 통일합니다.
+- Project type: Multi-module Android application
+- Language: Kotlin
+- UI: Jetpack Compose + Material 3
+- DI: Hilt + KSP
+- Network: Retrofit + OkHttp + Moshi
+- Local storage: DataStore + Android Keystore encryption
+- Navigation: Navigation Compose type-safe route
+- Build: Gradle Kotlin DSL + Version Catalog + included `build-logic`
 
-## Coding Style & Architecture
-- **Compose-driven UI:** Screen은 composable function으로 구현되며, 상태는 `ViewModel`에서 전달됩니다. System UI(status/nav bar, inset)는 `LaunchedEffect`와 remember state를 통해 선언적으로 조정합니다.
-- **State management:** `ViewModel`은 `mutableStateOf` property를 노출하고, domain flow를 `collectLatest`, `combine`으로 수집해 비동기 데이터를 UI와 연결합니다 (`SplashViewModel`, `LoginViewModel`).
-- **Navigation:** Type-safe route(`composable<Route>`)와 nested graph(`navigation<HomeGraph>`)를 활용해 splash, home, login, nickname flow를 분리하고, `popUpTo`, `restoreState`로 back stack을 관리합니다.
-- **Design system:** `core:ui`의 `ColorComponents`와 typography wrapper가 component palette를 표준화합니다. `PressableButton`과 같은 reusable UI primitive는 press animation, throttling, styling을 캡슐화합니다.
-- **Sealed modeling:** `LoginType`, `SnsLoginSucceedType`, `SignUpAgreeType`, `EdgeBehavior` 등 domain-specific option은 sealed hierarchy로 정의되어 UI 로직에서 완전한 분기 처리를 보장합니다.
-- **Gradle conventions:** compileSdk 36, Java/Kotlin target, Compose compiler metrics 등의 공통 설정을 `build-logic`에 집중시켜 중복을 줄이고 module 간 일관성을 유지합니다. Hilt 설정은 custom plugin이 KSP와 dependency, `dagger.hilt.android.plugin` 적용을 자동화합니다.
+## Modules
 
-## Tooling & Dependencies
-- Kotlin 2.1.10, Compose BOM 2025.09.00, AndroidX Navigation 2.9.4
-- Credential Manager, Kakao SDK, Google Sign-In library (`feature:login`)
-- Compose Material 3, Material Icons, Accompanist Permissions, Coil 등 UI 의존성
-- Gradle plugin은 version catalog(`libs.versions.toml`)로 관리되며 alias 또는 custom convention ID(`jjs.*`)로 적용됩니다
+| Module | Responsibility |
+| --- | --- |
+| `:app` | Application entry point, `MainActivity`, app-level navigation, bottom navigation, Firebase Messaging service |
+| `:core:ui` | Shared design system, route definitions, typography, semantic colors, reusable Compose components |
+| `:core:data` | Retrofit services, repository implementations, DTOs, model mapping, network module, secure preferences |
+| `:core:domain` | UseCases for auth, bootstrap, user profile, community profile, local data |
+| `:feature:login` | Kakao/Google login UI and orchestration, signup agreement bottom sheet |
+| `:feature:nickname` | Nickname validation, duplication check, signup completion |
+| `:feature:profile` | Community profile screen and profile edit flows |
+| `build-logic` | Project convention plugins for Android, Compose, Hilt, Firebase setup |
 
-## 주목할 패턴
-- **Edge-to-edge handling:** `MainActivity`와 `EdgeToEdgeChrome`이 현재 destination의 `EdgeBehavior`에 따라 system bar icon 색상과 scrim을 조정합니다.
-- **Bottom sheet consent flow:** `SignUpBottomSheet`은 `mutableStateMapOf`로 동의 상태를 추적하며, 필수 동의 여부에 따라 CTA가 “모두 동의” ↔ “다음”으로 전환됩니다.
-- **Login orchestration:** `LoginViewModel`은 SNS login 진입, 응답 처리, token 저장을 추상화하며, TODO는 Apple login 지원 등 향후 작업을 표시합니다.
+## Runtime Flow
 
+```text
+App
+└── MainActivity
+    └── AppRoot
+        ├── AppNavHost
+        ├── MainBottomNavigationBar
+        └── EdgeToEdgeChrome
+```
+
+Primary feature flow:
+
+```text
+SplashScreen
+→ LoginGraph or HomeGraph
+→ LoginScreen
+→ NickNameScreen
+→ ProfileScreen / Modify* screens
+```
+
+Data flow:
+
+```text
+Composable Screen
+→ Hilt ViewModel
+→ UseCase
+→ Repository
+→ Retrofit service or SecurePreferences
+```
+
+## Architecture Notes
+
+- UI state is represented with `UiState<T>` and exposed through Compose state or `StateFlow`.
+- API calls are wrapped by `safeApiCall` and mapped to `ApiResult<T>`.
+- Navigation routes are defined with `@Serializable` route objects/data classes in `:core:ui`.
+- Feature modules depend on `:core:ui` through `jjs.android.feature` and explicitly depend on `:core:data` / `:core:domain` where needed.
+- Current dependency direction is pragmatic, not fully clean: `:core:domain` depends on `:core:data`, and `:core:ui` also depends on `:core:data`. If the codebase grows, move repository contracts and domain models out of `:core:data`.
+
+## Architecture Guardrails
+
+Future changes must preserve these project constraints:
+
+1. Keep the current multi-module project structure. Do not collapse `app`, `core`, `feature`, or `build-logic` boundaries for convenience.
+2. Keep the `:core:data` and `:core:domain` architecture. `:core:data` owns Retrofit APIs, DTOs, repository implementations, DataStore, network configuration, and data mapping. `:core:domain` owns UseCases and domain-level flow orchestration.
+3. Preserve dependency separation inside that structure. Avoid direct feature-to-feature dependencies, keep reusable UI in `:core:ui`, keep data access in `:core:data`, and route business workflows through `:core:domain`.
+
+If architecture cleanup is needed, make the module boundaries and `core:data` / `core:domain` separation stronger rather than weaker.
+
+## Build
+
+```bash
+./gradlew :app:assembleDebug --no-daemon
+```
+
+Known local build requirement:
+
+- `:app` applies Google Services Plugin.
+- `app/google-services.json` or a variant-specific Google services file must exist for `:app:assembleDebug`.
+
+Compile check for core and feature modules:
+
+```bash
+./gradlew \
+  :core:data:compileDebugKotlin \
+  :core:domain:compileDebugKotlin \
+  :core:ui:compileDebugKotlin \
+  :feature:login:compileDebugKotlin \
+  :feature:nickname:compileDebugKotlin \
+  :feature:profile:compileDebugKotlin \
+  --no-daemon
+```
+
+## Configuration Files
+
+- `local.properties`: local-only values such as `BASE_URL`, `DEV_BASE_URL`, Kakao key, Google OAuth client id.
+- `app/google-services.json`: Firebase app configuration. Do not commit real production secrets unless repository policy explicitly allows it.
+- `gradle/libs.versions.toml`: dependency and plugin versions.
+- `build-logic/convention`: convention plugin source.
+
+## Current Implementation Highlights
+
+- `MainActivity` controls edge-to-edge behavior based on the current navigation destination.
+- `AppNavHost` owns app-level graph wiring for splash, home, login, nickname, and profile edit flows.
+- `LoginViewModel` coordinates Kakao/Google credential acquisition and server login.
+- `SecurePreferences` encrypts stored values with Android Keystore AES/GCM before saving them in DataStore.
+- `NetworkModule` provides token and non-token Retrofit clients with Hilt qualifiers.
+- `ProfileViewModel` fetches and updates community profile information and keeps `ProfileSingleton` in sync.
+
+## Known Gaps From Latest Analysis
+
+- `:app:assembleDebug` is blocked without `google-services.json`.
+- Google login button currently sets the login type but does not start the login request from the click handler.
+- Apple login is represented in UI/model but not implemented.
+- Signup agreement passes marketing consent as `true` regardless of the actual selected agreement list.
+- `NetworkModule` timeout constants are `3000L` seconds, which is likely unintended.
+- Token handling uses module-level mutable state. A dedicated token provider/interceptor would be safer.
+- FCM token is logged and `UpdateAppInfoUseCase` is not yet wired into app startup or token refresh handling.
+- Several profile edit screens still contain placeholder button text.
+- `toCompetitionRank()` maps only `GOLD`.
+- Tests are mostly generated examples; business logic and mapper tests should be added.
+
+## Suggested Test Targets
+
+- `safeApiCall` error mapping.
+- DTO to domain mapper behavior, especially nullable API responses.
+- `toCompetitionRank()` and other enum mapping functions.
+- Nickname validation and duplicate-check state transitions.
+- Login success vs new-user branching.
+- Profile update request generation.

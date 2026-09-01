@@ -6,11 +6,11 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class SnsLoginResponse(
-    val success: Boolean?,
-    val code: String?,
-    val message: String?,
-    val data: SnsLoginResponseData?,
-)
+    override val success: Boolean?,
+    override val code: String?,
+    override val message: String?,
+    override val data: SnsLoginResponseData?,
+) : ApiResponse<SnsLoginResponseData>
 
 @JsonClass(generateAdapter = true)
 data class SnsLoginResponseData(

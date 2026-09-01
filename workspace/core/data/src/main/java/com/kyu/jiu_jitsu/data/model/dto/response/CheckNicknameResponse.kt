@@ -4,8 +4,8 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class CheckNicknameResponse(
-    val success: Boolean?,
-    val code: String?,
-    val message: String?,
-    val data: Boolean?,
-)
+    override val success: Boolean?,
+    override val code: String?,
+    override val message: String?,
+    override val data: Boolean?,
+) : ApiResponse<Boolean>

@@ -6,11 +6,11 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class BootStrapResponse(
-    val success: Boolean?,
-    val code: String?,
-    val message: String?,
-    val data: BootStrapResponseData?,
-)
+    override val success: Boolean?,
+    override val code: String?,
+    override val message: String?,
+    override val data: BootStrapResponseData?,
+) : ApiResponse<BootStrapResponseData>
 
 @JsonClass(generateAdapter = true)
 data class BootStrapResponseData(

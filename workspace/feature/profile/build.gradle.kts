@@ -1,8 +1,15 @@
+import java.util.Properties
+
 plugins {
-    alias(libs.plugins.jjs.android.feaure)
-    alias(libs.plugins.jjs.android.compose.library)
+    alias(libs.plugins.jjs.android.feature)
     alias(libs.plugins.secrets)
 }
+
+val properties = Properties()
+properties.load(project.rootProject.file("local.properties").inputStream())
+
+fun String.asBuildConfigString(): String =
+    "\"${replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
 android {
     namespace = "com.kyu.jiu_jitsu.profile"
@@ -10,6 +17,11 @@ android {
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+        buildConfigField(
+            "String",
+            "IMAGE_PUBLIC_KEY",
+            properties.getProperty("IMAGE_PUBLIC_KEY", "").asBuildConfigString(),
+        )
     }
 
     buildFeatures {
@@ -33,11 +45,11 @@ dependencies {
     implementation(projects.core.domain)
 
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.constraintlayout.compose)
+    implementation(libs.coil.compose)
 
     testImplementation(libs.junit)
 

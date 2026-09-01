@@ -1,14 +1,11 @@
 package com.kyu.jiu_jitsu.domain.usecase.login
 
-import com.kyu.jiu_jitsu.data.api.common.ApiResult
 import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.api.common.toUiError
 import com.kyu.jiu_jitsu.data.model.LoginInfo
-import com.kyu.jiu_jitsu.data.model.dto.response.SnsLoginResponse
 import com.kyu.jiu_jitsu.data.model.dto.response.toInfo
 import com.kyu.jiu_jitsu.data.repository.SnsLoginRepository
+import com.kyu.jiu_jitsu.domain.mapResultToUiState
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class GetSnsLoginUseCase @Inject constructor(
@@ -18,12 +15,7 @@ class GetSnsLoginUseCase @Inject constructor(
         snsProvider: String,
         token: String
     ): Flow<UiState<LoginInfo>> =
-        loginRepository.getSnsLoginUserInfo(snsProvider, token).map { res ->
-            when(res) {
-                is ApiResult.Success -> UiState.Success(res.data.data.toInfo())
-                is ApiResult.Failure -> res.error.toUiError()
-                else -> UiState.Loading
-            }
-        }
+        loginRepository.getSnsLoginUserInfo(snsProvider, token)
+            .mapResultToUiState { response -> response.data.toInfo() }
 
 }
