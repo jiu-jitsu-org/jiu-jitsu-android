@@ -25,7 +25,10 @@ A change is complete when every applicable item below is satisfied.
 - User-facing strings use resources.
 - Relevant loading, disabled, error, and retry states are visible and usable.
 - Content descriptions, semantics, focus, and touch targets are considered for changed UI.
-- Relevant Compose previews or screenshot coverage are updated when available.
+- Changed screen structure follows the [adaptive UI contract](adaptive-ui.md), including single-owner
+  inset handling and relevant compact, landscape, expanded, IME, and font-scale cases.
+- Relevant Compose screenshot coverage and reviewed reference images are updated when visual behavior
+  changes.
 
 ## Verification
 
@@ -33,6 +36,7 @@ A change is complete when every applicable item below is satisfied.
 - Focused unit tests pass.
 - `bash scripts/check-architecture.sh` passes when module imports or dependency edges changed.
 - Broader module tests are run when risk warrants them.
+- Applicable `validateDebugScreenshotTest` tasks pass against reviewed references.
 - The app build is run when Firebase configuration is available.
 - Manual verification is performed for behavior that automated tests do not cover.
 - Secrets or sensitive values do not appear in source, logs, diffs, or documentation.

@@ -13,6 +13,7 @@ Before changing code:
    - [Architecture](docs/architecture/index.md)
    - [Module boundaries](docs/architecture/module-boundaries.md)
    - [Development](docs/development/index.md)
+   - [Adaptive Compose UI](docs/development/adaptive-ui.md) for UI work
    - [Definition of done](docs/development/definition-of-done.md)
    - [Active workstreams](docs/workstreams/index.md)
 4. Inspect the implementation and tests that own the behavior.

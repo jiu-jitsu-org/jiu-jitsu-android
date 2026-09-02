@@ -53,6 +53,7 @@ navigationUiKtx = "2.9.3"
 kotlinxSerializationJson = "1.7.3"
 kakaoSdk = "2.21.7"
 googleId = "1.1.1"
+composeScreenshot = "0.0.1-alpha15"
 
 [libraries]
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
@@ -113,6 +114,7 @@ kakao-share = { group = "com.kakao.sdk", name = "v2-share", version.ref = "kakao
 androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "androidxCredentials" }
 androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "androidxCredentials" }
 google-googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleId" }
+screenshot-validation-api = { group = "com.android.tools.screenshot", name = "screenshot-validation-api", version.ref = "composeScreenshot" }
 
 androidx-datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "androidxDatastore" }
 
@@ -154,6 +156,7 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 module-graph = { id = "com.jraska.module.graph.assertion", version.ref = "moduleGraph" }
 secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secrets" }
+compose-screenshot = { id = "com.android.compose.screenshot", version.ref = "composeScreenshot" }
 
 
 # Plugins defined by this project

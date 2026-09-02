@@ -67,6 +67,17 @@ bash scripts/check-architecture.sh
 
 Run the narrowest relevant tests first and broaden verification in proportion to risk. If Firebase configuration blocks the app build, run unaffected module tasks and report the limitation.
 
+Compose screenshot reference generation and validation:
+
+```bash
+./gradlew :core:ui:updateDebugScreenshotTest --no-daemon
+./gradlew :core:ui:validateDebugScreenshotTest --no-daemon
+```
+
+Reference images must be deliberately reviewed before update. See
+[Adaptive Compose UI and Screenshot Tests](adaptive-ui.md) for the canonical viewport, font-scale,
+IME, determinism, and review contract.
+
 ## Gradle Rules
 
 - Add dependencies and plugins through `gradle/libs.versions.toml`.
@@ -92,6 +103,8 @@ production logs.
 - Keep Route composables responsible for ViewModel state collection and navigation callbacks.
 - Keep Screen composables stateless where practical.
 - Put user-facing text in resources.
+- Follow the [adaptive UI contract](adaptive-ui.md) for edge-to-edge, insets, IME, screen sizing,
+  accessibility, and screenshot coverage.
 - Name continuing reads with `observe...` when they return a stream.
 - Do not broaden a feature task into an unrelated full architecture migration.
 

@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.jjs.android.feature)
     alias(libs.plugins.secrets)
+    alias(libs.plugins.compose.screenshot)
 }
 
 val properties = Properties()
@@ -11,6 +12,8 @@ properties.load(project.rootProject.file("local.properties").inputStream())
 
 android {
     namespace = "com.kyu.jiu_jitsu.nickname"
+
+    experimentalProperties["android.experimental.enableScreenshotTest"] = true
 
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -38,6 +41,12 @@ android {
         }
 
     }
+
+    testOptions {
+        screenshotTests {
+            imageDifferenceThreshold = 0.0001f
+        }
+    }
 }
 
 dependencies {
@@ -51,6 +60,9 @@ dependencies {
     implementation(libs.material)
 
     testImplementation(libs.junit)
+
+    screenshotTestImplementation(libs.screenshot.validation.api)
+    screenshotTestImplementation(libs.androidx.ui.tooling)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

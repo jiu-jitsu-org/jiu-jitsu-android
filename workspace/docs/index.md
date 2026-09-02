@@ -14,6 +14,7 @@ The `docs/` directory is the project's durable record system. It explains what t
 | What are the API and local-storage contracts? | [Contracts](architecture/contracts.md) |
 | Why was an architecture choice made? | [Architecture decisions](architecture/decisions/index.md) |
 | How should a change be developed and verified? | [Development](development/index.md) |
+| How should adaptive Compose UI and screenshots be handled? | [Adaptive UI](development/adaptive-ui.md) |
 | What is the completion standard? | [Definition of done](development/definition-of-done.md) |
 | How are builds released and incidents handled? | [Operations](operations/index.md) |
 | Which large migrations are active? | [Workstreams](workstreams/index.md) |
@@ -70,4 +71,3 @@ Prefer concise documents with links to canonical source files. Do not copy full 
 - **Active**: work is currently in progress.
 - **Proposed**: not yet an accepted decision.
 - **Superseded**: replaced by a later decision.
-
