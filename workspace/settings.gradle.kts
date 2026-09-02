@@ -32,3 +32,6 @@ include(":core:model")
 include(":feature:login")
 include(":feature:nickname")
 include(":feature:profile")
+
+include(":core:webview")
+include(":feature:web")

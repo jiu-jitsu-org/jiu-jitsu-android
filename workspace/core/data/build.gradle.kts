@@ -8,6 +8,14 @@ plugins {
 val properties = Properties()
 properties.load(project.rootProject.file("local.properties").inputStream())
 
+// Public frontend origins; local/CI overrides never derive from backend API URLs.
+fun webOriginField(key: String, fallback: String): String {
+    val value = providers.gradleProperty(key).orNull ?: properties.getProperty(key) ?: fallback
+    val origin = value.trim().removeSurrounding("\"").trimEnd('/')
+    require(origin.none { it == '\n' || it == '\r' || it == '\\' || it == '"' })
+    return "\"$origin\""
+}
+
 android {
     namespace = "com.kyu.jiu_jitsu.data"
 
@@ -31,6 +39,7 @@ android {
             // 개발여부설정 : false
             buildConfigField ("boolean", "DEV", "false")
             buildConfigField("String", "BASE_URL", properties.getProperty("BASE_URL"))
+            buildConfigField("String", "WEB_ORIGIN", webOriginField("WEB_ORIGIN", "https://oss-front.bjj-oss.kr"))
 //            buildConfigField("String", "NAVER_MAP_BASE_URL", properties.getProperty("NAVER_MAP_URL"))
 //            buildConfigField("String", "GOOGLE_CLOUD_CLIENT_ID", properties.getProperty("GOOGLE_CLOUD_CLIENT_ID"))
         }
@@ -38,6 +47,7 @@ android {
             // 개발여부설정 : true
             buildConfigField("boolean", "DEV", "true")
             buildConfigField("String", "BASE_URL", properties.getProperty("DEV_BASE_URL"))
+            buildConfigField("String", "WEB_ORIGIN", webOriginField("DEV_WEB_ORIGIN", "https://dev-oss-front.bjj-oss.kr"))
 //            buildConfigField("String", "NAVER_MAP_BASE_URL", properties.getProperty("NAVER_MAP_URL"))
 //            buildConfigField("String", "GOOGLE_CLOUD_CLIENT_ID", properties.getProperty("GOOGLE_CLOUD_CLIENT_ID"))
         }

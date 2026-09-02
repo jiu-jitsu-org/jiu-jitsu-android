@@ -1,0 +1,13 @@
+<resources>
+    <string name="web_load_failed">화면을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</string>
+    <string name="web_configuration_missing">웹 화면 연결을 준비하고 있어요.</string>
+    <string name="web_retry">다시 시도</string>
+    <string name="web_loading">화면을 불러오는 중</string>
+    <string name="web_close">닫기</string>
+    <string name="web_cancel">취소</string>
+    <string name="web_login_title">로그인이 필요해요</string>
+    <string name="web_login_message">로그인하고 계속할까요?</string>
+    <string name="web_login">로그인</string>
+    <string name="web_share">공유하기</string>
+    <string name="web_external_unavailable">이 링크를 열 수 있는 앱이 없어요.</string>
+</resources>

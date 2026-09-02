@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -71,7 +72,7 @@ fun <T : Any> MainBottomNavigationBar(
                     )
 
                 },
-                label = { Text(route::class.simpleName ?: "") },
+                label = { Text(if (route == RedScreen) stringResource(R.string.nav_community) else route::class.simpleName ?: "") },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Blue500,
                     selectedTextColor = Blue500,

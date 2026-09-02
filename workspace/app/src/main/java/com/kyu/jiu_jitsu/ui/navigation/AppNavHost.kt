@@ -1,6 +1,7 @@
 package com.kyu.jiu_jitsu.ui.navigation
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -16,7 +17,7 @@ import com.kyu.jiu_jitsu.profile.screen.ProfileScreen
 import com.kyu.jiu_jitsu.profile.screen.ModifyCompetitionScreen
 import com.kyu.jiu_jitsu.profile.screen.ModifyMyStyleScreen
 import com.kyu.jiu_jitsu.ui.screen.GrayScreen
-import com.kyu.jiu_jitsu.ui.screen.RedScreen
+import com.kyu.jiu_jitsu.web.WebContentRoute
 import com.kyu.jiu_jitsu.ui.screen.SplashScreen
 import com.kyu.jiu_jitsu.ui.routes.GrayScreen
 import com.kyu.jiu_jitsu.ui.routes.HomeGraph
@@ -36,6 +37,7 @@ fun AppNavHost(
     nav: NavHostController,
     modifier: Modifier,
     padding: PaddingValues,
+    onWebFullscreenChanged: (Boolean) -> Unit,
 ) {
     NavHost(
         navController = nav,
@@ -86,8 +88,11 @@ fun AppNavHost(
             }
 
             composable<RedScreen> {
-                RedScreen(
-                    onLoginClick = { nav.navigate(LoginGraph) }
+                WebContentRoute(
+                    modifier = Modifier.fillMaxSize(),
+                    padding = padding,
+                    onFullscreenChanged = onWebFullscreenChanged,
+                    loginContent = { done -> WebLoginFlow(padding, done) },
                 )
             }
 

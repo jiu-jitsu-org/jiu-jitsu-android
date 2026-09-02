@@ -151,3 +151,10 @@ Compilation remains authoritative; the script catches the most important forbidd
 - Do not add new feature destinations to `core:ui/.../routes/AppRoutes.kt` when feature ownership is possible.
 - Migrate existing centralized routes incrementally.
 - Add feature `api`/`impl` splits only when cross-feature navigation, build isolation, or team ownership justifies the granularity.
+
+## 공통 웹 모듈
+
+`:core:webview`는 Android/Compose/직렬화 라이브러리만 사용하는 플랫폼 런타임이다.
+`:feature:web -> :core:webview, :core:data(repository), :core:ui`를 허용한다.
+`:core:webview`에서 data/domain/ui/app/feature 의존은 금지한다.
+로그인 feature 조합과 앱 chrome은 app이 담당한다. [ADR 0003](decisions/0003-isolate-shared-webview-runtime.md).

@@ -15,3 +15,5 @@ Workstream documents track large, multi-change efforts that cannot be safely com
 - Record blockers and scope changes explicitly.
 - When complete, mark the workstream complete and link the resulting ADRs and final architecture documents.
 
+
+- [공통 WebView 도입](shared-webview.md): Active — Android 구현과 웹 공동 검수.

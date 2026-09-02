@@ -8,6 +8,7 @@ readonly UPPER_LAYER_PATHS=(
   "app/src"
   "core/domain/src"
   "core/ui/src"
+  "core/webview/src"
   "feature"
 )
 
@@ -27,6 +28,16 @@ fi
 
 if rg -n 'projects\.core\.data|jjs\.android|androidx\.datastore|jjs\.hilt' core/domain/build.gradle.kts; then
   echo "Architecture violation: core:domain is no longer framework independent." >&2
+  failed=1
+fi
+
+if rg -n 'projects\.(core\.(data|domain|ui)|feature|app)|project\(":(app|feature|core:(data|domain|ui))' core/webview/build.gradle.kts; then
+  echo "Architecture violation: core:webview must stay independent of app/data/feature code." >&2
+  failed=1
+fi
+
+if rg -n 'projects\.feature|project\(":feature:' feature/web/build.gradle.kts; then
+  echo "Architecture violation: feature:web must not depend on another feature." >&2
   failed=1
 fi
 

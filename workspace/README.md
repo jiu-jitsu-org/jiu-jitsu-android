@@ -32,3 +32,5 @@ Repository working rules are in [`AGENTS.md`](AGENTS.md).
 ```
 
 The app build requires `app/google-services.json` or a variant-specific Google Services configuration. See [Development](docs/development/index.md) for module-level verification commands and [Operations](docs/operations/index.md) for release constraints.
+
+공통 WebView의 [상세 분석·작업 계획](docs/workstreams/shared-webview.md)과 [개발 지침](docs/development/webview.md)을 참고하세요.

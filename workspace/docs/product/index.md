@@ -61,3 +61,10 @@ Do not infer backend capability, business policy, or release commitment from pla
 ## Product Completion
 
 A user-facing change is complete only when its acceptance criteria are met and the applicable checks in the [definition of done](../development/definition-of-done.md) pass.
+
+## 커뮤니티 웹 화면
+
+홈 첫 탭은 Next 피드를 표시한다. 상세/작성은 목록을 보존한 전체 화면 WebView로 열고,
+로그인/가입·확인창·신고 선택·사진 선택·공유는 네이티브 UI와 연결한다.
+설정 누락/세션 준비 실패/문서 오류는 안내와 재시도를 제공한다. 회전 후 웹 초안/선택 사진은
+복원하지 않는다. 실제 배포 검수와 웹 측 출시 조건은 [작업 계획](../workstreams/shared-webview.md)을 따른다.

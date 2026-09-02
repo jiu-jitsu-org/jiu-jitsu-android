@@ -18,7 +18,7 @@ Before changing code:
    - [Active workstreams](docs/workstreams/index.md)
 4. Inspect the implementation and tests that own the behavior.
 
-The actual Gradle root is this `workspace/` directory. Current modules are `:app`, `:core:model`, `:core:ui`, `:core:data`, `:core:domain`, `:feature:login`, `:feature:nickname`, and `:feature:profile`; `build-logic` is an included build.
+The actual Gradle root is this `workspace/` directory. Current modules are `:app`, `:core:model`, `:core:ui`, `:core:data`, `:core:domain`, `:core:webview`, `:feature:web`, `:feature:login`, `:feature:nickname`, and `:feature:profile`; `build-logic` is an included build.
 
 ## Non-Negotiable Working Rules
 
@@ -81,3 +81,7 @@ Use [the project definition of done](docs/development/definition-of-done.md). At
 - Remaining blockers and risks are stated explicitly.
 
 Run `bash scripts/check-architecture.sh` whenever module imports or Gradle dependencies change.
+
+## Shared WebView
+
+Modules also include `:core:webview` and `:feature:web`. Read [WebView development](docs/development/webview.md) for web work. Keep runtime independent of data and feature implementations.

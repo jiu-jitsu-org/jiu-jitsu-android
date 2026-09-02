@@ -3,14 +3,19 @@ package com.kyu.jiu_jitsu.data.repository.impl
 import com.kyu.jiu_jitsu.data.repository.CommunityRepository
 import com.kyu.jiu_jitsu.data.repository.SessionRepository
 import com.kyu.jiu_jitsu.data.session.SessionLocalDataSource
+import com.kyu.jiu_jitsu.data.session.TokenRefreshCoordinator
 import com.kyu.jiu_jitsu.model.SessionUpdate
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 internal class SessionRepositoryImpl @Inject constructor(
     private val localDataSource: SessionLocalDataSource,
+    private val refreshCoordinator: TokenRefreshCoordinator,
     private val communityRepository: CommunityRepository,
 ) : SessionRepository {
+    override val revision: Flow<Long> = localDataSource.revision
+    override suspend fun refreshAccessToken(expiredAccessToken: String?) = refreshCoordinator.refresh(expiredAccessToken)
+
     override val accessToken: Flow<String?> = localDataSource.accessToken
     override val nickname: Flow<String?> = localDataSource.nickname
     override val profileImageUrl: Flow<String?> = localDataSource.profileImageUrl

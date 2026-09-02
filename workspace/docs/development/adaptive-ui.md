@@ -2,7 +2,7 @@
 
 - Status: Current
 - Applies to: `:core:ui`, `:feature:login`, `:feature:nickname`, `:feature:profile`,
-  and app-level Compose scaffolding
+  `:core:webview`, `:feature:web`, and app-level Compose scaffolding
 
 This document is the canonical project contract for edge-to-edge Compose layout, runtime system
 insets, adaptive device behavior, IME handling, and screenshot regression tests. Module-level

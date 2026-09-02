@@ -1,6 +1,7 @@
 package com.kyu.jiu_jitsu.data.repository
 
 import com.kyu.jiu_jitsu.model.SessionUpdate
+import com.kyu.jiu_jitsu.model.AppResult
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -10,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
  * keeps encrypted persistence and request-header synchronization inside `core:data`.
  */
 interface SessionRepository {
+    val revision: Flow<Long>
+    suspend fun refreshAccessToken(expiredAccessToken: String?): AppResult<String>
+
     val accessToken: Flow<String?>
     val nickname: Flow<String?>
     val profileImageUrl: Flow<String?>

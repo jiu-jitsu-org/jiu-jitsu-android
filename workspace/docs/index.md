@@ -71,3 +71,5 @@ Prefer concise documents with links to canonical source files. Do not copy full 
 - **Active**: work is currently in progress.
 - **Proposed**: not yet an accepted decision.
 - **Superseded**: replaced by a later decision.
+
+- 공통 WebView: [상세 분석·계획](workstreams/shared-webview.md), [개발 지침](development/webview.md)

@@ -144,3 +144,7 @@ Add focused tests for behavior changed by the task, especially:
 - Token refresh and request retry when authentication behavior changes.
 
 Use [the definition of done](definition-of-done.md) before handing off work.
+
+## 공통 WebView
+
+[공통 WebView 개발 지침](webview.md)을 따른다.

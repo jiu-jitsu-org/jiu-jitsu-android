@@ -52,6 +52,7 @@ fun LoginScreen(
     modifier: Modifier,
     goHome: () -> Unit,
     goInputNickName: (isMarketingAgreed: Boolean) -> Unit,
+    onSkip: () -> Unit = goHome,
 ) {
     val context = LocalContext.current
     val viewModel = hiltViewModel<LoginViewModel>()
@@ -199,9 +200,7 @@ fun LoginScreen(
                 pressedTextColor = White,
                 enableTextColor = White,
                 disabledTextColor = White,
-                onClick = {
-                    goHome()
-                }
+                onClick = onSkip
             )
             Spacer(modifier = Modifier.height(15.dp))
         }

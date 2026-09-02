@@ -90,6 +90,7 @@ dependencies {
     implementation(projects.feature.login)
     implementation(projects.feature.nickname)
     implementation(projects.feature.profile)
+    implementation(projects.feature.web)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -112,6 +113,7 @@ dependencies {
 
     testImplementation(libs.junit)
 
+    androidTestImplementation(projects.core.webview)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -41,12 +41,12 @@ Authentication assignments above describe the Retrofit client currently provided
 - Authenticated requests add an `Authorization: Bearer <token>` header.
 - An empty credential is omitted rather than sent as `Authorization: Bearer `.
 - Server code `A0003` is treated as token expiration.
-- `TokenRefreshInterceptor` serializes concurrent refresh attempts, reuses a token refreshed by another request, atomically persists the new token pair, and retries each original request at most once.
+- `TokenRefreshCoordinator` serializes REST/WebView refresh attempts, reuses a token refreshed by another request, and commits only to the same session revision. `TokenRefreshInterceptor` retries each original REST request at most once.
 - `SessionRepository` is the public session boundary used by app and feature ViewModels.
 - Starting or clearing a session also clears repository-owned user profile memory so one account's profile cannot flash for the next account.
 - Access and refresh tokens are encrypted through `SecurePreferences`; `AccessTokenProvider` is the injected in-memory view used by synchronous OkHttp header interception.
 - A new user's temporary sign-up token stays memory-only until sign-up returns a durable access/refresh pair.
-- Network timeouts are 30 seconds. Authenticated and image-upload clients intentionally omit body/profiler logging because credentials and signatures may be present.
+- General network timeouts are 30 seconds. NetworkModule clients use the debug-only profiler; the dedicated refresh and WebView session clients never profile credentials, never redirect, and have an 8-second call timeout.
 
 ## Local Storage
 
@@ -75,3 +75,19 @@ When changing an API or persisted value:
 4. Add tests for nullable fields, enum values, error envelopes, and auth behavior affected by the change.
 5. Update this inventory.
 6. Record an ADR if the change alters an architectural boundary rather than only an endpoint.
+
+## WebView BFF session
+
+`WebSessionRepository` prepares the frontend `POST /api/auth/session` with raw accessToken and validates
+HTTP 200 + success + authenticated. Host-only HttpOnly session cookies are applied through
+CookieManager callbacks before navigation. Anonymous entry expires only oss_session at path /.
+Web frontend configuration uses separate debug/release origin settings, independent of API base URLs.
+JWT exp is an advisory refresh trigger; opaque tokens remain subject to protected API validation.
+
+The 11 incoming / 7 outgoing bridge types are defined in `core:webview/BridgeMessages.kt` and
+[the handoff](../../TO_ANDROID_DEV.md). The native refresh budget is 8 seconds within the web's
+15-second recovery window; the web BFF POST still needs time after native delivery. Transient network
+failure sends AUTH_SESSION_EXPIRED to the waiting web document but preserves encrypted native tokens
+for a later retry. This current policy must be confirmed with the backend/product before release.
+Session changes increment revision; no refreshToken crosses the bridge. Cookie state and web-memory
+state are distinct. Web session POST/DELETE races remain a coordinated web release requirement.

@@ -3,7 +3,8 @@ package com.kyu.jiu_jitsu.data.module
 import com.kyu.jiu_jitsu.data.BuildConfig
 import com.kyu.jiu_jitsu.data.api.interceptor.TokenRefreshInterceptor
 import com.kyu.jiu_jitsu.data.session.AccessTokenProvider
-import com.kyu.jiu_jitsu.data.session.SessionLocalDataSource
+import com.kyu.jiu_jitsu.data.session.SessionRequestRevision
+import com.kyu.jiu_jitsu.data.session.TokenRefreshCoordinator
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -58,9 +59,11 @@ object NetworkModule {
         tokenRefreshInterceptor: TokenRefreshInterceptor,
     ): OkHttpClient = commonClientBuilder()
         .addInterceptor { chain ->
+            val session = accessTokenProvider.snapshot()
             val requestBuilder = chain.request().newBuilder()
+                .tag(SessionRequestRevision::class.java, SessionRequestRevision(session.revision))
             // Anonymous and pre-login calls must not send an empty `Bearer ` credential.
-            accessTokenProvider.current()?.let { token ->
+            session.accessToken?.let { token ->
                 requestBuilder.header(AUTHORIZATION_HEADER, "$BEARER_PREFIX$token")
             }
             chain.proceed(requestBuilder.build())
@@ -73,15 +76,9 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideTokenRefreshInterceptor(
-        sessionLocalDataSource: SessionLocalDataSource,
-        @BaseNetworkExceptToken refreshClient: OkHttpClient,
+        coordinator: TokenRefreshCoordinator,
         moshi: Moshi,
-    ): TokenRefreshInterceptor = TokenRefreshInterceptor(
-        sessionLocalDataSource = sessionLocalDataSource,
-        refreshClient = refreshClient,
-        moshi = moshi,
-        baseUrl = BASE_URL,
-    )
+    ): TokenRefreshInterceptor = TokenRefreshInterceptor(coordinator, moshi)
 
     @Provides
     @Singleton

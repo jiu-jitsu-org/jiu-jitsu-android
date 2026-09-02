@@ -58,6 +58,12 @@ This guide applies to everything under `core/data/`. It extends the repository-r
 - Update `docs/architecture/contracts.md` in the same change when an endpoint, payload family,
   authentication rule, timeout, or persisted key changes.
 
+## Credential Transport Exception
+
+The dedicated token refresh and WebView BFF session clients intentionally omit profiling, redirects,
+and automatic retries. Their payloads consist of credentials/cookies. They are owned by the session
+coordinator/repository rather than NetworkModule. Never add body logging to these clients.
+
 ## OkHttp Profiler Policy
 
 - Keep `io.nerdythings:okhttp-profiler` declared through `libs.okhttp.profiler` in this module. The

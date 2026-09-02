@@ -13,11 +13,16 @@ import javax.inject.Singleton
 @Singleton
 class AccessTokenProvider @Inject constructor() {
     @Volatile
-    private var accessToken: String? = null
+    private var state = SessionHeader(null, 0)
 
-    fun current(): String? = accessToken
+    fun current(): String? = state.accessToken
+    fun snapshot(): SessionHeader = state
 
-    fun update(value: String?) {
-        accessToken = value?.takeIf(String::isNotBlank)
+    fun update(value: String?, revision: Long) {
+        state = SessionHeader(value?.takeIf(String::isNotBlank), revision)
     }
 }
+
+/** Immutable header snapshot binds the credential and account revision atomically. */
+class SessionHeader(val accessToken: String?, val revision: Long)
+class SessionRequestRevision(val value: Long)

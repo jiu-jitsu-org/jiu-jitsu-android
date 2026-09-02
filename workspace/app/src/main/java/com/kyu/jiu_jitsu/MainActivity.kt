@@ -21,6 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -59,6 +61,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppRoot() {
     val navController = rememberNavController()
+    var webFullscreen by remember { mutableStateOf(false) }
     val mainBottomNavItems = listOf(RedScreen, GrayScreen, ProfileScreen)
 
     val bottomBarDestinations = remember { setOf(HomeGraph::class) }
@@ -67,9 +70,10 @@ fun AppRoot() {
 
     val showBottomBar = destination?.hierarchy?.any { node ->
         bottomBarDestinations.any { route -> node.hasRoute(route) }
-    } == true
+    } == true && !webFullscreen
 
-    val edge = rememberEdgeBehavior(destination)
+    val destinationEdge = rememberEdgeBehavior(destination)
+    val edge = if (webFullscreen) EdgeBehavior.PadSystemBars else destinationEdge
 
     // (선택) 아이콘 밝기 정책: 예시로 배경이 밝은 홈탭에 어두운 아이콘, 컨텐츠가 어두운 상세에 밝은 아이콘
     val statusIconsDark = when (edge) {
@@ -115,6 +119,7 @@ fun AppRoot() {
                 .fillMaxSize()
                 .consumeWindowInsets(innerPadding),
             padding = innerPadding,
+            onWebFullscreenChanged = { webFullscreen = it },
         )
     }
 }

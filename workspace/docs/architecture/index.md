@@ -15,6 +15,8 @@ The data layer is the source of truth for application data. UI events flow downw
 | `:core:ui` | Theme, reusable Compose components, shared async UI state, visual mappings, centralized route definitions |
 | `:core:data` | Repository APIs/implementations, Retrofit services, DTO mapping, session state, secure preferences, network/Hilt setup |
 | `:core:domain` | Framework-independent validation and reusable business transformations |
+| `:core:webview` | Shared WebView runtime, URL policy, bridge contracts, document lifecycle |
+| `:feature:web` | Web screen stack, auth orchestration, native dialog/sheet/chooser/share |
 | `:feature:login` | Social login UI and signup agreement flow |
 | `:feature:nickname` | Nickname validation, duplication check, signup completion |
 | `:feature:profile` | Community-profile display and editing |
@@ -88,3 +90,8 @@ The completed and remaining milestones are tracked in [the NIA architecture migr
 - [API and storage contracts](contracts.md)
 - [Architecture decisions](decisions/index.md)
 - [Development and verification](../development/index.md)
+
+## 공통 웹 화면
+
+`:core:webview`는 재사용 플랫폼 런타임, `:feature:web`는 화면/인증/네이티브 표면 조합이다.
+[ADR 0003](decisions/0003-isolate-shared-webview-runtime.md), [개발 지침](../development/webview.md)을 따른다.

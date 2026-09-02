@@ -1,6 +1,9 @@
 package com.kyu.jiu_jitsu.data.module
 
 import android.content.Context
+import com.kyu.jiu_jitsu.data.repository.WebSessionRepository
+import com.kyu.jiu_jitsu.data.repository.impl.WebSessionRepositoryImpl
+import com.squareup.moshi.Moshi
 import com.kyu.jiu_jitsu.data.api.BootStrapService
 import com.kyu.jiu_jitsu.data.api.CommunityService
 import com.kyu.jiu_jitsu.data.api.ImageKitService
@@ -20,6 +23,7 @@ import com.kyu.jiu_jitsu.data.repository.impl.LoginUserRepositoryImpl
 import com.kyu.jiu_jitsu.data.repository.impl.SessionRepositoryImpl
 import com.kyu.jiu_jitsu.data.repository.impl.UserRepositoryImpl
 import com.kyu.jiu_jitsu.data.session.SessionLocalDataSource
+import com.kyu.jiu_jitsu.data.session.TokenRefreshCoordinator
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,6 +34,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object RepositoryModule {
+    @Provides
+    @Singleton
+    fun provideWebSessionRepository(store: SessionLocalDataSource, refresh: TokenRefreshCoordinator, moshi: Moshi): WebSessionRepository =
+        WebSessionRepositoryImpl(store, refresh, moshi)
+
 
     @Provides
     @Singleton
@@ -68,7 +77,8 @@ object RepositoryModule {
     @Singleton
     fun provideSessionRepository(
         localDataSource: SessionLocalDataSource,
+        refreshCoordinator: TokenRefreshCoordinator,
         communityRepository: CommunityRepository,
-    ): SessionRepository = SessionRepositoryImpl(localDataSource, communityRepository)
+    ): SessionRepository = SessionRepositoryImpl(localDataSource, refreshCoordinator, communityRepository)
 
 }

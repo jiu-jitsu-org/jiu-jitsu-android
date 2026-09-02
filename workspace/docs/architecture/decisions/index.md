@@ -17,3 +17,5 @@ Architecture Decision Records (ADRs) explain why durable technical choices were 
 - Add a new ADR and mark the older record superseded when a decision changes.
 - Small implementation details that do not constrain future architecture do not need an ADR.
 
+
+- [ADR 0003](0003-isolate-shared-webview-runtime.md): Accepted — 공통 WebView 런타임과 화면 조합 분리.
