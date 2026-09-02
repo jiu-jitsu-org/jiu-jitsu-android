@@ -230,41 +230,23 @@ class ModifyMyStyleViewModel @Inject constructor(
             // Build a typed immutable command. The data layer alone knows how this maps to the
             // backend's partial-update request and its profileRequestType wire string.
             val update = when (pageIndex) {
-                0 -> if (styleTabIndex == 0) {
-                    CommunityProfileUpdate(
-                        field = CommunityProfileField.POSITION_BEST,
-                        bestPosition = POSITION_LIST[bestPositionIndex ?: 0],
-                    )
-                } else {
-                    CommunityProfileUpdate(
-                        field = CommunityProfileField.POSITION_FAVORITE,
-                        favoritePosition = POSITION_LIST[favoritePositionIndex ?: 0],
-                    )
-                }
+                0 -> CommunityProfileUpdate(
+                    field = CommunityProfileField.POSITION,
+                    bestPosition = POSITION_LIST[bestPositionIndex ?: 0],
+                    favoritePosition = POSITION_LIST[favoritePositionIndex ?: 0],
+                )
 
-                1 -> if (styleTabIndex == 0) {
-                    CommunityProfileUpdate(
-                        field = CommunityProfileField.TECHNIQUE_BEST,
-                        bestTechnique = TECHNIQUE_LIST[bestTechniqueIndex ?: 0],
-                    )
-                } else {
-                    CommunityProfileUpdate(
-                        field = CommunityProfileField.TECHNIQUE_FAVORITE,
-                        favoriteTechnique = TECHNIQUE_LIST[favoriteTechniqueIndex ?: 0],
-                    )
-                }
+                1 -> CommunityProfileUpdate(
+                    field = CommunityProfileField.TECHNIQUE,
+                    bestTechnique = TECHNIQUE_LIST[bestTechniqueIndex ?: 0],
+                    favoriteTechnique = TECHNIQUE_LIST[favoriteTechniqueIndex ?: 0],
+                )
 
-                2 -> if (styleTabIndex == 0) {
-                    CommunityProfileUpdate(
-                        field = CommunityProfileField.SUBMISSION_BEST,
-                        bestSubmission = SUBMISSION_LIST[bestSubmissionIndex ?: 0],
-                    )
-                } else {
-                    CommunityProfileUpdate(
-                        field = CommunityProfileField.SUBMISSION_FAVORITE,
-                        favoriteSubmission = SUBMISSION_LIST[favoriteSubmissionIndex ?: 0],
-                    )
-                }
+                2 -> CommunityProfileUpdate(
+                    field = CommunityProfileField.SUBMISSION,
+                    bestSubmission = SUBMISSION_LIST[bestSubmissionIndex ?: 0],
+                    favoriteSubmission = SUBMISSION_LIST[favoriteSubmissionIndex ?: 0],
+                )
 
                 else -> return@launch
             }
