@@ -1,38 +1,28 @@
 package com.kyu.jiu_jitsu.domain
 
 import java.time.Year
+import java.text.Normalizer
 
-// 허용 문자: 영문/숫자/한글(가-힣) 만, 길이 2~12자
-private val ID_REGEX = Regex("^[A-Za-z0-9가-힣]{2,12}$")
+// The backend currently accepts ASCII letters, digits, and complete Hangul syllables only.
+private val NICKNAME_REGEX = Regex("^[A-Za-z0-9가-힣]{2,12}$")
+private val ZERO_WIDTH_CHARACTERS = Regex("[\\u200B-\\u200D\\uFEFF]")
 
-/** 유니코드 정규화 + 제어/Zero-width 문자 제거 */
-fun normalizeId(input: String): String {
-    val nfc = java.text.Normalizer.normalize(input.trim(), java.text.Normalizer.Form.NFKC)
-    // zero-width 스페이스/조인너 제거
-    return nfc.replace(Regex("[\\u200B-\\u200D\\uFEFF]"), "")
-}
+/** Normalizes equivalent Unicode forms and removes invisible characters used to spoof names. */
+fun normalizeId(input: String): String =
+    Normalizer.normalize(input.trim(), Normalizer.Form.NFKC)
+        .replace(ZERO_WIDTH_CHARACTERS, "")
 
-/** 최종 검증: 규칙에 맞으면 true (허용 문자: 영문/숫자/한글(가-힣) 만, 길이 2~12자) */
-fun String.isValidUserNickName(): Boolean = ID_REGEX.matches(normalizeId(this))
+/** Returns true when the normalized nickname satisfies the current product contract. */
+fun String.isValidUserNickName(): Boolean = NICKNAME_REGEX.matches(normalizeId(this))
 
-/** a+b = a.b */
+/** Combines a whole-number weight and one decimal digit without locale-sensitive formatting. */
 fun combineToDouble(
     a: Int,
-    b: Int
-): Double {
-    try {
-        val formatted = "%d.%01d".format(a, b)
-        return formatted.toDouble()
-    } catch (e: Exception) {
-        return 0.0
-    }
-}
+    b: Int,
+): Double = a + b.coerceIn(0, 9) / 10.0
 
-/**
- * 현재 연도부터 과거 (Current - lastIndex)전까지
- * @param lastIndex 몇년 전 까지?
- */
+/** Returns the current year followed by [lastIndex] prior years in descending order. */
 fun yearsDescending(lastIndex: Int): List<Int> {
     val currentYear = Year.now().value
-    return (currentYear downTo (currentYear - lastIndex)).toList()
+    return (currentYear downTo (currentYear - lastIndex.coerceAtLeast(0))).toList()
 }

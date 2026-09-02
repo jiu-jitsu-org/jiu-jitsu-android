@@ -29,9 +29,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kyu.jiu_jitsu.data.model.BELT_RANK
-import com.kyu.jiu_jitsu.data.model.BELT_STRIPE
-import com.kyu.jiu_jitsu.data.model.CommunityProfileInfo
+import com.kyu.jiu_jitsu.model.BELT_RANK
+import com.kyu.jiu_jitsu.model.BELT_STRIPE
+import com.kyu.jiu_jitsu.model.CommunityProfileInfo
 import com.kyu.jiu_jitsu.profile.R
 import com.kyu.jiu_jitsu.ui.components.button.PrimaryButton
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents

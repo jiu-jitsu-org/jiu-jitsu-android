@@ -1,6 +1,5 @@
 package com.kyu.jiu_jitsu.login.screen
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,10 +30,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.kyu.jiu_jitsu.data.api.common.UiState
+import com.kyu.jiu_jitsu.ui.state.UiState
 import com.kyu.jiu_jitsu.login.LoginViewModel
 import com.kyu.jiu_jitsu.login.R
 import com.kyu.jiu_jitsu.login.components.SignUpBottomSheet
+import com.kyu.jiu_jitsu.login.components.SignUpAgreeType
 import com.kyu.jiu_jitsu.login.model.LoginType
 import com.kyu.jiu_jitsu.login.model.SnsLoginSucceedType
 import com.kyu.jiu_jitsu.ui.components.button.PressableButton
@@ -57,12 +57,6 @@ fun LoginScreen(
     val viewModel = hiltViewModel<LoginViewModel>()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var open by rememberSaveable { mutableStateOf(false) }
-
-    var isMarketingAgreed = false
-
-    LaunchedEffect(Unit) {
-
-    }
 
     LaunchedEffect(viewModel.loginUiState) {
         val uiState = viewModel.loginUiState
@@ -232,11 +226,10 @@ fun LoginScreen(
             },
         ) {
             SignUpBottomSheet { agreeList ->
-                Log.d("@@@@@@", "@@@@@@ $agreeList")
                 open = false
-                isMarketingAgreed = true
-
-                goInputNickName(isMarketingAgreed)
+                // Marketing is optional. Derive the backend flag from the actual selection rather
+                // than treating submission of the required agreements as marketing consent.
+                goInputNickName(agreeList.contains(SignUpAgreeType.Marketing.code))
             }
         }
     }

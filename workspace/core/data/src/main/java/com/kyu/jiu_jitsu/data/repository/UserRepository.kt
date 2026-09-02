@@ -1,34 +1,30 @@
 package com.kyu.jiu_jitsu.data.repository
 
-import com.kyu.jiu_jitsu.data.api.common.ApiResult
-import com.kyu.jiu_jitsu.data.model.dto.request.UpdateProfileRequest
-import com.kyu.jiu_jitsu.data.model.dto.response.CheckNicknameResponse
-import com.kyu.jiu_jitsu.data.model.dto.response.SnsLoginResponse
-import com.kyu.jiu_jitsu.data.model.dto.response.UserProfileResponse
-import kotlinx.coroutines.flow.Flow
+import com.kyu.jiu_jitsu.model.AppResult
+import com.kyu.jiu_jitsu.model.LoginInfo
+import com.kyu.jiu_jitsu.model.UserProfileInfo
 
+/** Account operations exposed as app models, never Retrofit response types. */
 interface UserRepository {
-
-    suspend fun getUserProfileInfo(): Flow<ApiResult<UserProfileResponse>>
+    suspend fun getUserProfileInfo(): AppResult<UserProfileInfo>
 
     suspend fun updateUserProfileInfo(
         nickname: String,
         profileImageUrl: String,
-    ): Flow<ApiResult<UserProfileResponse>>
+    ): AppResult<UserProfileInfo>
 
     suspend fun signupUser(
         nickname: String,
         isMarketingAgreed: Boolean,
-    ): Flow<ApiResult<SnsLoginResponse>>
+    ): AppResult<LoginInfo>
 
     suspend fun checkNickname(
         nickname: String,
-    ): Flow<ApiResult<CheckNicknameResponse>>
+    ): AppResult<Boolean>
 
     suspend fun appInfo(
         fcmToken: String,
         deviceId: String,
         osVersion: String
-    ): Flow<ApiResult<Boolean>>
-
+    ): AppResult<Boolean>
 }

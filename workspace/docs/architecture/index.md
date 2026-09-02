@@ -11,9 +11,10 @@ The data layer is the source of truth for application data. UI events flow downw
 | Module | Current responsibility |
 | --- | --- |
 | `:app` | Application entry point, `MainActivity`, app-level navigation, splash flow, Firebase Messaging |
-| `:core:ui` | Theme, reusable Compose components, visual mappings, centralized route definitions |
-| `:core:data` | Retrofit services, DTOs, app models, repositories, mapping, secure preferences, network/Hilt setup |
-| `:core:domain` | UseCases and domain-level orchestration |
+| `:core:model` | Framework-independent application models, commands, and stable operation results |
+| `:core:ui` | Theme, reusable Compose components, shared async UI state, visual mappings, centralized route definitions |
+| `:core:data` | Repository APIs/implementations, Retrofit services, DTO mapping, session state, secure preferences, network/Hilt setup |
+| `:core:domain` | Framework-independent validation and reusable business transformations |
 | `:feature:login` | Social login UI and signup agreement flow |
 | `:feature:nickname` | Nickname validation, duplication check, signup completion |
 | `:feature:profile` | Community-profile display and editing |
@@ -26,12 +27,11 @@ Current module declarations are in [`settings.gradle.kts`](../../settings.gradle
 ```text
 App / Compose Screen
 -> Hilt ViewModel
--> UseCase
--> Repository
--> Retrofit service or SecurePreferences
+-> Repository contract
+-> Retrofit service or repository-owned StateFlow / SessionRepository
 ```
 
-This flow is transitional. Simple reads, writes, toggles, and events do not require a pass-through UseCase; a feature ViewModel may call a repository contract directly. UseCases are for reusable composition, validation, transformation, or meaningful business operations.
+Simple reads, writes, toggles, and events use repositories directly. A future UseCase is justified only when it provides reusable composition, validation, transformation, or a meaningful business operation.
 
 ## Target Dependency Shape
 
@@ -72,16 +72,15 @@ flowchart TB
 
 These modules are introduced incrementally. Do not create every NIA module merely to copy the sample project's module count.
 
-## Known Transitional Exceptions
+## Remaining Transitional Work
 
-- `:core:domain` currently imports DTO mappers, `UiState`, DataStore types, and `NetworkModule`.
-- `:core:ui` currently depends on `:core:data` for model enums used by visual mappings.
-- Feature modules currently import DTOs, data-layer `UiState`, and `ProfileSingleton`.
-- Repository contracts currently expose response DTOs and `ApiResult`.
-- App-wide models currently live under `core:data/model`.
-- Route definitions are centralized in `:core:ui`.
+- Route definitions are still centralized in `:core:ui` instead of being owned by features and composed by `:app`.
+- Theme and generic Compose primitives still share `:core:ui`; `:core:designsystem` has not yet been introduced.
+- Some app-model rank/style types retain display strings while localization is migrated to UI resources.
+- UI state is not yet consistently modeled as one immutable feature state per screen.
+- Network, repository, and encrypted preference implementations remain together in `:core:data`; a split is deferred until size or build isolation justifies it.
 
-Do not add new instances of these patterns. Their removal is tracked in [the NIA architecture migration](../workstreams/nia-architecture-migration.md).
+The completed and remaining milestones are tracked in [the NIA architecture migration](../workstreams/nia-architecture-migration.md).
 
 ## Detailed References
 
@@ -89,4 +88,3 @@ Do not add new instances of these patterns. Their removal is tracked in [the NIA
 - [API and storage contracts](contracts.md)
 - [Architecture decisions](decisions/index.md)
 - [Development and verification](../development/index.md)
-

@@ -35,8 +35,9 @@ Core and feature compile smoke test:
 
 ```bash
 ./gradlew \
+  :core:model:compileKotlin \
   :core:data:compileDebugKotlin \
-  :core:domain:compileDebugKotlin \
+  :core:domain:compileKotlin \
   :core:ui:compileDebugKotlin \
   :feature:login:compileDebugKotlin \
   :feature:nickname:compileDebugKotlin \
@@ -48,13 +49,20 @@ Module unit tests:
 
 ```bash
 ./gradlew \
+  :core:model:test \
   :core:data:testDebugUnitTest \
-  :core:domain:testDebugUnitTest \
+  :core:domain:test \
   :core:ui:testDebugUnitTest \
   :feature:login:testDebugUnitTest \
   :feature:nickname:testDebugUnitTest \
   :feature:profile:testDebugUnitTest \
   --no-daemon
+```
+
+Architecture boundary scan:
+
+```bash
+bash scripts/check-architecture.sh
 ```
 
 Run the narrowest relevant tests first and broaden verification in proportion to risk. If Firebase configuration blocks the app build, run unaffected module tasks and report the limitation.
@@ -67,6 +75,14 @@ Run the narrowest relevant tests first and broaden verification in proportion to
 - Declare feature-specific data/domain dependencies explicitly.
 - Use `api` only when a dependency is intentionally part of a module's public contract.
 - Prefer a Kotlin/JVM module for `:core:model`.
+
+## Debug Network Inspection
+
+Debug builds attach the OkHttp Profiler interceptor to the clients constructed by
+`core:data`'s `NetworkModule`. Install the **OkHttp Profiler** Android Studio plugin to inspect
+those requests. The interceptor is guarded by `BuildConfig.DEBUG` because it writes request and
+response headers and bodies to Logcat; it must not run in release builds or be used with shared
+production logs.
 
 ## Coding Rules
 
@@ -94,4 +110,3 @@ Add focused tests for behavior changed by the task, especially:
 - Token refresh and request retry when authentication behavior changes.
 
 Use [the definition of done](definition-of-done.md) before handing off work.
-

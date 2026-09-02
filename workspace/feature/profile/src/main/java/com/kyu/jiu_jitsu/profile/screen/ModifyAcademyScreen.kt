@@ -35,7 +35,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.kyu.jiu_jitsu.data.api.common.UiState
+import com.kyu.jiu_jitsu.ui.state.UiState
 import com.kyu.jiu_jitsu.profile.viewmodel.ProfileViewModel
 import com.kyu.jiu_jitsu.profile.R
 import com.kyu.jiu_jitsu.ui.components.button.PrimaryCTAButton

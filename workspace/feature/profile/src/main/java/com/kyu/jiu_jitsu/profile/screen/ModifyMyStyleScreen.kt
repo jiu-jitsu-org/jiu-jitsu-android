@@ -43,7 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.kyu.jiu_jitsu.data.api.common.UiState
+import com.kyu.jiu_jitsu.ui.state.UiState
 import com.kyu.jiu_jitsu.profile.viewmodel.ModifyMyStyleAction
 import com.kyu.jiu_jitsu.profile.viewmodel.ModifyMyStyleViewModel
 import com.kyu.jiu_jitsu.profile.R

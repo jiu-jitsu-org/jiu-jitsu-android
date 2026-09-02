@@ -1,13 +1,12 @@
 package com.kyu.jiu_jitsu.data.repository
 
-import com.kyu.jiu_jitsu.data.api.common.ApiResult
-import com.kyu.jiu_jitsu.data.model.dto.response.SnsLoginResponse
-import kotlinx.coroutines.flow.Flow
+import com.kyu.jiu_jitsu.model.AppResult
+import com.kyu.jiu_jitsu.model.LoginInfo
 
+/** Authentication boundary used by login presentation code. */
 interface SnsLoginRepository {
-    suspend fun getSnsLoginUserInfo(
+    suspend fun login(
         snsProvider: String,
-        token: String)
-    : Flow<ApiResult<SnsLoginResponse>>
-
+        token: String,
+    ): AppResult<LoginInfo>
 }

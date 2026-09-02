@@ -26,10 +26,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.kyu.jiu_jitsu.data.model.CommunityProfileInfo
-import com.kyu.jiu_jitsu.data.model.POSITION
-import com.kyu.jiu_jitsu.data.model.SUBMISSION
-import com.kyu.jiu_jitsu.data.model.TECHNIQUE
+import com.kyu.jiu_jitsu.model.CommunityProfileInfo
+import com.kyu.jiu_jitsu.model.POSITION
+import com.kyu.jiu_jitsu.model.SUBMISSION
+import com.kyu.jiu_jitsu.model.TECHNIQUE
 import com.kyu.jiu_jitsu.profile.R
 import com.kyu.jiu_jitsu.ui.components.button.TintButton
 import com.kyu.jiu_jitsu.ui.routes.SkillStyleScreenType

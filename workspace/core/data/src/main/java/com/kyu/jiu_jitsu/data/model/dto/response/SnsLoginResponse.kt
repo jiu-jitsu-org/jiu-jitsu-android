@@ -1,7 +1,7 @@
 package com.kyu.jiu_jitsu.data.model.dto.response
 
-import com.kyu.jiu_jitsu.data.model.LoginInfo
-import com.kyu.jiu_jitsu.data.model.UserInfo
+import com.kyu.jiu_jitsu.model.LoginInfo
+import com.kyu.jiu_jitsu.model.UserInfo
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
@@ -30,17 +30,20 @@ data class UserInfoResponseData(
     val snsProvider: String?,
 )
 
-fun SnsLoginResponseData?.toInfo(): LoginInfo =
+/** Converts nullable wire fields to the stable authentication result consumed by features. */
+internal fun SnsLoginResponseData.toInfo(): LoginInfo =
     LoginInfo(
-        this?.accessToken ?: "",
-        this?.refreshToken ?: "",
-        this?.tempToken ?: "",
-        this?.isNewUser ?: true,
-        UserInfo(
-            this?.userInfo?.userId ?: 0,
-            this?.userInfo?.email,
-            this?.userInfo?.nickname,
-            this?.userInfo?.profileImageUrl,
-            this?.userInfo?.snsProvider,
-        )
+        accessToken = accessToken.orEmpty(),
+        refreshToken = refreshToken.orEmpty(),
+        tempToken = tempToken.orEmpty(),
+        isNewUser = isNewUser ?: true,
+        userInfo = userInfo?.toInfo(),
     )
+
+private fun UserInfoResponseData.toInfo(): UserInfo = UserInfo(
+    userId = userId,
+    email = email,
+    nickname = nickname,
+    profileImageUrl = profileImageUrl,
+    snsProvider = snsProvider,
+)

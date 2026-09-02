@@ -15,7 +15,7 @@ A change is complete when every applicable item below is satisfied.
 - Upper layers do not newly import DTOs, API services, response envelopes, DataStore implementations, `NetworkModule`, repository implementations, or mutable data singletons.
 - Repository public APIs expose stable app models or stable results.
 - DTO/entity mapping occurs inside the data boundary.
-- Feature UI state remains in the feature.
+- Feature-specific UI state remains in the feature; only genuinely shared presentation contracts live in `:core:ui`.
 - New shared models are framework independent and placed in `:core:model`.
 - Changed Gradle dependencies are the narrowest necessary edges.
 
@@ -31,6 +31,7 @@ A change is complete when every applicable item below is satisfied.
 
 - Changed code compiles.
 - Focused unit tests pass.
+- `bash scripts/check-architecture.sh` passes when module imports or dependency edges changed.
 - Broader module tests are run when risk warrants them.
 - The app build is run when Firebase configuration is available.
 - Manual verification is performed for behavior that automated tests do not cover.
@@ -49,4 +50,3 @@ A change is complete when every applicable item below is satisfied.
 - The final summary states what changed.
 - Verification commands and outcomes are reported.
 - Remaining risks, blockers, migrations, or follow-up work are identified without presenting incomplete work as complete.
-

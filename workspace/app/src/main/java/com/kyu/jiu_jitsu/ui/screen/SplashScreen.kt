@@ -1,6 +1,5 @@
 package com.kyu.jiu_jitsu.ui.screen
 
-import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -8,7 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.kyu.jiu_jitsu.ui.SplashViewModel
-import com.kyu.jiu_jitsu.data.api.common.UiState
+import com.kyu.jiu_jitsu.ui.state.UiState
 import com.kyu.jiu_jitsu.ui.theme.Red500
 
 @Composable
@@ -26,7 +25,6 @@ fun SplashScreen(
         val uiState = viewModel.splashUiState
         when(uiState) {
             is UiState.Success -> {
-                Log.d("@@@@@@@", "SplashScreen splashUiState.Success")
                 val (bootStrapInfo, autoLogin) = uiState.result
 
                 bootStrapInfo?.let { info ->
@@ -42,11 +40,9 @@ fun SplashScreen(
                 }
             }
             is UiState.Error -> {
-                Log.d("@@@@@@@", "SplashScreen splashUiState.Error")
+                // TODO: Render a retry action instead of leaving the splash surface static.
             }
-            is UiState.Loading -> {
-                Log.d("@@@@@@@", "SplashScreen splashUiState.Loading")
-            }
+            is UiState.Loading -> Unit
             else -> {}
         }
     }
@@ -55,21 +51,18 @@ fun SplashScreen(
         val uiState = viewModel.autoLoginState
         when(uiState) {
             is UiState.Success -> {
-                Log.d("@@@@@@@", "SplashScreen autoLoginState.Success")
                 enterHomeScreen()
             }
             is UiState.Error -> {
-                Log.d("@@@@@@@", "SplashScreen autoLoginState.Error")
-                if (uiState.code == 500) {
-                    enterLoginScreen()
-                } else if (uiState.code == 401) {
-                    // code U0002 , message :존재하지않는 유저입니다.
+                if (
+                    uiState.code == 401 ||
+                    uiState.serverCode == "A0003" ||
+                    uiState.serverCode == "U0002"
+                ) {
                     enterLoginScreen()
                 }
             }
-            is UiState.Loading -> {
-                Log.d("@@@@@@@", "SplashScreen autoLoginState.Loading")
-            }
+            is UiState.Loading -> Unit
             else -> {}
         }
     }

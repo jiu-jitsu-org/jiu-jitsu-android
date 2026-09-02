@@ -47,6 +47,8 @@ android {
 
 dependencies {
 
+    api(projects.core.model)
+
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.kotlin.serialization)
     implementation(libs.retrofit.converter.moshi)

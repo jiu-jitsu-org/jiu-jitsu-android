@@ -29,7 +29,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.kyu.jiu_jitsu.data.api.common.UiState
 import com.kyu.jiu_jitsu.nickname.NickNameAction
 import com.kyu.jiu_jitsu.nickname.NickNameViewModel
 import com.kyu.jiu_jitsu.nickname.R

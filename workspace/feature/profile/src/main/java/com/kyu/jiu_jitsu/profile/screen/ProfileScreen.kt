@@ -71,7 +71,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.kyu.jiu_jitsu.data.model.isShowModify
+import com.kyu.jiu_jitsu.model.isShowModify
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightBottomSheet
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightLayout
 import com.kyu.jiu_jitsu.profile.components.CompetitionLayout

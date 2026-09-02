@@ -1,6 +1,6 @@
 package com.kyu.jiu_jitsu.data.model.dto.response
 
-import com.kyu.jiu_jitsu.data.model.UserProfileInfo
+import com.kyu.jiu_jitsu.model.UserProfileInfo
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
@@ -31,13 +31,14 @@ data class UserProfileImageResponse(
     val imageUrl: String?,
 )
 
-fun UserProfileResponseData?.toInfo(): UserProfileInfo =
+/** Maps the backend profile shape to the smaller app-facing account model. */
+internal fun UserProfileResponseData.toInfo(): UserProfileInfo =
     UserProfileInfo(
-        this?.userId,
-        this?.email,
-        this?.nickname,
-        this?.profileImage?.imageUrl ?: this?.profileImageUrl,
-        this?.snsProvider,
-        this?.role,
-        this?.status
+        id = userId,
+        email = email,
+        nickname = nickname,
+        profileImageUrl = profileImage?.imageUrl ?: profileImageUrl,
+        snsProvider = snsProvider,
+        role = role,
+        status = status,
     )

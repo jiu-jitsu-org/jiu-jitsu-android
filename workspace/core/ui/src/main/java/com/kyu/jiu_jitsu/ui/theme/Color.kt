@@ -1,7 +1,7 @@
 package com.kyu.jiu_jitsu.ui.theme
 
 import androidx.compose.ui.graphics.Color
-import com.kyu.jiu_jitsu.data.model.BELT_RANK
+import com.kyu.jiu_jitsu.model.BELT_RANK
 import com.kyu.jiu_jitsu.ui.R
 
 val Purple80 = Color(0xFFD0BCFF)

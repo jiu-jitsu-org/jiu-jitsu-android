@@ -57,6 +57,7 @@ Core modules must not depend on app or feature modules. Do not add feature-to-fe
 
 - Owns focused UseCases that combine repositories, transform streams, validate inputs, or represent reusable business operations.
 - May depend on `core:data.repository` contracts and `core:model`.
+- Currently remains a Kotlin/JVM utility module with no repository dependency because no surviving operation requires multi-repository orchestration.
 - Must not import API services, DTOs, response envelopes, DataStore types, `NetworkModule`, repository implementations, or UI state.
 - Avoid pass-through UseCases that only rename one repository method.
 
@@ -89,6 +90,7 @@ com.kyu.jiu_jitsu.data.api.*
 com.kyu.jiu_jitsu.data.model.dto.*
 com.kyu.jiu_jitsu.data.datastore.*
 com.kyu.jiu_jitsu.data.module.*
+com.kyu.jiu_jitsu.data.session.*
 com.kyu.jiu_jitsu.data.repository.impl.*
 com.kyu.jiu_jitsu.data.model.singleton.*
 ```
@@ -101,11 +103,13 @@ Repository contracts remain in `:core:data` under the accepted NIA-style decisio
 
 ```kotlin
 interface CommunityRepository {
-    fun observeCommunityProfile(): Flow<CommunityProfile>
+    val communityProfile: StateFlow<CommunityProfileInfo?>
 
-    suspend fun updateCommunityProfile(
-        command: UpdateCommunityProfile,
-    ): Result<Unit>
+    suspend fun getCommunityProfile(): AppResult<CommunityProfileInfo>
+
+    suspend fun modifyCommunityProfile(
+        update: CommunityProfileUpdate,
+    ): AppResult<CommunityProfileInfo>
 }
 ```
 
@@ -128,6 +132,17 @@ interface CommunityRepository {
 - Replace `ProfileSingleton` with repository-backed observable state or feature ViewModel state.
 - Replace module-level auth-token mutation with an injected session/token source observed by the network interceptor.
 - Access DataStore and encrypted preferences through repositories or data sources. Domain and feature code must not reference preference keys.
+- `SessionRepository` is the upper-layer session boundary; `SessionLocalDataSource` and `AccessTokenProvider` synchronize encrypted persistence with synchronous request headers inside `:core:data`.
+
+## Automated Boundary Check
+
+Run the source-level guard whenever imports or dependency declarations change:
+
+```bash
+bash scripts/check-architecture.sh
+```
+
+Compilation remains authoritative; the script catches the most important forbidden imports and reverse Gradle edges earlier.
 
 ## Navigation
 
@@ -136,4 +151,3 @@ interface CommunityRepository {
 - Do not add new feature destinations to `core:ui/.../routes/AppRoutes.kt` when feature ownership is possible.
 - Migrate existing centralized routes incrementally.
 - Add feature `api`/`impl` splits only when cross-feature navigation, build isolation, or team ownership justifies the granularity.
-

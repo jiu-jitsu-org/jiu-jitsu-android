@@ -1,36 +1,45 @@
 package com.kyu.jiu_jitsu.data.repository.impl
 
 import com.kyu.jiu_jitsu.data.api.CommunityService
-import com.kyu.jiu_jitsu.data.api.common.ApiResult
+import com.kyu.jiu_jitsu.data.api.common.mapEnvelope
 import com.kyu.jiu_jitsu.data.api.common.safeApiCall
-import com.kyu.jiu_jitsu.data.model.dto.request.UpdateCommunityProfileRequest
-import com.kyu.jiu_jitsu.data.model.dto.response.CommunityProfileData
-import com.kyu.jiu_jitsu.data.model.dto.response.CommunityProfileResponse
+import com.kyu.jiu_jitsu.data.model.dto.request.toRequest
+import com.kyu.jiu_jitsu.data.model.dto.response.toInfo
 import com.kyu.jiu_jitsu.data.repository.CommunityRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import com.kyu.jiu_jitsu.model.AppResult
+import com.kyu.jiu_jitsu.model.CommunityProfileInfo
+import com.kyu.jiu_jitsu.model.CommunityProfileUpdate
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
-class CommunityRepositoryImpl @Inject constructor(
+internal class CommunityRepositoryImpl @Inject constructor(
     private val communityService: CommunityService
 ): CommunityRepository {
 
-    override fun getCommunityProfile(): Flow<ApiResult<CommunityProfileResponse>> = flow {
-        emit(
-            safeApiCall {
-                communityService.reqCommunityProfile()
-            }
-        )
-    }.flowOn(Dispatchers.IO)
+    private val mutableCommunityProfile = MutableStateFlow<CommunityProfileInfo?>(null)
+    override val communityProfile: StateFlow<CommunityProfileInfo?> =
+        mutableCommunityProfile.asStateFlow()
 
-    override suspend fun modifyCommunityProfile(body: UpdateCommunityProfileRequest): Flow<ApiResult<CommunityProfileResponse>> = flow {
-        emit(
-            safeApiCall {
-                communityService.modifyCommunityProfile(body)
-            }
-        )
-    }.flowOn(Dispatchers.IO)
+    override suspend fun getCommunityProfile(): AppResult<CommunityProfileInfo> =
+        safeApiCall { communityService.reqCommunityProfile() }
+            .mapEnvelope { response -> response.toInfo() }
+            .also(::cacheSuccessfulProfile)
 
+    override suspend fun modifyCommunityProfile(
+        update: CommunityProfileUpdate,
+    ): AppResult<CommunityProfileInfo> =
+        safeApiCall { communityService.modifyCommunityProfile(update.toRequest()) }
+            .mapEnvelope { response -> response.toInfo() }
+            .also(::cacheSuccessfulProfile)
+
+    override fun clearCachedProfile() {
+        mutableCommunityProfile.value = null
+    }
+
+    /** Only a successful server snapshot may replace the current source of truth. */
+    private fun cacheSuccessfulProfile(result: AppResult<CommunityProfileInfo>) {
+        if (result is AppResult.Success) mutableCommunityProfile.value = result.data
+    }
 }

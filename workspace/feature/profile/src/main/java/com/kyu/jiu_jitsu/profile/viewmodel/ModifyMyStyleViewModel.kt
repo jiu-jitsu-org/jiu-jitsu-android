@@ -6,19 +6,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.model.CommunityProfileInfo
-import com.kyu.jiu_jitsu.data.model.dto.request.PROFILE_REQUEST_TYPE
-import com.kyu.jiu_jitsu.data.model.dto.request.UpdateCommunityProfileRequest
-import com.kyu.jiu_jitsu.data.model.singleton.ProfileSingleton
-import com.kyu.jiu_jitsu.domain.usecase.community.UpdateCommunityProfileUseCase
+import com.kyu.jiu_jitsu.data.repository.CommunityRepository
+import com.kyu.jiu_jitsu.model.CommunityProfileField
+import com.kyu.jiu_jitsu.model.CommunityProfileInfo
+import com.kyu.jiu_jitsu.model.CommunityProfileUpdate
 import com.kyu.jiu_jitsu.profile.model.POSITION_LIST
 import com.kyu.jiu_jitsu.profile.model.SUBMISSION_LIST
 import com.kyu.jiu_jitsu.profile.model.TECHNIQUE_LIST
 import com.kyu.jiu_jitsu.profile.model.getIndex
 import com.kyu.jiu_jitsu.ui.routes.SkillStyleScreenType
+import com.kyu.jiu_jitsu.ui.state.UiState
+import com.kyu.jiu_jitsu.ui.state.toUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,7 +34,7 @@ sealed interface ModifyMyStyleAction {
 
 @HiltViewModel
 class ModifyMyStyleViewModel @Inject constructor(
-    private val updateCommunityProfileUseCase: UpdateCommunityProfileUseCase,
+    private val communityRepository: CommunityRepository,
 ): ViewModel()  {
 
     var profileUiState by mutableStateOf<UiState<CommunityProfileInfo>>(UiState.Idle)
@@ -75,29 +74,30 @@ class ModifyMyStyleViewModel @Inject constructor(
     fun initScreenType(type: String) {
         // 스크린 타입 - 포지션, 기술, 서브미션
         viewModelScope.launch {
+            val currentProfile = communityRepository.communityProfile.value
             when (type) {
                 SkillStyleScreenType.Position.screenName -> {
                     pageIndex = 0
                     screenType = SkillStyleScreenType.Position
 
-                    bestPositionIndex = ProfileSingleton.profileInfo?.bestPosition?.getIndex()
-                    favoritePositionIndex = ProfileSingleton.profileInfo?.favoritePosition?.getIndex()
+                    bestPositionIndex = currentProfile?.bestPosition?.getIndex()
+                    favoritePositionIndex = currentProfile?.favoritePosition?.getIndex()
                 }
 
                 SkillStyleScreenType.Technique.screenName -> {
                     pageIndex = 1
                     screenType = SkillStyleScreenType.Technique
 
-                    bestTechniqueIndex = ProfileSingleton.profileInfo?.bestTechnique?.getIndex()
-                    favoriteTechniqueIndex = ProfileSingleton.profileInfo?.favoriteTechnique?.getIndex()
+                    bestTechniqueIndex = currentProfile?.bestTechnique?.getIndex()
+                    favoriteTechniqueIndex = currentProfile?.favoriteTechnique?.getIndex()
                 }
 
                 SkillStyleScreenType.Submission.screenName -> {
                     pageIndex = 2
                     screenType = SkillStyleScreenType.Submission
 
-                    bestSubmissionIndex = ProfileSingleton.profileInfo?.bestSubmission?.getIndex()
-                    favoriteSubmissionIndex = ProfileSingleton.profileInfo?.favoriteSubmission?.getIndex()
+                    bestSubmissionIndex = currentProfile?.bestSubmission?.getIndex()
+                    favoriteSubmissionIndex = currentProfile?.favoriteSubmission?.getIndex()
                 }
 
                 else -> {
@@ -227,52 +227,50 @@ class ModifyMyStyleViewModel @Inject constructor(
         viewModelScope.launch {
             profileUiState = UiState.Loading
 
-            val requestData = UpdateCommunityProfileRequest()
-            var profileRequestType = ""
-            when(pageIndex) {
-                0 -> { // POSITION
-                    if (styleTabIndex == 0) {
-                        profileRequestType = PROFILE_REQUEST_TYPE.POSITION_BEST().name
-                        requestData.bestPosition = POSITION_LIST[bestPositionIndex?:0].name
-                    } else {
-                        profileRequestType = PROFILE_REQUEST_TYPE.POSITION_FAVORITE().name
-                        requestData.favoritePosition = POSITION_LIST[favoritePositionIndex?:0].name
-                    }
+            // Build a typed immutable command. The data layer alone knows how this maps to the
+            // backend's partial-update request and its profileRequestType wire string.
+            val update = when (pageIndex) {
+                0 -> if (styleTabIndex == 0) {
+                    CommunityProfileUpdate(
+                        field = CommunityProfileField.POSITION_BEST,
+                        bestPosition = POSITION_LIST[bestPositionIndex ?: 0],
+                    )
+                } else {
+                    CommunityProfileUpdate(
+                        field = CommunityProfileField.POSITION_FAVORITE,
+                        favoritePosition = POSITION_LIST[favoritePositionIndex ?: 0],
+                    )
                 }
-                1 -> { // TECHNIQUE
-                    if (styleTabIndex == 0) {
-                        profileRequestType = PROFILE_REQUEST_TYPE.TECHNIQUE_BEST().name
-                        requestData.bestTechnique = TECHNIQUE_LIST[bestTechniqueIndex?:0].name
-                    } else {
-                        profileRequestType = PROFILE_REQUEST_TYPE.TECHNIQUE_FAVORITE().name
-                        requestData.favoriteTechnique = TECHNIQUE_LIST[favoriteTechniqueIndex?:0].name
-                    }
+
+                1 -> if (styleTabIndex == 0) {
+                    CommunityProfileUpdate(
+                        field = CommunityProfileField.TECHNIQUE_BEST,
+                        bestTechnique = TECHNIQUE_LIST[bestTechniqueIndex ?: 0],
+                    )
+                } else {
+                    CommunityProfileUpdate(
+                        field = CommunityProfileField.TECHNIQUE_FAVORITE,
+                        favoriteTechnique = TECHNIQUE_LIST[favoriteTechniqueIndex ?: 0],
+                    )
                 }
-                2 -> { // SUBMISSION
-                    if (styleTabIndex == 0) {
-                        profileRequestType = PROFILE_REQUEST_TYPE.SUBMISSION_BEST().name
-                        requestData.bestSubmission = SUBMISSION_LIST[bestSubmissionIndex?:0].name
-                    } else {
-                        profileRequestType = PROFILE_REQUEST_TYPE.SUBMISSION_FAVORITE().name
-                        requestData.favoriteSubmission = SUBMISSION_LIST[favoriteSubmissionIndex?:0].name
-                    }
+
+                2 -> if (styleTabIndex == 0) {
+                    CommunityProfileUpdate(
+                        field = CommunityProfileField.SUBMISSION_BEST,
+                        bestSubmission = SUBMISSION_LIST[bestSubmissionIndex ?: 0],
+                    )
+                } else {
+                    CommunityProfileUpdate(
+                        field = CommunityProfileField.SUBMISSION_FAVORITE,
+                        favoriteSubmission = SUBMISSION_LIST[favoriteSubmissionIndex ?: 0],
+                    )
                 }
+
+                else -> return@launch
             }
 
-            requestData.profileRequestType = profileRequestType
-
-            updateCommunityProfileUseCase(requestData).collectLatest { uiState ->
-                when(uiState) {
-                    is UiState.Success -> {
-                        ProfileSingleton.profileInfo = uiState.result
-                        profileUiState = UiState.Success(uiState.result)
-
-                        changeUiIndex(completeClick)
-                    }
-                    is UiState.Error -> profileUiState = UiState.Error(message = uiState.message, retryable =  false)
-                    else -> {}
-                }
-            }
+            profileUiState = communityRepository.modifyCommunityProfile(update).toUiState()
+            if (profileUiState is UiState.Success) changeUiIndex(completeClick)
         }
     }
 }

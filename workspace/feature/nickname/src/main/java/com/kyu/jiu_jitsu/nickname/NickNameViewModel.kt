@@ -1,173 +1,129 @@
 package com.kyu.jiu_jitsu.nickname
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kyu.jiu_jitsu.data.api.common.UiState
+import com.kyu.jiu_jitsu.data.repository.SessionRepository
+import com.kyu.jiu_jitsu.data.repository.UserRepository
 import com.kyu.jiu_jitsu.domain.isValidUserNickName
-import com.kyu.jiu_jitsu.domain.usecase.user.CheckNickNameUseCase
-import com.kyu.jiu_jitsu.domain.usecase.local.GetLocalNickNameUseCase
-import com.kyu.jiu_jitsu.domain.usecase.local.SaveLocalUserInfoUseCase
-import com.kyu.jiu_jitsu.domain.usecase.user.SignupUseCase
-import com.kyu.jiu_jitsu.domain.usecase.user.UpdateUserProfileUseCase
+import com.kyu.jiu_jitsu.model.AppResult
+import com.kyu.jiu_jitsu.model.SessionUpdate
 import com.kyu.jiu_jitsu.nickname.model.NickNameState
+import com.kyu.jiu_jitsu.ui.state.toUiError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed interface NickNameAction {
-    data class SignUp(val inputNickName: String, val isMarketingAgreed: Boolean): NickNameAction
-    data class ValidateNickName(val inputNickName: String): NickNameAction
-    data object InitNickNameState: NickNameAction
+    data class SignUp(val inputNickName: String, val isMarketingAgreed: Boolean) : NickNameAction
+    data class ValidateNickName(val inputNickName: String) : NickNameAction
+    data object InitNickNameState : NickNameAction
 }
 
+/** Handles local syntax validation, server duplication checks, and final account creation. */
 @HiltViewModel
 class NickNameViewModel @Inject constructor(
-    private val getLocalNickNameUseCase: GetLocalNickNameUseCase,
-    private val signupUseCase: SignupUseCase,
-    private val updateUserProfileUseCase: UpdateUserProfileUseCase,
-    private val saveLocalUserInfoUseCase: SaveLocalUserInfoUseCase,
-    private val checkNickNameUseCase: CheckNickNameUseCase,
+    private val userRepository: UserRepository,
+    private val sessionRepository: SessionRepository,
 ) : ViewModel() {
-    /** 로컬에 저장된 닉네임 조회 상태 */
-    var _localNickNameState = MutableStateFlow<String?>(null)
-    val localNickNameState = _localNickNameState.asStateFlow()
+    private val mutableLocalNickNameState = MutableStateFlow<String?>(null)
+    val localNickNameState = mutableLocalNickNameState.asStateFlow()
 
+    private val mutableValidateNickNameState = MutableStateFlow<NickNameState>(NickNameState.Idle)
+    val validateNickNameState = mutableValidateNickNameState.asStateFlow()
 
-    /** 입력받은 닉네임의 유효성 검사 상태 (NickNameState) */
-    val _validateNickNameState = MutableStateFlow<NickNameState>(NickNameState.Idle)
-    var validateNickNameState = _validateNickNameState.asStateFlow()
+    private val mutableErrorUiState = MutableStateFlow<String?>(null)
+    val errorUiState = mutableErrorUiState.asStateFlow()
 
-    private var _errorUiState = MutableStateFlow<String?>(null)
-    var errorUiState = _errorUiState.asStateFlow()
-
-    private var _loadingUiState = MutableStateFlow(false)
-    var loadingUiState = _loadingUiState.asStateFlow()
+    private val mutableLoadingUiState = MutableStateFlow(false)
+    val loadingUiState = mutableLoadingUiState.asStateFlow()
 
     init {
         getLocalNickName()
     }
 
     fun onAction(action: NickNameAction) {
-        when(action) {
-            is NickNameAction.SignUp -> onClickSignUp(action.inputNickName, action.isMarketingAgreed)
-            is NickNameAction.ValidateNickName -> onClickValidateNickname(action.inputNickName)
-            NickNameAction.InitNickNameState -> _validateNickNameState.value = NickNameState.Idle
+        when (action) {
+            is NickNameAction.SignUp -> signUp(action.inputNickName, action.isMarketingAgreed)
+            is NickNameAction.ValidateNickName -> validateNickname(action.inputNickName)
+            NickNameAction.InitNickNameState -> mutableValidateNickNameState.value = NickNameState.Idle
         }
     }
 
-    /** Get Local NickName 로컬에 저장된 닉네임 조회 */
-    fun getLocalNickName() {
+    /** Reads the initial value once; this screen does not need a permanent DataStore collector. */
+    private fun getLocalNickName() {
         viewModelScope.launch {
-            getLocalNickNameUseCase().onStart {
-                _loadingUiState.value = true
-            }.collectLatest { nickName ->
-                _loadingUiState.value = false
-                _localNickNameState.value = nickName
+            mutableLoadingUiState.value = true
+            mutableLocalNickNameState.value = sessionRepository.nickname.first()
+            mutableLoadingUiState.value = false
+        }
+    }
+
+    private fun validateNickname(inputNickName: String) {
+        if (!inputNickName.isValidUserNickName()) {
+            mutableValidateNickNameState.value = NickNameState.ValidationError
+            return
+        }
+
+        // Local validation gives immediate feedback; the backend remains authoritative for
+        // uniqueness, so ValidationSuccess is finalized by checkNickname below.
+        checkNickname(inputNickName)
+    }
+
+    private fun signUp(inputNickName: String, isMarketingAgreed: Boolean) {
+        viewModelScope.launch {
+            beginRequest()
+            when (val result = userRepository.signupUser(inputNickName, isMarketingAgreed)) {
+                is AppResult.Success -> {
+                    val loginInfo = result.data
+                    sessionRepository.updateSession(
+                        SessionUpdate(
+                            accessToken = loginInfo.accessToken,
+                            refreshToken = loginInfo.refreshToken,
+                            nickname = loginInfo.userInfo?.nickname ?: inputNickName,
+                            profileImageUrl = loginInfo.userInfo?.profileImageUrl,
+                        ),
+                    )
+                    mutableValidateNickNameState.value = NickNameState.Succeed
+                }
+
+                is AppResult.Failure -> {
+                    mutableErrorUiState.value = result.error.toUiError().message
+                }
             }
+            mutableLoadingUiState.value = false
         }
     }
 
-    fun updateUserProfile() {
-
-    }
-
-    fun saveLocalUserInfo() {
-
-    }
-
-    /**
-     * Bottom Button Click Action
-     * @param inputNickName: String 입력받은 닉네임
-     */
-    private fun onClickValidateNickname(
-        inputNickName: String,
-    ) {
-        // 닉네임 유효성 체크 시작
-        if (inputNickName.isValidUserNickName()) {
-            _validateNickNameState.value = NickNameState.ValidationSuccess
-            checkNickname(inputNickName)
-        } else {
-            _validateNickNameState.value = NickNameState.ValidationError
-        }
-
-    }
-
-    /**
-     * Bottom Button Click Action
-     * @param inputNickName: String 입력받은 닉네임
-     * @param isMarketingAgreed: Boolean 마케팅 동의 여부
-     */
-    private fun onClickSignUp(
-        inputNickName: String,
-        isMarketingAgreed: Boolean,
-    ) {
+    private fun checkNickname(nickName: String) {
         viewModelScope.launch {
-            signupUseCase(inputNickName, isMarketingAgreed).onStart {
-                _loadingUiState.value = true
-                _errorUiState.value = null
-            }.collectLatest { uiState ->
-                _loadingUiState.value = false
-                when (uiState) {
-                    is UiState.Success -> {
-                        with(uiState.result) {
-                            saveLocalUserInfoUseCase(
-                                token = accessToken,
-                                refreshToken = refreshToken,
-                                nickName = userInfo?.nickname,
-                                userProfileImg = userInfo?.profileImageUrl,
-                            )
-                        }
-                        _validateNickNameState.value = NickNameState.Succeed
+            beginRequest()
+            when (val result = userRepository.checkNickname(nickName)) {
+                is AppResult.Success -> {
+                    mutableValidateNickNameState.value = if (result.data) {
+                        NickNameState.ValidationSuccess
+                    } else {
+                        NickNameState.DuplicateError
                     }
-                    is UiState.Error -> {
-                        _errorUiState.value = uiState.message
-                    }
-                    else -> {
-                        Log.d("LoginViewModel", "signUp else")
+                }
+
+                is AppResult.Failure -> {
+                    val error = result.error.toUiError()
+                    if (error.code == 400) {
+                        mutableValidateNickNameState.value = NickNameState.DuplicateError
+                    } else {
+                        mutableErrorUiState.value = error.message
                     }
                 }
             }
+            mutableLoadingUiState.value = false
         }
-
     }
 
-    /**
-     * Check Duplicate NickName
-     * @param nickName: String 입력받은 닉네임
-     */
-    private fun checkNickname(
-        nickName: String,
-    ) {
-        viewModelScope.launch {
-            checkNickNameUseCase(nickName).onStart{
-                _loadingUiState.value = true
-                _errorUiState.value = null
-            }.collectLatest { uiState ->
-                _loadingUiState.value = false
-                when (uiState) {
-                    is UiState.Success -> {
-                        _validateNickNameState.value = NickNameState.ValidationSuccess
-                    }
-                    is UiState.Error -> {
-                        if (uiState.code != null) {
-                            when (uiState.code) {
-                                400 -> _validateNickNameState.value = NickNameState.DuplicateError
-                                else -> _errorUiState.value = uiState.message
-                            }
-                        } else {
-                            _errorUiState.value = uiState.message
-                        }
-                    }
-                    else -> {
-                        Log.d("LoginViewModel", "checkNickname else")
-                    }
-                }
-            }
-        }
+    private fun beginRequest() {
+        mutableLoadingUiState.value = true
+        mutableErrorUiState.value = null
     }
 }

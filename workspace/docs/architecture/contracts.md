@@ -8,6 +8,7 @@ This document is an inventory and navigation aid, not a replacement for backend 
 - Endpoint constants: [`NetworkConfig.kt`](../../core/data/src/main/java/com/kyu/jiu_jitsu/data/utils/NetworkConfig.kt)
 - Retrofit/OkHttp configuration: [`NetworkModule.kt`](../../core/data/src/main/java/com/kyu/jiu_jitsu/data/module/NetworkModule.kt)
 - Service bindings and authenticated/unauthenticated clients: [`ApiModule.kt`](../../core/data/src/main/java/com/kyu/jiu_jitsu/data/module/ApiModule.kt)
+- Stable repository result and app models: [`core/model`](../../core/model/)
 - Request DTOs: `core/data/src/main/java/com/kyu/jiu_jitsu/data/model/dto/request/`
 - Response DTOs: `core/data/src/main/java/com/kyu/jiu_jitsu/data/model/dto/response/`
 
@@ -38,10 +39,14 @@ Authentication assignments above describe the Retrofit client currently provided
 ## Token Behavior
 
 - Authenticated requests add an `Authorization: Bearer <token>` header.
+- An empty credential is omitted rather than sent as `Authorization: Bearer `.
 - Server code `A0003` is treated as token expiration.
-- `TokenRefreshInterceptor` serializes refresh attempts, persists new tokens, and retries the original request.
-- Access and refresh tokens are stored through `SecurePreferences`.
-- Current module-level access-token state is transitional and must be replaced by an injected token source.
+- `TokenRefreshInterceptor` serializes concurrent refresh attempts, reuses a token refreshed by another request, atomically persists the new token pair, and retries each original request at most once.
+- `SessionRepository` is the public session boundary used by app and feature ViewModels.
+- Starting or clearing a session also clears repository-owned user profile memory so one account's profile cannot flash for the next account.
+- Access and refresh tokens are encrypted through `SecurePreferences`; `AccessTokenProvider` is the injected in-memory view used by synchronous OkHttp header interception.
+- A new user's temporary sign-up token stays memory-only until sign-up returns a durable access/refresh pair.
+- Network timeouts are 30 seconds. Authenticated and image-upload clients intentionally omit body/profiler logging because credentials and signatures may be present.
 
 ## Local Storage
 
@@ -58,6 +63,7 @@ Canonical implementation:
 
 - [`PreferencesDatastore.kt`](../../core/data/src/main/java/com/kyu/jiu_jitsu/data/datastore/PreferencesDatastore.kt)
 - [`SecureCrypto.kt`](../../core/data/src/main/java/com/kyu/jiu_jitsu/data/utils/SecureCrypto.kt)
+- [`SessionLocalDataSource.kt`](../../core/data/src/main/java/com/kyu/jiu_jitsu/data/session/SessionLocalDataSource.kt)
 
 ## Contract Change Checklist
 
@@ -69,4 +75,3 @@ When changing an API or persisted value:
 4. Add tests for nullable fields, enum values, error envelopes, and auth behavior affected by the change.
 5. Update this inventory.
 6. Record an ADR if the change alters an architectural boundary rather than only an endpoint.
-

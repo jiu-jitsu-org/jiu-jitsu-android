@@ -5,14 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.model.CommunityProfileInfo
-import com.kyu.jiu_jitsu.data.model.dto.request.PROFILE_REQUEST_TYPE
-import com.kyu.jiu_jitsu.data.model.dto.request.UpdateCommunityProfileRequest
-import com.kyu.jiu_jitsu.data.model.singleton.ProfileSingleton
-import com.kyu.jiu_jitsu.domain.usecase.community.UpdateCommunityProfileUseCase
+import com.kyu.jiu_jitsu.data.repository.CommunityRepository
+import com.kyu.jiu_jitsu.model.CommunityProfileField
+import com.kyu.jiu_jitsu.model.CommunityProfileInfo
+import com.kyu.jiu_jitsu.model.CommunityProfileUpdate
+import com.kyu.jiu_jitsu.ui.state.UiState
+import com.kyu.jiu_jitsu.ui.state.toUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,7 +21,7 @@ sealed interface ModifyAcademyAction {
 
 @HiltViewModel
 class ModifyAcademyViewModel @Inject constructor(
-    private val updateCommunityProfileUseCase: UpdateCommunityProfileUseCase,
+    private val communityRepository: CommunityRepository,
 ): ViewModel() {
 
     var profileUiState by mutableStateOf<UiState<CommunityProfileInfo>>(UiState.Idle)
@@ -38,24 +37,15 @@ class ModifyAcademyViewModel @Inject constructor(
         viewModelScope.launch {
             profileUiState = UiState.Loading
 
-            val requestData = UpdateCommunityProfileRequest(
-                profileRequestType = PROFILE_REQUEST_TYPE.ACADEMY().name,
-                academyName = academyName
+            val update = CommunityProfileUpdate(
+                field = CommunityProfileField.ACADEMY,
+                academyName = academyName,
             )
 
-            updateCommunityProfileUseCase(requestData).collectLatest { uiState ->
-                when(uiState) {
-                    is UiState.Success -> {
-                        ProfileSingleton.profileInfo = uiState.result
-                        profileUiState = UiState.Success(uiState.result)
-
-                        onCompleted()
-
-                    }
-                    is UiState.Error -> profileUiState = UiState.Error(message = uiState.message, retryable =  false)
-                    else -> {}
-                }
-            }
+            // Repository updates its shared StateFlow before returning success, so the main
+            // profile screen will already have the latest server snapshot when navigation pops.
+            profileUiState = communityRepository.modifyCommunityProfile(update).toUiState()
+            if (profileUiState is UiState.Success) onCompleted()
         }
     }
 

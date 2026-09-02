@@ -1,8 +1,8 @@
 package com.kyu.jiu_jitsu.ui.theme
 
-import com.kyu.jiu_jitsu.data.model.POSITION
-import com.kyu.jiu_jitsu.data.model.SUBMISSION
-import com.kyu.jiu_jitsu.data.model.TECHNIQUE
+import com.kyu.jiu_jitsu.model.POSITION
+import com.kyu.jiu_jitsu.model.SUBMISSION
+import com.kyu.jiu_jitsu.model.TECHNIQUE
 import com.kyu.jiu_jitsu.ui.R
 
 /**

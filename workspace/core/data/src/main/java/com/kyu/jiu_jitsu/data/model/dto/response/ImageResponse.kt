@@ -1,6 +1,6 @@
 package com.kyu.jiu_jitsu.data.model.dto.response
 
-import com.kyu.jiu_jitsu.data.model.CdnImageInfo
+import com.kyu.jiu_jitsu.model.CdnImageInfo
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
@@ -40,10 +40,10 @@ data class RegisterImageData(
     val status: String?,
 )
 
-fun RegisterImageData?.toInfo(): CdnImageInfo =
+internal fun RegisterImageData.toInfo(): CdnImageInfo =
     CdnImageInfo(
-        id = this?.id ?: 0,
-        cdnId = this?.cdnId.orEmpty(),
-        imageUrl = this?.imageUrl.orEmpty(),
-        status = this?.status.orEmpty(),
+        id = id ?: 0,
+        cdnId = cdnId.orEmpty(),
+        imageUrl = imageUrl.orEmpty(),
+        status = status.orEmpty(),
     )

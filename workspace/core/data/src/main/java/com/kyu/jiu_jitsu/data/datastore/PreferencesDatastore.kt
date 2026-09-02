@@ -34,6 +34,13 @@ class SecurePreferences @Inject constructor (
         }
     }
 
+    /**
+     * Persists one encrypted value.
+     *
+     * Prefer [setEncryptedValues] when several values form one logical state, such as an access
+     * and refresh token pair. A single DataStore edit prevents readers from observing half of an
+     * updated session.
+     */
     suspend fun setValueToEncrypt(
         key: Preferences.Key<String>,
         plainStr: String?,
@@ -47,6 +54,20 @@ class SecurePreferences @Inject constructor (
         }
     }
 
+    /** Atomically writes or removes a group of encrypted string preferences. */
+    suspend fun setEncryptedValues(values: Map<Preferences.Key<String>, String?>) {
+        context.appPrefs.edit { prefs ->
+            values.forEach { (key, plainValue) ->
+                if (plainValue == null) {
+                    prefs.remove(key)
+                } else {
+                    val blob = encryptToBlob(plainValue.encodeToByteArray())
+                    prefs[key] = Base64.getEncoder().encodeToString(blob)
+                }
+            }
+        }
+    }
+
     fun getValueToDecrypt(
         key: Preferences.Key<String>,
     ): Flow<String?> = context.appPrefs.data.map { prefs ->
@@ -55,6 +76,4 @@ class SecurePreferences @Inject constructor (
             decryptFromBlob(blob).decodeToString()
         }
     }
-
-
 }

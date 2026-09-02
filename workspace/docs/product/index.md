@@ -39,9 +39,7 @@ The following gaps are visible in the current implementation and are not complet
 
 - Google login UI does not complete the full click-to-login flow.
 - Apple login is represented but not implemented.
-- Marketing consent is not consistently derived from the selected agreement set.
 - Some profile-edit actions still display placeholder text.
-- Competition-rank mapping currently supports only `GOLD`.
 - FCM token updates are not fully connected to startup and refresh behavior.
 
 Architecture-only migration work is tracked separately in [the NIA migration workstream](../workstreams/nia-architecture-migration.md).
@@ -63,4 +61,3 @@ Do not infer backend capability, business policy, or release commitment from pla
 ## Product Completion
 
 A user-facing change is complete only when its acceptance criteria are met and the applicable checks in the [definition of done](../development/definition-of-done.md) pass.
-

@@ -6,18 +6,18 @@ import android.provider.OpenableColumns
 import com.kyu.jiu_jitsu.data.api.ImageKitService
 import com.kyu.jiu_jitsu.data.api.ImageService
 import com.kyu.jiu_jitsu.data.api.UserService
-import com.kyu.jiu_jitsu.data.api.common.ApiResult
 import com.kyu.jiu_jitsu.data.api.common.ServerApiException
+import com.kyu.jiu_jitsu.data.api.common.mapEnvelope
 import com.kyu.jiu_jitsu.data.api.common.safeApiCall
 import com.kyu.jiu_jitsu.data.model.dto.DtoCommonCode
 import com.kyu.jiu_jitsu.data.model.dto.request.RegisterImageRequest
-import com.kyu.jiu_jitsu.data.model.dto.response.RegisterImageResponse
+import com.kyu.jiu_jitsu.data.model.dto.response.toInfo
 import com.kyu.jiu_jitsu.data.repository.ImageRepository
+import com.kyu.jiu_jitsu.model.AppResult
+import com.kyu.jiu_jitsu.model.CdnImageInfo
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -27,7 +27,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
-class ImageRepositoryImpl @Inject constructor(
+internal class ImageRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val imageService: ImageService,
     private val imageKitService: ImageKitService,
@@ -37,9 +37,8 @@ class ImageRepositoryImpl @Inject constructor(
     override suspend fun uploadCommunityImage(
         imageUri: String,
         publicKey: String,
-    ): Flow<ApiResult<RegisterImageResponse>> = flow {
-        emit(
-            safeApiCall {
+    ): AppResult<CdnImageInfo> = withContext(Dispatchers.IO) {
+        safeApiCall {
                 val uri = Uri.parse(imageUri)
                 val imageFileName = uri.createImageKitFileName()
 
@@ -114,7 +113,7 @@ class ImageRepositoryImpl @Inject constructor(
                 )
 
                 // 4. 등록된 이미지 id를 사용자 프로필 이미지로 반영한다.
-                // 서버 요구사항이 request parameter 전달이므로 PUT /api/user/profile/image?imageId={id}
+                // 서버 요구사항이 request parameter 전달이므로 PUT /api/user/profile/image?imageFileId={id}
                 // 형태로 호출한다. 이 API 또한 공통 래퍼 응답이므로, HTTP 200이어도 success=false 또는
                 // data=null이면 최종 프로필 반영이 실패한 것으로 보고 전체 업로드 플로우를 실패 처리한다.
                 val userProfileResponse = userService.updateUserProfileImage(
@@ -133,12 +132,11 @@ class ImageRepositoryImpl @Inject constructor(
                     )
                 }
 
-                // 화면은 업로드된 CDN 이미지 정보를 표시/추적하므로 기존 반환 타입(RegisterImageResponse)을 유지한다.
-                // 사용자 프로필 반영 성공 여부는 위 userProfileResponse 검증에서 보장된다.
+                // The repository maps this DTO to CdnImageInfo below. The UI therefore observes
+                // only stable app data, while successful profile activation is guaranteed above.
                 registerResponse
-            }
-        )
-    }.flowOn(Dispatchers.IO)
+        }.mapEnvelope { response -> response.toInfo() }
+    }
 
     private fun Uri.toMultipartFile(fileName: String): MultipartBody.Part {
         val mimeType = context.contentResolver.getType(this) ?: DEFAULT_IMAGE_MIME_TYPE

@@ -35,7 +35,7 @@ import com.kyu.jiu_jitsu.ui.theme.Typography
 
 sealed class SignUpAgreeType(
     @StringRes val titleResId: Int,
-    var isRequired: Boolean = true,
+    val isRequired: Boolean = true,
     val code: String,
     val index: Int,
 ) {

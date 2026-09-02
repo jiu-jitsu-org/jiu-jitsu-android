@@ -8,18 +8,16 @@
 
 Align the project with Now in Android-style boundaries without attempting an unrelated all-at-once rewrite.
 
-## Current Problems
+## Current State
 
-- Stable app models and transport DTOs coexist under `:core:data`.
-- Repository contracts expose response DTOs and `ApiResult`.
-- Domain code maps DTOs and returns presentation `UiState`.
-- Domain code accesses `SecurePreferences`, preference keys, and `NetworkModule`.
-- `:core:ui` depends on `:core:data` for rank/style models.
-- Features import DTO request types, data-layer UI state, and `ProfileSingleton`.
-- Authentication uses mutable module-level access-token state.
+The original model, repository, UI-state, DataStore, and mutable-global boundary violations have been removed. `:core:model` now owns stable contracts; repositories map transport responses before returning; `:core:domain` is framework independent; and session/profile state is repository backed.
+
+The remaining migration work is presentation modularization:
+
 - Navigation destinations are centralized in `:core:ui`.
-
-These are existing exceptions. New code must not expand them.
+- Theme and generic UI primitives have not yet moved to `:core:designsystem`.
+- Several screens expose multiple state holders instead of one immutable feature state.
+- Rank/style display strings still need resource-backed localization.
 
 ## Target
 
@@ -36,11 +34,15 @@ These are existing exceptions. New code must not expand them.
 
 ### 1. Establish app models
 
+Status: Completed on 2026-09-01.
+
 - Add `:core:model` as a Kotlin/JVM module.
 - Move one bounded model family at a time, starting with profile and rank types used by both UI and data.
 - Keep app models free of Android, serialization, storage, and UI annotations.
 
 ### 2. Correct repository boundaries
+
+Status: Completed on 2026-09-01.
 
 - Change repository methods to return app models or stable results.
 - Move DTO-to-model mapping into repository implementations.
@@ -49,17 +51,23 @@ These are existing exceptions. New code must not expand them.
 
 ### 3. Move UI state to features
 
+Status: Boundary completed on 2026-09-01; feature-state consolidation remains incremental.
+
 - Define feature-specific sealed UI state.
 - Map data/domain results in ViewModels.
 - Remove `UiState` from `:core:data` after all consumers migrate.
 
 ### 4. Remove UI-to-data coupling
 
+Status: Completed on 2026-09-01.
+
 - Point `:core:ui` visual mappings at `:core:model`.
 - Keep feature-only model-to-visual mapping in the owning feature.
 - Remove the `:core:ui -> :core:data` Gradle edge.
 
 ### 5. Replace mutable global state
+
+Status: Completed on 2026-09-01.
 
 - Replace `ProfileSingleton` with repository-observed or ViewModel-owned state.
 - Introduce an injected session/token source.
@@ -68,11 +76,15 @@ These are existing exceptions. New code must not expand them.
 
 ### 6. Refine UI and navigation modules
 
+Status: Active.
+
 - Add `:core:designsystem` and migrate generic primitives from `:core:ui`.
 - Move navigation keys and graph registration to features.
 - Add feature `api`/`impl` splits only when justified.
 
 ### 7. Split infrastructure only when justified
+
+Status: Deferred; no current size or isolation requirement justifies the split.
 
 - Add `:core:network`, `:core:datastore`, or `:core:database` when size, reuse, build isolation, or ownership warrants the modules.
 - Do not split solely to match NIA's module count.
@@ -84,7 +96,7 @@ These are existing exceptions. New code must not expand them.
 - Domain contains no UI state, DTO mapper, DataStore, or network-module access.
 - `:core:ui` has no `:core:data` dependency.
 - Mutable profile and token globals have been removed.
-- Focused repository, mapper, UseCase, and ViewModel tests cover migrated behavior.
+- Focused mapper, model, domain, repository, and ViewModel tests cover migrated behavior.
 - Architecture and contract documents describe the implemented state rather than the migration target.
 
 ## Non-Goals
@@ -93,4 +105,3 @@ These are existing exceptions. New code must not expand them.
 - Introducing Room before an offline source of truth is a product requirement.
 - Moving repository contracts into domain only to satisfy strict Clean Architecture.
 - Creating every module present in Now in Android without a project-specific need.
-

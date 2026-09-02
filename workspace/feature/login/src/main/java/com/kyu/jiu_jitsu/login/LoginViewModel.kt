@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
@@ -14,51 +15,49 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.user.UserApiClient
-import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.module.NetworkModule.setUserToken
-import com.kyu.jiu_jitsu.domain.usecase.login.GetSnsLoginUseCase
-import com.kyu.jiu_jitsu.domain.usecase.local.SaveLocalUserInfoUseCase
-import com.kyu.jiu_jitsu.domain.usecase.user.SignupUseCase
+import com.kyu.jiu_jitsu.data.repository.SessionRepository
+import com.kyu.jiu_jitsu.data.repository.SnsLoginRepository
 import com.kyu.jiu_jitsu.login.model.LoginType
 import com.kyu.jiu_jitsu.login.model.SnsLoginSucceedType
+import com.kyu.jiu_jitsu.model.AppResult
+import com.kyu.jiu_jitsu.model.SessionUpdate
+import com.kyu.jiu_jitsu.ui.state.UiState
+import com.kyu.jiu_jitsu.ui.state.toUiError
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** Owns provider sign-in and converts its credential into an application session. */
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val getSnsLoginUseCase: GetSnsLoginUseCase,
-    private val signupUseCase: SignupUseCase,
-    private val saveLocalUserInfoUseCase: SaveLocalUserInfoUseCase,
-): ViewModel() {
+    private val snsLoginRepository: SnsLoginRepository,
+    private val sessionRepository: SessionRepository,
+) : ViewModel() {
 
     var loginType by mutableStateOf<LoginType>(LoginType.GOOGLE)
-    var loginUiState by mutableStateOf<UiState<SnsLoginSucceedType>>(UiState.Idle)
 
-    /**
-     * Test
-     */
+    // Provider credentials are scoped to this ViewModel instance. They are neither saved in
+    // Compose state nor attached to singleton provider objects, which limits accidental exposure.
+    private var providerToken: String? = null
+
+    var loginUiState by mutableStateOf<UiState<SnsLoginSucceedType>>(UiState.Idle)
+        private set
+
+    /** Development helper retained for the existing test server flow. */
     fun startKakaoTestLogin() {
-        loginType = LoginType.KAKAO_ACCOUNT.apply { snsLoginToken = "kakaoTest" }
+        if (!BuildConfig.DEV) return
+        loginType = LoginType.KAKAO_ACCOUNT
+        providerToken = "kakaoTest"
         getSnsLoginInfo()
     }
 
-    /**
-     * SNS Login
-     */
-    fun startSnsLogin(
-        context: Context,
-    ) {
-        when(loginType) {
-            is LoginType.KAKAO_ACCOUNT -> {
-                loginWithKakaoTalk(context)
-            }
-            is LoginType.GOOGLE -> {
-                signInWithGoogle(context)
-            }
-            is LoginType.APPLE -> {
-
+    /** Starts the SDK flow selected by [loginType]. */
+    fun startSnsLogin(context: Context) {
+        when (loginType) {
+            LoginType.KAKAO_ACCOUNT -> loginWithKakaoTalk(context)
+            LoginType.GOOGLE -> signInWithGoogle(context)
+            LoginType.APPLE -> {
+                // TODO: Add the Android web-based Apple authorization flow.
             }
         }
     }
@@ -66,121 +65,112 @@ class LoginViewModel @Inject constructor(
     private fun buildGoogleIdOption(
         webClientId: String,
         nonce: String? = null,
-    ): GetGoogleIdOption {
-        return GetGoogleIdOption.Builder()
-            // 기존에 이 앱에 로그인한 적 있는 계정을 우선 필터링
-            .setFilterByAuthorizedAccounts(false)
-            // 서버 검증 시 서버(Web) 클라이언트 ID 사용
-            .setServerClientId(webClientId)
-            // 단일 자격이면 자동 로그인 UX 허용(권장)
-            .setAutoSelectEnabled(true)
-            .apply { nonce?.let { setNonce(it) } }
-            .build()
-    }
+    ): GetGoogleIdOption = GetGoogleIdOption.Builder()
+        // The backend validates a token minted for the web OAuth client, not the Android client.
+        .setServerClientId(webClientId)
+        .setFilterByAuthorizedAccounts(false)
+        .setAutoSelectEnabled(true)
+        .apply { nonce?.let(::setNonce) }
+        .build()
 
     fun signInWithGoogle(
         context: Context,
         onSuccess: (GoogleIdTokenCredential) -> Unit = {},
         onCancelOrError: (Throwable?) -> Unit = {},
     ) {
-        val cm = CredentialManager.create(context)
-        val googleId = buildGoogleIdOption(BuildConfig.GOOGLE_OAUTH_WEB_CLIENT_ID)
+        val credentialManager = CredentialManager.create(context)
         val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleId)
+            .addCredentialOption(buildGoogleIdOption(BuildConfig.GOOGLE_OAUTH_WEB_CLIENT_ID))
             .build()
 
         viewModelScope.launch {
             try {
-                val result = cm.getCredential(
-                    context = context,
-                    request = request
-                )
-                when (val cred = result.credential) {
-                    is androidx.credentials.CustomCredential -> {
-                        if (cred.type ==
-                            GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                            val idCred = GoogleIdTokenCredential.createFrom(cred.data)
-                            loginType = LoginType.GOOGLE.apply { snsLoginToken = idCred.idToken }
-                            onSuccess(idCred)
-                            getSnsLoginInfo()
-                        } else {
-                            onCancelOrError(IllegalStateException("Unknown credential type"))
-                        }
-                    }
-                    else -> {
-                        onCancelOrError(IllegalStateException("Unexpected credential"))
-                    }
+                val credential = credentialManager.getCredential(context, request).credential
+                if (
+                    credential is CustomCredential &&
+                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                ) {
+                    val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                    loginType = LoginType.GOOGLE
+                    providerToken = googleCredential.idToken
+                    onSuccess(googleCredential)
+                    getSnsLoginInfo()
+                } else {
+                    onCancelOrError(IllegalStateException("Unsupported Google credential type."))
                 }
-            } catch (e: GetCredentialException) {
-                // 사용자가 취소했거나 네트워크/구성 오류 등
-                Log.e("@@@@@@@@", "Google Login Error : ${e.message}")
-                onCancelOrError(e)
+            } catch (error: GetCredentialException) {
+                // Never log an ID token or provider access token. The exception category is enough
+                // for diagnostics and avoids leaking credentials through Logcat or crash reports.
+                Log.w(LOG_TAG, "Google credential request did not complete.", error)
+                onCancelOrError(error)
             }
         }
     }
 
     private fun loginWithKakaoTalk(context: Context) {
-        val callback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
-            if (error != null) {
-                Log.e("KakaoTalk", "카카오계정으로 로그인 실패", error)
-            } else if (token != null) {
-                loginType = LoginType.KAKAO_ACCOUNT.apply { snsLoginToken = token.accessToken }
-                Log.i("KakaoTalk", "카카오계정으로 로그인 성공 ${token.accessToken}")
-                getSnsLoginInfo()
-            }
+        val accountCallback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
+            handleKakaoResult(token, error)
         }
 
-        viewModelScope.launch {
-            if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
-                UserApiClient.instance.loginWithKakaoTalk(context) { token, error ->
-                    if (error != null) {
-                        Log.e("KakaoTalk", "카카오톡으로 로그인 실패", error)
-                    } else if (token != null) {
-                        loginType = LoginType.KAKAO_ACCOUNT.apply { snsLoginToken = token.accessToken }
-                        Log.i("KakaoTalk", "카카오톡으로 로그인 성공 ${token.accessToken}")
-                        getSnsLoginInfo()
-                    }
-                }
-            } else {
-                UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
-            }
+        if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
+            UserApiClient.instance.loginWithKakaoTalk(context, callback = ::handleKakaoResult)
+        } else {
+            UserApiClient.instance.loginWithKakaoAccount(context, callback = accountCallback)
         }
     }
 
+    private fun handleKakaoResult(token: OAuthToken?, error: Throwable?) {
+        if (error != null) {
+            Log.w(LOG_TAG, "Kakao credential request did not complete.", error)
+            return
+        }
+        if (token != null) {
+            loginType = LoginType.KAKAO_ACCOUNT
+            providerToken = token.accessToken
+            getSnsLoginInfo()
+        }
+    }
+
+    /** Exchanges the provider credential for either a temporary sign-up token or a full session. */
     fun getSnsLoginInfo() {
         viewModelScope.launch {
             loginUiState = UiState.Loading
-            getSnsLoginUseCase(loginType.type, loginType.snsLoginToken?:"").collectLatest { uiState ->
-                when(uiState) {
-                    is UiState.Success -> {
-                        Log.d("LoginViewModel", "getSnsLoginInfo Success : ${uiState.result}")
-                        if (uiState.result.isNewUser) {
-                            // New User Need Sign up
-                            uiState.result.tempToken.setUserToken()
-                            loginUiState = UiState.Success(SnsLoginSucceedType.SIGN_UP)
-                        } else {
-                            // Sign in
-                            with(uiState.result) {
-                                saveLocalUserInfoUseCase(
-                                    token = accessToken,
-                                    refreshToken = refreshToken,
-                                    nickName = userInfo?.nickname,
-                                    userProfileImg = userInfo?.profileImageUrl,
-                                )
-                            }
-                            loginUiState = UiState.Success(SnsLoginSucceedType.SIGN_IN)
-                        }
-                    }
-                    is UiState.Error -> {
-                        Log.d("LoginViewModel", "getSnsLoginInfo Error : ${uiState.message}")
-                        loginUiState = UiState.Error(message = uiState.message, retryable =  false)
-                    }
-                    else -> {
-                        Log.d("LoginViewModel", "getSnsLoginInfo else")
+            // Copy then clear the provider credential before suspension so it cannot remain in
+            // memory for the lifetime of this ViewModel after the exchange completes.
+            val credential = providerToken.orEmpty()
+            providerToken = null
+            when (
+                val result = snsLoginRepository.login(
+                    snsProvider = loginType.type,
+                    token = credential,
+                )
+            ) {
+                is AppResult.Success -> {
+                    val loginInfo = result.data
+                    if (loginInfo.isNewUser) {
+                        // The temporary token authorizes sign-up only and intentionally remains
+                        // memory-only until the backend returns a durable session.
+                        sessionRepository.setTransientAccessToken(loginInfo.tempToken)
+                        loginUiState = UiState.Success(SnsLoginSucceedType.SIGN_UP)
+                    } else {
+                        sessionRepository.updateSession(
+                            SessionUpdate(
+                                accessToken = loginInfo.accessToken,
+                                refreshToken = loginInfo.refreshToken,
+                                nickname = loginInfo.userInfo?.nickname,
+                                profileImageUrl = loginInfo.userInfo?.profileImageUrl,
+                            ),
+                        )
+                        loginUiState = UiState.Success(SnsLoginSucceedType.SIGN_IN)
                     }
                 }
+
+                is AppResult.Failure -> loginUiState = result.error.toUiError()
             }
         }
     }
 
+    private companion object {
+        private const val LOG_TAG = "LoginViewModel"
+    }
 }

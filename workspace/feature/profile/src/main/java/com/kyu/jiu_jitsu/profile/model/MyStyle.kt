@@ -1,10 +1,10 @@
 package com.kyu.jiu_jitsu.profile.model
 
 import androidx.compose.ui.graphics.Color
-import com.kyu.jiu_jitsu.data.model.COMPETITION_RANK
-import com.kyu.jiu_jitsu.data.model.POSITION
-import com.kyu.jiu_jitsu.data.model.SUBMISSION
-import com.kyu.jiu_jitsu.data.model.TECHNIQUE
+import com.kyu.jiu_jitsu.model.COMPETITION_RANK
+import com.kyu.jiu_jitsu.model.POSITION
+import com.kyu.jiu_jitsu.model.SUBMISSION
+import com.kyu.jiu_jitsu.model.TECHNIQUE
 import com.kyu.jiu_jitsu.ui.theme.Blue500
 import com.kyu.jiu_jitsu.ui.theme.CoolGray25
 import com.kyu.jiu_jitsu.ui.theme.CoolGray200

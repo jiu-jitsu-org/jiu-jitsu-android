@@ -5,16 +5,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.model.CommunityProfileInfo
-import com.kyu.jiu_jitsu.data.model.dto.request.PROFILE_REQUEST_TYPE
-import com.kyu.jiu_jitsu.data.model.dto.request.UpdateCommunityProfileRequest
-import com.kyu.jiu_jitsu.data.model.dto.response.Competition
-import com.kyu.jiu_jitsu.data.model.singleton.ProfileSingleton
-import com.kyu.jiu_jitsu.domain.usecase.community.UpdateCommunityProfileUseCase
+import com.kyu.jiu_jitsu.data.repository.CommunityRepository
+import com.kyu.jiu_jitsu.model.CommunityProfileField
+import com.kyu.jiu_jitsu.model.CommunityProfileInfo
+import com.kyu.jiu_jitsu.model.CommunityProfileUpdate
+import com.kyu.jiu_jitsu.model.CompetitionInfo
+import com.kyu.jiu_jitsu.model.toCompetitionRank
 import com.kyu.jiu_jitsu.profile.screen.CompetitionScreenType
+import com.kyu.jiu_jitsu.ui.state.UiState
+import com.kyu.jiu_jitsu.ui.state.toUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,7 +27,7 @@ sealed interface ModifyCompetitionAction {
 
 @HiltViewModel
 class ModifyCompetitionViewModel @Inject constructor(
-    private val updateCommunityProfileUseCase: UpdateCommunityProfileUseCase,
+    private val communityRepository: CommunityRepository,
 ): ViewModel()  {
 
     var profileUiState by mutableStateOf<UiState<CommunityProfileInfo>>(UiState.Idle)
@@ -76,30 +76,20 @@ class ModifyCompetitionViewModel @Inject constructor(
                 viewModelScope.launch {
                     profileUiState = UiState.Loading
 
-                    val requestData = UpdateCommunityProfileRequest(
-                        profileRequestType = PROFILE_REQUEST_TYPE.COMPETITION().name,
-                        competitionInfoList = listOf(
-                            Competition(
+                    val update = CommunityProfileUpdate(
+                        field = CommunityProfileField.COMPETITION,
+                        competitions = listOf(
+                            CompetitionInfo(
                                 competitionYear = selectedYear,
                                 competitionMonth = selectedMonth,
                                 competitionName = selectedName,
-                                competitionRank = selectedRank
-                            )
-                        )
+                                competitionRank = selectedRank.toCompetitionRank(),
+                            ),
+                        ),
                     )
 
-                    updateCommunityProfileUseCase(requestData).collectLatest { uiState ->
-                        when(uiState) {
-                            is UiState.Success -> {
-                                ProfileSingleton.profileInfo = uiState.result
-                                profileUiState = UiState.Success(uiState.result)
-
-                                onCompleteClick()
-                            }
-                            is UiState.Error -> profileUiState = UiState.Error(message = uiState.message, retryable =  false)
-                            else -> {}
-                        }
-                    }
+                    profileUiState = communityRepository.modifyCommunityProfile(update).toUiState()
+                    if (profileUiState is UiState.Success) onCompleteClick()
                 }
             }
         }

@@ -10,14 +10,16 @@ import com.kyu.jiu_jitsu.data.api.UserService
 import com.kyu.jiu_jitsu.data.repository.BootStrapRepository
 import com.kyu.jiu_jitsu.data.repository.CommunityRepository
 import com.kyu.jiu_jitsu.data.repository.ImageRepository
-import com.kyu.jiu_jitsu.data.repository.RefreshTokenRepository
+import com.kyu.jiu_jitsu.data.repository.SessionRepository
 import com.kyu.jiu_jitsu.data.repository.SnsLoginRepository
 import com.kyu.jiu_jitsu.data.repository.UserRepository
 import com.kyu.jiu_jitsu.data.repository.impl.BootStrapInfoRepository
 import com.kyu.jiu_jitsu.data.repository.impl.CommunityRepositoryImpl
 import com.kyu.jiu_jitsu.data.repository.impl.ImageRepositoryImpl
 import com.kyu.jiu_jitsu.data.repository.impl.LoginUserRepositoryImpl
+import com.kyu.jiu_jitsu.data.repository.impl.SessionRepositoryImpl
 import com.kyu.jiu_jitsu.data.repository.impl.UserRepositoryImpl
+import com.kyu.jiu_jitsu.data.session.SessionLocalDataSource
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,12 +36,6 @@ object RepositoryModule {
     fun provideSnsLoginRepository(
         loginService: LoginService
     ): SnsLoginRepository = LoginUserRepositoryImpl(loginService)
-
-    @Provides
-    @Singleton
-    fun provideRefreshTokenRepository(
-        loginService: LoginService
-    ): RefreshTokenRepository = LoginUserRepositoryImpl(loginService)
 
     @Provides
     @Singleton
@@ -67,5 +63,12 @@ object RepositoryModule {
         imageKitService: ImageKitService,
         userService: UserService,
     ): ImageRepository = ImageRepositoryImpl(context, imageService, imageKitService, userService)
+
+    @Provides
+    @Singleton
+    fun provideSessionRepository(
+        localDataSource: SessionLocalDataSource,
+        communityRepository: CommunityRepository,
+    ): SessionRepository = SessionRepositoryImpl(localDataSource, communityRepository)
 
 }

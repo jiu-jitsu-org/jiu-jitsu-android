@@ -1,14 +1,11 @@
 package com.kyu.jiu_jitsu.data.api.interceptor
 
-import com.kyu.jiu_jitsu.data.datastore.PrefKeys
-import com.kyu.jiu_jitsu.data.datastore.SecurePreferences
 import com.kyu.jiu_jitsu.data.model.dto.request.RefreshTokenRequest
 import com.kyu.jiu_jitsu.data.model.dto.response.SnsLoginResponse
-import com.kyu.jiu_jitsu.data.module.NetworkModule.setUserToken
+import com.kyu.jiu_jitsu.data.session.SessionLocalDataSource
 import com.kyu.jiu_jitsu.data.utils.NetworkConfig
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
@@ -36,12 +33,12 @@ import javax.inject.Inject
  * 처리 순서:
  * 1. 원 REST API 응답 바디에서 code == A0003 여부를 확인한다.
  * 2. A0003이면 로컬에 저장된 refreshToken으로 POST /auth/refresh를 호출한다.
- * 3. refresh 응답의 accessToken, refreshToken을 SecurePreferences에 먼저 저장한다.
- * 4. 메모리 토큰(NetworkModule.userToken)도 새 accessToken으로 갱신한다.
+ * 3. refresh 응답의 accessToken, refreshToken을 암호화 저장소에 원자적으로 저장한다.
+ * 4. 세션 데이터 소스가 동기식 요청 헤더용 메모리 토큰도 함께 갱신한다.
  * 5. 저장이 끝난 뒤 원 요청을 새 Authorization 헤더로 1회만 재호출한다.
  */
 class TokenRefreshInterceptor @Inject constructor(
-    private val securePreferences: SecurePreferences,
+    private val sessionLocalDataSource: SessionLocalDataSource,
     private val refreshClient: OkHttpClient,
     moshi: Moshi,
     baseUrl: String,
@@ -66,19 +63,14 @@ class TokenRefreshInterceptor @Inject constructor(
             return response
         }
 
-        val currentAccessToken = runBlocking {
-            securePreferences.getValueToDecrypt(PrefKeys.USER_TOKEN).first()
-        }
         val requestAccessToken = request.accessTokenFromHeader()
 
         val refreshResult = synchronized(refreshLock) {
-            val latestAccessToken = runBlocking {
-                securePreferences.getValueToDecrypt(PrefKeys.USER_TOKEN).first()
-            }
+            val latestAccessToken = sessionLocalDataSource.currentAccessToken()
 
             // 동시에 여러 API가 A0003을 받으면 첫 번째 요청만 refresh를 수행한다.
             // 락 대기 중 다른 요청이 이미 토큰을 갱신했다면, 현재 요청은 저장된 최신 accessToken으로 바로 재시도한다.
-            if (!latestAccessToken.isNullOrBlank() && latestAccessToken != currentAccessToken && latestAccessToken != requestAccessToken) {
+            if (!latestAccessToken.isNullOrBlank() && latestAccessToken != requestAccessToken) {
                 TokenRefreshResult.Success(latestAccessToken)
             } else {
                 refreshToken()
@@ -104,9 +96,7 @@ class TokenRefreshInterceptor @Inject constructor(
     }
 
     private fun refreshToken(): TokenRefreshResult {
-        val savedRefreshToken = runBlocking {
-            securePreferences.getValueToDecrypt(PrefKeys.USER_REFRESH_TOKEN).first()
-        }
+        val savedRefreshToken = runBlocking { sessionLocalDataSource.refreshToken() }
         if (savedRefreshToken.isNullOrBlank()) {
             return TokenRefreshResult.Failure
         }
@@ -137,13 +127,11 @@ class TokenRefreshInterceptor @Inject constructor(
                 return TokenRefreshResult.Failure
             }
 
-            // 요구사항상 원 API 재호출보다 토큰 저장이 반드시 먼저 끝나야 한다.
-            // SecurePreferences 저장은 suspend 함수이므로 runBlocking으로 완료를 보장한 뒤 다음 단계로 진행한다.
+            // 원 API를 재호출하기 전에 두 토큰의 영속화와 메모리 반영을 모두 완료한다.
+            // Interceptor API는 동기식이므로 이 전용 OkHttp 작업 스레드에서 완료를 기다린다.
             runBlocking {
-                securePreferences.setValueToEncrypt(PrefKeys.USER_TOKEN, newAccessToken)
-                securePreferences.setValueToEncrypt(PrefKeys.USER_REFRESH_TOKEN, newRefreshToken)
+                sessionLocalDataSource.updateTokens(newAccessToken, newRefreshToken)
             }
-            newAccessToken.setUserToken()
 
             return TokenRefreshResult.Success(newAccessToken)
         }

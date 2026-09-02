@@ -1,14 +1,14 @@
 package com.kyu.jiu_jitsu.data.model.dto.response
 
-import com.kyu.jiu_jitsu.data.model.CommunityProfileInfo
-import com.kyu.jiu_jitsu.data.model.CompetitionInfo
-import com.kyu.jiu_jitsu.data.model.toBeltRank
-import com.kyu.jiu_jitsu.data.model.toBeltStripe
-import com.kyu.jiu_jitsu.data.model.toCompetitionRank
-import com.kyu.jiu_jitsu.data.model.toGender
-import com.kyu.jiu_jitsu.data.model.toPosition
-import com.kyu.jiu_jitsu.data.model.toSubmission
-import com.kyu.jiu_jitsu.data.model.toTechnique
+import com.kyu.jiu_jitsu.model.CommunityProfileInfo
+import com.kyu.jiu_jitsu.model.CompetitionInfo
+import com.kyu.jiu_jitsu.model.toBeltRank
+import com.kyu.jiu_jitsu.model.toBeltStripe
+import com.kyu.jiu_jitsu.model.toCompetitionRank
+import com.kyu.jiu_jitsu.model.toGender
+import com.kyu.jiu_jitsu.model.toPosition
+import com.kyu.jiu_jitsu.model.toSubmission
+import com.kyu.jiu_jitsu.model.toTechnique
 import com.squareup.moshi.JsonClass
 
 
@@ -52,53 +52,34 @@ data class CommunityProfileImage(
 
 @JsonClass(generateAdapter = true)
 data class Competition(
-    var competitionYear: Int? = null,
-    var competitionMonth: Int? = null,
-    var competitionName: String? = null,
-    var competitionRank: String? = null,
+    val competitionYear: Int? = null,
+    val competitionMonth: Int? = null,
+    val competitionName: String? = null,
+    val competitionRank: String? = null,
 )
 
-fun CommunityProfileData?.toInfo(): CommunityProfileInfo {
-    return if (this == null) {
-        CommunityProfileInfo()
-    } else {
-        CommunityProfileInfo(
-            nickname = nickname ?:"",
-            profileImageUrl = profileImage?.imageUrl ?: profileImageUrl ?: "",
-            beltRank = beltRank.toBeltRank(),
-            beltStripe = beltStripe?.toBeltStripe(),
-            gender = gender?.toGender(),
-            weightKg = weightKg,
-            academyName = academyName ?: "",
-            competitions = competitionInfoList.toInfo(),
-            bestSubmission = bestSubmission.toSubmission(),
-            favoriteSubmission = favoriteSubmission.toSubmission(),
-            bestTechnique = bestTechnique.toTechnique(),
-            favoriteTechnique = favoriteTechnique.toTechnique(),
-            bestPosition = bestPosition.toPosition(),
-            favoritePosition = favoritePosition.toPosition(),
-            isWeightHidden = isWeightHidden ?: false,
-        )
-    }
-}
+/** The data-layer boundary where backend strings become typed application profile values. */
+internal fun CommunityProfileData.toInfo(): CommunityProfileInfo = CommunityProfileInfo(
+    nickname = nickname.orEmpty(),
+    profileImageUrl = profileImage?.imageUrl ?: profileImageUrl.orEmpty(),
+    beltRank = beltRank.toBeltRank(),
+    beltStripe = beltStripe.toBeltStripe(),
+    gender = gender.toGender(),
+    weightKg = weightKg,
+    academyName = academyName.orEmpty(),
+    competitions = competitionInfoList?.map(Competition::toInfo),
+    bestSubmission = bestSubmission.toSubmission(),
+    favoriteSubmission = favoriteSubmission.toSubmission(),
+    bestTechnique = bestTechnique.toTechnique(),
+    favoriteTechnique = favoriteTechnique.toTechnique(),
+    bestPosition = bestPosition.toPosition(),
+    favoritePosition = favoritePosition.toPosition(),
+    isWeightHidden = isWeightHidden ?: false,
+)
 
-fun List<Competition>?.toInfo(): List<CompetitionInfo>? {
-    return if (this == null) {
-        null
-    } else {
-        this.map { it.toInfo() }
-    }
-}
-
-fun Competition?.toInfo(): CompetitionInfo {
-    return if (this == null) {
-        CompetitionInfo()
-    } else {
-        CompetitionInfo(
-            competitionYear = competitionYear,
-            competitionMonth = competitionMonth,
-            competitionName = competitionName,
-            competitionRank = competitionRank.toCompetitionRank(),
-        )
-    }
-}
+internal fun Competition.toInfo(): CompetitionInfo = CompetitionInfo(
+    competitionYear = competitionYear,
+    competitionMonth = competitionMonth,
+    competitionName = competitionName,
+    competitionRank = competitionRank.toCompetitionRank(),
+)

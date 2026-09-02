@@ -6,149 +6,120 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.model.BELT_RANK
-import com.kyu.jiu_jitsu.data.model.BELT_STRIPE
-import com.kyu.jiu_jitsu.data.model.CdnImageInfo
-import com.kyu.jiu_jitsu.data.model.CommunityProfileInfo
-import com.kyu.jiu_jitsu.data.model.GENDER
-import com.kyu.jiu_jitsu.data.model.dto.request.PROFILE_REQUEST_TYPE
-import com.kyu.jiu_jitsu.data.model.dto.request.UpdateCommunityProfileRequest
-import com.kyu.jiu_jitsu.data.model.singleton.ProfileSingleton
-import com.kyu.jiu_jitsu.domain.usecase.community.GetCommunityProfileUseCase
-import com.kyu.jiu_jitsu.domain.usecase.community.UpdateCommunityProfileUseCase
-import com.kyu.jiu_jitsu.domain.usecase.image.UploadCommunityImageUseCase
-import com.kyu.jiu_jitsu.domain.usecase.local.GetLocalNickNameUseCase
+import com.kyu.jiu_jitsu.data.repository.CommunityRepository
+import com.kyu.jiu_jitsu.data.repository.ImageRepository
+import com.kyu.jiu_jitsu.model.AppResult
+import com.kyu.jiu_jitsu.model.BELT_RANK
+import com.kyu.jiu_jitsu.model.BELT_STRIPE
+import com.kyu.jiu_jitsu.model.CdnImageInfo
+import com.kyu.jiu_jitsu.model.CommunityProfileField
+import com.kyu.jiu_jitsu.model.CommunityProfileInfo
+import com.kyu.jiu_jitsu.model.CommunityProfileUpdate
+import com.kyu.jiu_jitsu.model.GENDER
 import com.kyu.jiu_jitsu.profile.BuildConfig
+import com.kyu.jiu_jitsu.ui.state.UiState
+import com.kyu.jiu_jitsu.ui.state.toUiError
+import com.kyu.jiu_jitsu.ui.state.toUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed interface ProfileAction {
-    data object FetchProfileData: ProfileAction
+    data object FetchProfileData : ProfileAction
 }
 
+/** Profile screen coordinator backed by the repository's observable profile source of truth. */
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val getLocalNickNameUseCase: GetLocalNickNameUseCase,
-    private val getCommunityProfile: GetCommunityProfileUseCase,
-    private val updateCommunityProfileUseCase: UpdateCommunityProfileUseCase,
-    private val uploadCommunityImageUseCase: UploadCommunityImageUseCase,
-): ViewModel() {
+    private val communityRepository: CommunityRepository,
+    private val imageRepository: ImageRepository,
+) : ViewModel() {
 
     var profileUiState by mutableStateOf<UiState<CommunityProfileInfo>>(UiState.Idle)
-    var localNickname by mutableStateOf<String?>(null)
+        private set
 
-    private var _errorUiState = MutableStateFlow<String?>(null)
-    var errorUiState = _errorUiState.asStateFlow()
+    private val mutableErrorUiState = MutableStateFlow<String?>(null)
+    val errorUiState = mutableErrorUiState.asStateFlow()
 
-    private var _loadingUiState = MutableStateFlow(false)
-    var loadingUiState = _loadingUiState.asStateFlow()
+    private val mutableLoadingUiState = MutableStateFlow(false)
+    val loadingUiState = mutableLoadingUiState.asStateFlow()
 
-    private var _profileInfoUiState = MutableStateFlow<CommunityProfileInfo?>(null)
-    var profileInfoUiState = _profileInfoUiState.asStateFlow()
+    // Every profile editor writes through the same repository. Exposing that repository-owned
+    // StateFlow means returning from an editor immediately renders its latest server snapshot.
+    val profileInfoUiState = communityRepository.communityProfile
 
-    private var _profileImageUploadUiState = MutableStateFlow<UiState<CdnImageInfo>>(UiState.Idle)
-    var profileImageUploadUiState = _profileImageUploadUiState.asStateFlow()
+    private val mutableProfileImageUploadUiState =
+        MutableStateFlow<UiState<CdnImageInfo>>(UiState.Idle)
+    val profileImageUploadUiState = mutableProfileImageUploadUiState.asStateFlow()
 
     init {
-        initProfileData()
+        fetchProfileData()
     }
 
     fun onAction(action: ProfileAction) {
         when (action) {
-            ProfileAction.FetchProfileData -> { initProfileData() }
+            ProfileAction.FetchProfileData -> fetchProfileData()
         }
     }
 
+    /** Executes the complete image workflow owned by ImageRepository. */
     fun uploadCommunityImage(imageUri: Uri) {
         val publicKey = BuildConfig.IMAGE_PUBLIC_KEY
         if (publicKey.isBlank()) {
             val errorMessage = "IMAGE_PUBLIC_KEY가 설정되어 있지 않습니다."
-            _profileImageUploadUiState.value = UiState.Error(
+            mutableProfileImageUploadUiState.value = UiState.Error(
                 message = errorMessage,
                 retryable = false,
             )
-            _errorUiState.value = errorMessage
+            mutableErrorUiState.value = errorMessage
             return
         }
 
         viewModelScope.launch {
-            // CDN 인증값 요청 -> ImageKit 직접 업로드 -> 내 서버 이미지 TEMP 등록 -> 사용자 프로필 이미지 반영까지
-            // 하나의 useCase에서 순차 수행한다. 중간 단계 중 하나라도 실패하면 UiState.Error로 내려오며,
-            // 성공 시에는 서버에 등록된 CDN 이미지 정보를 state로 노출한다.
-            uploadCommunityImageUseCase(
+            beginRequest()
+            mutableProfileImageUploadUiState.value = UiState.Loading
+
+            val state = imageRepository.uploadCommunityImage(
                 imageUri = imageUri.toString(),
                 publicKey = publicKey,
-            ).onStart {
-                _loadingUiState.value = true
-                _errorUiState.value = null
-                _profileImageUploadUiState.value = UiState.Loading
-            }.collectLatest { uiState ->
-                _loadingUiState.value = false
-                _profileImageUploadUiState.value = uiState
+            ).toUiState()
+            mutableProfileImageUploadUiState.value = state
+            if (state is UiState.Error) mutableErrorUiState.value = state.message
 
-                if (uiState is UiState.Error) {
-                    _errorUiState.value = uiState.message
-                }
-            }
+            mutableLoadingUiState.value = false
         }
     }
 
-    private fun initProfileData() {
+    private fun fetchProfileData() {
         viewModelScope.launch {
+            beginRequest()
             profileUiState = UiState.Loading
-//            combine(
-//                getLocalNickNameUseCase(),
-//                getCommunityProfile()
-//            ) { nickNameState, uiState ->
-//                localNickname = nickNameState
-//
-//                when(uiState) {
-//                    is UiState.Success -> {
-//                        ProfileSingleton.profileInfo = uiState.result
-//                        profileUiState = UiState.Success(uiState.result)
-//                    }
-//                    is UiState.Error -> {
-//                        _errorUiState.value = uiState.message
-//                    }
-//                    else -> {}
-//                }
-//            }.collect()
-
-            getCommunityProfile().onStart {
-                _loadingUiState.value = true
-                _errorUiState.value = null
-            }.collectLatest { uiState ->
-                _loadingUiState.value = false
-                when(uiState) {
-                    is UiState.Success -> {
-                        ProfileSingleton.profileInfo = uiState.result
-                        _profileInfoUiState.value = uiState.result
-                    }
-                    is UiState.Error -> _errorUiState.value = uiState.message
-                    else -> {}
-                }
+            profileUiState = communityRepository.getCommunityProfile().toUiState()
+            if (profileUiState is UiState.Error) {
+                mutableErrorUiState.value = (profileUiState as UiState.Error).message
             }
+            mutableLoadingUiState.value = false
         }
-
     }
 
-    /** 도장 정보 수정 */
+    /** Updates only the academy field while preserving the backend partial-update contract. */
     fun changeAcademyName(academyName: String) {
         changeCommunityProfile(
-            UpdateCommunityProfileRequest(
-                profileRequestType = PROFILE_REQUEST_TYPE.ACADEMY().name,
-                academyName = academyName
-            )
+            CommunityProfileUpdate(
+                field = CommunityProfileField.ACADEMY,
+                academyName = academyName,
+            ),
         )
     }
 
-    /** 벨트/체급 수정 */
+    /**
+     * Updates the belt section.
+     *
+     * Unchanged selector values are copied from the repository snapshot because this backend
+     * operation replaces the whole BELT_WEIGHT section rather than patching individual fields.
+     */
     fun changeBeltAndWeight(
         beltRank: BELT_RANK? = null,
         beltStripe: BELT_STRIPE? = null,
@@ -156,39 +127,37 @@ class ProfileViewModel @Inject constructor(
         weightKg: Double? = null,
         isWeightHidden: Boolean? = null,
     ) {
+        val currentProfile = communityRepository.communityProfile.value
         changeCommunityProfile(
-            UpdateCommunityProfileRequest(
-                profileRequestType = PROFILE_REQUEST_TYPE.BELT_WEIGHT().name,
-                beltRank = beltRank?.name ?: ProfileSingleton.profileInfo?.beltRank?.name,
-                beltStripe = beltStripe?.name ?: ProfileSingleton.profileInfo?.beltStripe?.name,
-                gender = gender?.name ?: ProfileSingleton.profileInfo?.gender?.name,
+            CommunityProfileUpdate(
+                field = CommunityProfileField.BELT_WEIGHT,
+                beltRank = beltRank ?: currentProfile?.beltRank,
+                beltStripe = beltStripe ?: currentProfile?.beltStripe,
+                gender = gender ?: currentProfile?.gender,
                 weightKg = weightKg,
                 isWeightHidden = isWeightHidden,
-            )
+            ),
         )
-
     }
 
-    private fun changeCommunityProfile(
-        requestData : UpdateCommunityProfileRequest
-    ) {
+    private fun changeCommunityProfile(update: CommunityProfileUpdate) {
         viewModelScope.launch {
+            beginRequest()
             profileUiState = UiState.Loading
-            updateCommunityProfileUseCase(requestData).onStart {
-                _loadingUiState.value = true
-                _errorUiState.value = null
-            }.collectLatest { uiState ->
-                _loadingUiState.value = false
-                when(uiState) {
-                    is UiState.Success -> {
-                        ProfileSingleton.profileInfo = uiState.result
-                        _profileInfoUiState.value = uiState.result
-                    }
-                    is UiState.Error -> _errorUiState.value = uiState.message
-                    else -> {}
+            when (val result = communityRepository.modifyCommunityProfile(update)) {
+                is AppResult.Success -> profileUiState = UiState.Success(result.data)
+                is AppResult.Failure -> {
+                    val error = result.error.toUiError()
+                    profileUiState = error
+                    mutableErrorUiState.value = error.message
                 }
             }
+            mutableLoadingUiState.value = false
         }
     }
 
+    private fun beginRequest() {
+        mutableLoadingUiState.value = true
+        mutableErrorUiState.value = null
+    }
 }

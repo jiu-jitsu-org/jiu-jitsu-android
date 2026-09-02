@@ -45,8 +45,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
-import com.kyu.jiu_jitsu.data.api.common.UiState
-import com.kyu.jiu_jitsu.data.model.CommunityProfileInfo
+import com.kyu.jiu_jitsu.model.CommunityProfileInfo
+import com.kyu.jiu_jitsu.ui.state.UiState
 import com.kyu.jiu_jitsu.profile.viewmodel.ProfileViewModel
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightBottomSheet
 import com.kyu.jiu_jitsu.profile.components.BeltRankAndWeightLayout

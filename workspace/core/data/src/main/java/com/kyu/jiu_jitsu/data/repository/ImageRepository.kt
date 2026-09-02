@@ -1,13 +1,13 @@
 package com.kyu.jiu_jitsu.data.repository
 
-import com.kyu.jiu_jitsu.data.api.common.ApiResult
-import com.kyu.jiu_jitsu.data.model.dto.response.RegisterImageResponse
-import kotlinx.coroutines.flow.Flow
+import com.kyu.jiu_jitsu.model.AppResult
+import com.kyu.jiu_jitsu.model.CdnImageInfo
 
+/** Coordinates CDN upload, backend registration, and profile-image activation. */
 interface ImageRepository {
 
     suspend fun uploadCommunityImage(
         imageUri: String,
         publicKey: String,
-    ): Flow<ApiResult<RegisterImageResponse>>
+    ): AppResult<CdnImageInfo>
 }

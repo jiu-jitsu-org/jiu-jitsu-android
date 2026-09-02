@@ -1,9 +1,9 @@
 package com.kyu.jiu_jitsu.data.repository
 
-import com.kyu.jiu_jitsu.data.api.common.ApiResult
-import com.kyu.jiu_jitsu.data.model.dto.response.BootStrapResponse
-import kotlinx.coroutines.flow.Flow
+import com.kyu.jiu_jitsu.model.AppResult
+import com.kyu.jiu_jitsu.model.BootStrapInfo
 
+/** Source of the configuration required to make the application's startup decision. */
 interface BootStrapRepository {
-    suspend fun getBootStrapInfo(): Flow<ApiResult<BootStrapResponse>>
+    suspend fun getBootStrapInfo(): AppResult<BootStrapInfo>
 }

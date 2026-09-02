@@ -35,7 +35,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.kyu.jiu_jitsu.data.model.COMPETITION_RANK
+import com.kyu.jiu_jitsu.model.COMPETITION_RANK
 import com.kyu.jiu_jitsu.domain.yearsDescending
 import com.kyu.jiu_jitsu.profile.R
 import com.kyu.jiu_jitsu.profile.model.COMPETITION_RANK_LIST

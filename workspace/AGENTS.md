@@ -17,7 +17,7 @@ Before changing code:
    - [Active workstreams](docs/workstreams/index.md)
 4. Inspect the implementation and tests that own the behavior.
 
-The actual Gradle root is this `workspace/` directory. Current modules are `:app`, `:core:ui`, `:core:data`, `:core:domain`, `:feature:login`, `:feature:nickname`, and `:feature:profile`; `build-logic` is an included build.
+The actual Gradle root is this `workspace/` directory. Current modules are `:app`, `:core:model`, `:core:ui`, `:core:data`, `:core:domain`, `:feature:login`, `:feature:nickname`, and `:feature:profile`; `build-logic` is an included build.
 
 ## Non-Negotiable Working Rules
 
@@ -40,10 +40,10 @@ The accepted target is a Now in Android-style architecture, not strict Clean Arc
 - Domain and features may use repository contracts and stable app models.
 - DTOs, entities, API services, DataStore implementations, Hilt/network modules, repository implementations, and presentation state must not cross the data boundary.
 - `:core:ui` must not gain new dependencies on `:core:data`.
-- Feature-specific `UiState` belongs in the feature.
+- Feature-specific `UiState` belongs in the feature; the small shared async state contract lives in `:core:ui`.
 - UseCases are for reusable composition, validation, transformation, or meaningful business operations; do not add pass-through UseCases.
 - ViewModels may call repositories directly for simple reads, writes, toggles, and events.
-- New shared app models belong in the planned framework-independent `:core:model`.
+- New shared app models belong in the framework-independent `:core:model`.
 - Existing boundary violations are migration targets and must not be used as precedent.
 
 New upper-layer code must not import:
@@ -53,6 +53,7 @@ com.kyu.jiu_jitsu.data.api.*
 com.kyu.jiu_jitsu.data.model.dto.*
 com.kyu.jiu_jitsu.data.datastore.*
 com.kyu.jiu_jitsu.data.module.*
+com.kyu.jiu_jitsu.data.session.*
 com.kyu.jiu_jitsu.data.repository.impl.*
 com.kyu.jiu_jitsu.data.model.singleton.*
 ```
@@ -77,3 +78,5 @@ Use [the project definition of done](docs/development/definition-of-done.md). At
 - No forbidden dependency or public-type leak was added.
 - Applicable documentation is current.
 - Remaining blockers and risks are stated explicitly.
+
+Run `bash scripts/check-architecture.sh` whenever module imports or Gradle dependencies change.
