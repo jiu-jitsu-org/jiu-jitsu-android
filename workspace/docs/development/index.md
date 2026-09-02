@@ -87,6 +87,27 @@ IME, determinism, and review contract.
 - Use `api` only when a dependency is intentionally part of a module's public contract.
 - Prefer a Kotlin/JVM module for `:core:model`.
 
+## Color Token Class Names
+
+Use `ColorSemantic.Transparent.Transparent` for transparent semantic colors. Do not add class or
+object aliases that differ from another type only by letter case, including nested objects. On a
+case-insensitive filesystem, `ColorSemantic.Transparent` and the former `ColorSemantic.TransParent`
+both write to the same class-file path. The resulting APK can omit `ColorSemantic$Transparent` and
+crash when `ColorComponents.Button.Text` initializes.
+
+[`ColorTokensTest`](../../core/ui/src/test/kotlin/com/kyu/jiu_jitsu/ui/theme/ColorTokensTest.kt) checks
+case-insensitive uniqueness of semantic/component token classes and initializes transparent component
+backgrounds. Run it with `:core:ui:testDebugUnitTest` when changing token groups.
+
+After fixing a class-name collision, remove affected build outputs and rebuild the complete APK:
+
+```bash
+./gradlew :core:ui:clean :app:clean :core:ui:testDebugUnitTest :app:assembleDebug --no-build-cache --no-daemon
+```
+
+Deploy the rebuilt APK with a full Android Studio Run or `./gradlew :app:installDebug`, and restart the
+app before verifying the profile screen. Apply Changes alone does not validate the repaired package.
+
 ## Debug Network Inspection
 
 Debug builds attach the OkHttp Profiler interceptor to the clients constructed by

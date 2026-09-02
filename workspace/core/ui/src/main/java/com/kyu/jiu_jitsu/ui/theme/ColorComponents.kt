@@ -108,10 +108,10 @@ object ColorComponents {
             val DisabledText: Color = ColorSemantic.Text.TextDisabled
         }
         object TransparentText {
-            val Bg: Color = ColorSemantic.TransParent.TransParent
+            val Bg: Color = ColorSemantic.Transparent.Transparent
             val Text: Color = ColorSemantic.Interactive.InteractivePrimary
             val PressedBg: Color = ColorSemantic.Surface.SurfacePrimarySubtle
-            val DisabledBg: Color = ColorSemantic.TransParent.TransParent
+            val DisabledBg: Color = ColorSemantic.Transparent.Transparent
             val DisabledText: Color = ColorSemantic.Text.TextDisabled
         }
     }
@@ -283,7 +283,7 @@ object ColorComponents {
             val SubText: Color = ColorSemantic.Text.TextSecondary
         }
         object UnSelected {
-            val Bg: Color = ColorSemantic.TransParent.TransParent
+            val Bg: Color = ColorSemantic.Transparent.Transparent
             val TitleText: Color = ColorSemantic.Text.TextSecondary
             val SubText: Color = ColorSemantic.Text.TextTertiary
         }

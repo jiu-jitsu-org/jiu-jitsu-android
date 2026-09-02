@@ -123,9 +123,4 @@ object ColorSemantic {
     object Destructive {
         val Destructive: Color = Red500
     }
-
-    // Compatibility alias for the previous misspelled Android token shape.
-    object TransParent {
-        val TransParent: Color = Transparent.Transparent
-    }
 }
