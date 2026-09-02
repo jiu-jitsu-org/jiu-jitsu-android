@@ -38,6 +38,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.kyu.jiu_jitsu.ui.state.UiState
 import com.kyu.jiu_jitsu.profile.viewmodel.ProfileViewModel
 import com.kyu.jiu_jitsu.profile.R
+import com.kyu.jiu_jitsu.profile.viewmodel.ModifyAcademyViewModel
 import com.kyu.jiu_jitsu.ui.components.button.PrimaryCTAButton
 import com.kyu.jiu_jitsu.ui.components.textfield.TransparentOutlinedTextField
 import com.kyu.jiu_jitsu.ui.theme.ColorComponents
@@ -59,7 +60,7 @@ fun ModifyAcademyScreen(
     onCompleted: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    val viewModel = hiltViewModel<ProfileViewModel>()
+    val viewModel = hiltViewModel<ModifyAcademyViewModel>()
 
     /** 작성 중인 */
     var strAcademy by remember { mutableStateOf("") }

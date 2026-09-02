@@ -4,7 +4,10 @@ import androidx.compose.ui.graphics.Color
 
 object ColorComponents {
 
-    val Background: Color = ColorSemantic.Surface.BackgroundDefault
+    val BackgroundDefault: Color = ColorSemantic.Surface.BackgroundDefault
+
+    // The JSON also exposes the same background value as the group root.
+    val Background: Color = BackgroundDefault
 
     object Button {
         object Filled {
@@ -32,12 +35,33 @@ object ColorComponents {
             val PressedText: Color = ColorSemantic.Text.TextPrimary
         }
         object Text {
-            val DefaultBg: Color = ColorSemantic.TransParent.TransParent
+            val DefaultBg: Color = ColorSemantic.Transparent.Transparent
             val DefaultText: Color = ColorSemantic.Interactive.InteractivePrimary
             val PressedBg: Color = ColorSemantic.Surface.SurfacePrimarySubtle
-            val DisabledBg: Color = ColorSemantic.TransParent.TransParent
+            val DisabledBg: Color = ColorSemantic.Transparent.Transparent
             val DisabledText: Color = ColorSemantic.Text.TextDisabled
             val PressedText: Color = ColorSemantic.Interactive.InteractivePrimary
+        }
+        object Inverted {
+            val DefaultBg: Color = ColorSemantic.Transparent.Transparent
+            val DefaultText: Color = ColorSemantic.Primary.OnPrimary
+            val PressedBg: Color = ColorSemantic.Surface.OnDarkPressedBg
+            val PressedText: Color = ColorSemantic.Primary.OnPrimary
+            val DisabledBg: Color = ColorSemantic.Transparent.Transparent
+            val DisabledText: Color = ColorSemantic.Icon.IconDisabledOnDark
+        }
+        object InvertedSubtle {
+            val DefaultBg: Color = ColorSemantic.Transparent.Transparent
+            val DefaultText: Color = ColorSemantic.Icon.IconOnDarkSubtle
+            val PressedBg: Color = ColorSemantic.Surface.OnDarkPressedBg
+            val PressedText: Color = ColorSemantic.Primary.OnPrimary
+            val DisabledBg: Color = ColorSemantic.Transparent.Transparent
+            val DisabledText: Color = ColorSemantic.Icon.IconDisabledOnDark
+        }
+        object Ghost {
+            val DefaultText: Color = ColorSemantic.Text.TextPrimary
+            val PressedText: Color = ColorSemantic.Text.TextPrimary
+            val DisabledText: Color = ColorSemantic.Text.TextDisabled
         }
     }
 
@@ -114,14 +138,34 @@ object ColorComponents {
         object Filled {
             val Bg: Color = ColorSemantic.Surface.SurfaceField
             val Border: Color = ColorSemantic.Border.BorderDefault
-            val Placeholder: Color = ColorSemantic.Text.TextTertiary
-            val Icon: Color = ColorSemantic.Icon.IconTertiary
+            val Placeholder: Color = ColorSemantic.Text.TextPrimary
+            val Icon: Color = ColorSemantic.Text.TextTertiary
         }
         object Error {
             val Bg: Color = ColorSemantic.Surface.SurfaceField
             val Border: Color = ColorSemantic.Border.BorderError
             val Placeholder: Color = ColorSemantic.Text.TextPrimary
-            val Icon: Color = ColorSemantic.Icon.IconTertiary
+            val Icon: Color = ColorSemantic.Text.TextTertiary
+        }
+    }
+
+    object TextFieldMultiline {
+        object Default {
+            val Bg: Color = ColorSemantic.Surface.SurfaceField
+            val Text: Color = ColorSemantic.Text.TextTertiary
+        }
+        object Focused {
+            val Bg: Color = ColorSemantic.Surface.SurfaceField
+            val Border: Color = ColorSemantic.Border.BorderFocus
+            val Text: Color = ColorSemantic.Text.TextPrimary
+        }
+        object Filled {
+            val Bg: Color = ColorSemantic.Surface.SurfaceField
+            val Text: Color = ColorSemantic.Text.TextPrimary
+        }
+        object Disabled {
+            val Bg: Color = ColorSemantic.Surface.SurfaceField
+            val Text: Color = ColorSemantic.Text.TextDisabled
         }
     }
 
@@ -162,7 +206,7 @@ object ColorComponents {
         }
         object Selected {
             val IconSelected: Color = ColorSemantic.Interactive.InteractivePrimary
-            val LabelSelected: Color = ColorSemantic.Interactive.InteractivePrimary
+            val LabelSelected: Color = ColorSemantic.Interactive.InteractivePrimaryPressed
         }
     }
 
@@ -180,8 +224,11 @@ object ColorComponents {
     object Header {
         object Header {
             val Text: Color = ColorSemantic.Text.TextPrimary
-            val Background: Color = ColorSemantic.Surface.SurfaceContainer
+            val Background: Color = ColorSemantic.Surface.BackgroundDefault
             val IconButton: Color = ColorSemantic.Icon.IconPrimary
+            val DestructiveText: Color = ColorSemantic.Destructive.Destructive
+            val BellOff: Color = ColorSemantic.Icon.IconTertiary
+            val BellOn: Color = ColorSemantic.Interactive.InteractivePrimary
         }
     }
 
@@ -256,12 +303,15 @@ object ColorComponents {
         }
         object Editable {
             val Bg: Color = ColorSemantic.Surface.SurfaceContainer
-            val Bolder: Color = ColorSemantic.Border.BorderDefault
+            val Border: Color = ColorSemantic.Border.BorderDefault
             val LabelText: Color = ColorSemantic.Text.TextTertiary
             val LabelText2: Color = ColorSemantic.Text.TextTertiary
             val TitleTextFilled: Color = ColorSemantic.Text.TextPrimary
             val TitleTextEmpty: Color = ColorSemantic.Text.TextPrimary
             val IconBgEmpty: Color = ColorSemantic.Surface.SurfaceDisabled
+
+            // Compatibility alias for the previous misspelled Android token name.
+            val Bolder: Color = Border
         }
     }
 
@@ -288,7 +338,7 @@ object ColorComponents {
 
     object Picker {
         val ItemSelectedBg: Color = ColorSemantic.Surface.SurfaceSecondary
-//        val ItemSelectedText: Color = ColorSemantic
+        val ItemSelectedText: Color = ColorSemantic.Text.TextPrimary
         val ItemUnSelectedText: Color = ColorSemantic.Text.TextTertiary
         val Unit: Color = ColorSemantic.Text.TextPrimary
     }
@@ -308,7 +358,251 @@ object ColorComponents {
         }
     }
 
+    object FeedCard {
+        val EndText: Color = ColorSemantic.Text.TextTertiary
+
+        object Header {
+            val AvatarBg: Color = ColorSemantic.Surface.SurfaceSecondary
+            val UsernameText: Color = ColorSemantic.Text.TextPrimary
+            val DateText: Color = ColorSemantic.Text.TextTertiary
+            val MoreIcon: Color = ColorSemantic.Icon.IconSubtle
+        }
+
+        object Body {
+            val TitleText: Color = ColorSemantic.Text.TextPrimary
+            val BodyText: Color = ColorSemantic.Text.TextSecondary
+            val MoreText: Color = ColorSemantic.Text.TextTertiary
+        }
+
+        object ImageBadge {
+            val Bg: Color = ColorSemantic.Overlay.OverlayScrimHeavy
+            val Text: Color = ColorSemantic.Text.OnOverlay
+        }
+
+        object Tag {
+            val Text: Color = ColorSemantic.Text.TextTertiary
+        }
+    }
+
+    object Poll {
+        object StickyBar {
+            val Bg: Color = ColorSemantic.Surface.SurfacePrimarySubtle
+            val Text: Color = ColorSemantic.Interactive.InteractivePrimary
+            val Icon: Color = ColorSemantic.Interactive.InteractivePrimary
+        }
+
+        object Option {
+            object A {
+                object Default {
+                    val Bg: Color = ColorSemantic.Surface.SurfacePollA
+                    val Text: Color = ColorSemantic.Text.TextSecondary
+                }
+
+                object Selected {
+                    val Bg: Color = ColorSemantic.Surface.SurfacePollAStrong
+                    val BgTrack: Color = ColorSemantic.Surface.SurfacePollATrack
+                    val Text: Color = ColorSemantic.Text.TextOnPrimary
+                    val PercentText: Color = ColorSemantic.Interactive.InteractivePollA
+                }
+
+                object Result {
+                    val BgFill: Color = ColorSemantic.Surface.SurfacePollATrack
+                    val BgTrack: Color = ColorSemantic.Surface.SurfacePollA
+                    val Text: Color = ColorSemantic.Text.TextSecondary
+                    val PercentText: Color = ColorSemantic.Text.TextSecondary
+                }
+            }
+
+            object B {
+                object Default {
+                    val Bg: Color = ColorSemantic.Surface.SurfacePollB
+                    val Text: Color = ColorSemantic.Text.TextSecondary
+                }
+
+                object Selected {
+                    val Bg: Color = ColorSemantic.Surface.SurfacePollBStrong
+                    val BgTrack: Color = ColorSemantic.Surface.SurfacePollBTrack
+                    val Text: Color = ColorSemantic.Text.TextOnPrimary
+                    val PercentText: Color = ColorSemantic.Interactive.InteractivePollB
+                }
+
+                object Result {
+                    val BgFill: Color = ColorSemantic.Surface.SurfacePollBTrack
+                    val BgTrack: Color = ColorSemantic.Surface.SurfacePollB
+                    val Text: Color = ColorSemantic.Text.TextSecondary
+                    val PercentText: Color = ColorSemantic.Text.TextSecondary
+                    val Bg: Color = TrueWhite
+                }
+            }
+        }
+    }
+
+    object ReactionBar {
+        object Default {
+            val Icon: Color = ColorSemantic.Icon.IconSubtle
+            val CountText: Color = ColorSemantic.Text.TextTertiary
+        }
+
+        object Disabled {
+            val Icon: Color = ColorSemantic.Icon.IconTertiary
+            val CountText: Color = ColorSemantic.Text.TextTertiary
+        }
+
+        object Active {
+            val LikeIcon: Color = ColorSemantic.Error
+            val CommentIcon: Color = ColorSemantic.Icon.IconSecondary
+            val BookmarkIcon: Color = ColorSemantic.Interactive.InteractivePrimary
+            val CountText: Color = ColorSemantic.Text.TextSecondary
+        }
+
+        object Pressed {
+            val Bg: Color = ColorSemantic.Surface.SurfacePrimarySubtle
+            val Icon: Color = ColorSemantic.Interactive.InteractivePrimary
+            val CountText: Color = ColorSemantic.Interactive.InteractivePrimary
+        }
+
+        object Detail {
+            object Default {
+                val Bg: Color = ColorSemantic.Surface.SurfaceFieldSubtle
+                val CountText: Color = ColorSemantic.Text.TextSecondary
+                val Icon: Color = ColorSemantic.Icon.IconSecondary
+            }
+
+            object Disabled {
+                val Icon: Color = ColorSemantic.Icon.IconTertiary
+                val CountText: Color = ColorSemantic.Text.TextTertiary
+            }
+
+            object Active {
+                val LikeIcon: Color = ColorSemantic.Error
+                val BookmarkIcon: Color = ColorSemantic.Interactive.InteractivePrimary
+                val CommentIcon: Color = ColorSemantic.Icon.IconSecondary
+                val CountText: Color = ColorSemantic.Text.TextSecondary
+            }
+
+            object Pressed {
+                val CountText: Color = ColorSemantic.Interactive.InteractivePrimary
+                val Bg: Color = ColorSemantic.Surface.SurfacePrimarySubtle
+                val Icon: Color = ColorSemantic.Interactive.InteractivePrimary
+            }
+        }
+    }
+
+    object EmptyState {
+        object Default {
+            val TitleText: Color = ColorSemantic.Text.TextPrimary
+            val DescriptionText: Color = ColorSemantic.Text.TextSecondary
+        }
+    }
+
+    object ErrorState {
+        object Default {
+            val TitleText: Color = ColorSemantic.Text.TextPrimary
+            val DescriptionText: Color = ColorSemantic.Text.TextSecondary
+        }
+    }
+
+    object TabBar {
+        object Selected {
+            val Text: Color = ColorSemantic.Interactive.InteractivePrimary
+            val Underline: Color = ColorSemantic.Interactive.InteractivePrimary
+        }
+
+        object Unselected {
+            val Text: Color = ColorSemantic.Text.TextPrimary
+        }
+    }
+
+    object CommentInputBar {
+        val ContainerBg: Color = ColorSemantic.Surface.SurfaceContainer
+        val Bg: Color = ColorSemantic.Surface.SurfaceField
+        val Text: Color = ColorSemantic.Text.TextPrimary
+        val Placeholder: Color = ColorSemantic.Text.TextTertiary
+        val TextDisabled: Color = ColorSemantic.Text.TextDisabled
+        val SendIconDisabled: Color = ColorSemantic.Icon.IconDisabled
+        val SendIconActive: Color = ColorSemantic.Interactive.InteractivePrimary
+    }
+
+    object CommentSortSelect {
+        object Default {
+            val Text: Color = ColorSemantic.Text.TextPrimary
+        }
+
+        object Pressed {
+            val Bg: Color = ColorSemantic.Surface.SurfaceSecondary
+            val Text: Color = ColorSemantic.Text.TextPrimary
+            val Text2: Color = ColorSemantic.Surface.SurfaceField
+            val TextDisabled: Color = ColorSemantic.Text.TextDisabled
+        }
+
+        object Disabled {
+            val Text: Color = ColorSemantic.Text.TextDisabled
+        }
+    }
+
+    object TagChip {
+        object Default {
+            val Bg: Color = ColorSemantic.Transparent.Transparent
+            val Text: Color = ColorSemantic.Text.TextPrimary
+        }
+
+        object Selected {
+            val Bg: Color = ColorSemantic.Surface.SurfaceField
+            val Bg2: Color = ColorSemantic.Transparent.Transparent
+            val Text: Color = ColorSemantic.Text.TextPrimary
+        }
+
+        object Disabled {
+            val Bg: Color = ColorSemantic.Transparent.Transparent
+            val Text: Color = ColorSemantic.Text.TextDisabled
+        }
+    }
+
+    object Divider {
+        val Bg: Color = ColorSemantic.Surface.SurfaceBackground
+    }
+
+    object CommentReplies {
+        val Text: Color = ColorSemantic.Text.TextSecondary
+    }
+
+    object CommentTombstone {
+        val Icon: Color = ColorSemantic.Icon.IconSecondary
+        val Text: Color = ColorSemantic.Text.TextSecondary
+    }
+
+    object CommentAuthorBadge {
+        val Bg: Color = ColorSemantic.Surface.SurfacePrimarySubtle
+        val Text: Color = ColorSemantic.Interactive.InteractivePrimary
+    }
+
+    object CommentThreadLine {
+        val Stroke: Color = ColorSemantic.Border.BorderSubtle
+    }
+
+    object ConfirmDialog {
+        object DestructiveButton {
+            val Bg: Color = ColorSemantic.Surface.SurfaceDestructive
+            val Text: Color = ColorSemantic.Text.TextOnPrimary
+        }
+    }
+
+    object Radio {
+        object Selected {
+            val Border: Color = ColorSemantic.Interactive.InteractivePrimary
+            val Dot: Color = ColorSemantic.Interactive.InteractivePrimary
+            val Bg: Color = ColorSemantic.Surface.SurfaceContainer
+        }
+
+        object Unselected {
+            val Border: Color = ColorSemantic.Border.BorderDefault
+            val Bg: Color = ColorSemantic.Surface.SurfaceContainer
+        }
+    }
+
+    object ImageLoadError {
+        val Bg: Color = ColorSemantic.Surface.SurfaceField
+        val Text: Color = ColorSemantic.Text.TextSecondary
+    }
+
 }
-
-
-
