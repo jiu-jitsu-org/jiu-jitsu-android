@@ -90,6 +90,7 @@ dependencies {
     implementation(projects.feature.login)
     implementation(projects.feature.nickname)
     implementation(projects.feature.profile)
+    implementation(projects.feature.setting)
     implementation(projects.feature.web)
 
     implementation(libs.androidx.core.ktx)

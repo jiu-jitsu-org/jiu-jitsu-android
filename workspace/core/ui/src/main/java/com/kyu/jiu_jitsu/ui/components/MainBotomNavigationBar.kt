@@ -1,13 +1,6 @@
 package com.kyu.jiu_jitsu.ui.components
 
 import androidx.annotation.DrawableRes
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Android
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.outlined.Android
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -24,11 +17,9 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.kyu.jiu_jitsu.ui.R
-import com.kyu.jiu_jitsu.ui.routes.BlueScreen
-import com.kyu.jiu_jitsu.ui.routes.GrayScreen
-import com.kyu.jiu_jitsu.ui.routes.RedScreen
+import com.kyu.jiu_jitsu.ui.routes.SettingScreen
+import com.kyu.jiu_jitsu.ui.routes.HomeScreen
 import com.kyu.jiu_jitsu.ui.theme.Blue500
-import com.kyu.jiu_jitsu.ui.theme.CoolGray25
 import com.kyu.jiu_jitsu.ui.theme.CoolGray300
 import com.kyu.jiu_jitsu.ui.theme.CoolGray500
 import com.kyu.jiu_jitsu.ui.theme.White
@@ -60,8 +51,8 @@ fun <T : Any> MainBottomNavigationBar(
                 },
                 icon = {
                     @DrawableRes val iv = when (route) {
-                        RedScreen -> R.drawable.ic_square_dashed
-                        GrayScreen -> R.drawable.ic_square_dashed
+                        HomeScreen -> R.drawable.ic_square_dashed
+                        SettingScreen -> R.drawable.ic_square_dashed
                         else -> R.drawable.ic_square_dashed
                     }
 
@@ -72,7 +63,7 @@ fun <T : Any> MainBottomNavigationBar(
                     )
 
                 },
-                label = { Text(if (route == RedScreen) stringResource(R.string.nav_community) else route::class.simpleName ?: "") },
+                label = { Text(if (route == HomeScreen) stringResource(R.string.nav_community) else route::class.simpleName ?: "") },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Blue500,
                     selectedTextColor = Blue500,

@@ -37,12 +37,12 @@ import androidx.navigation.compose.rememberNavController
 import com.kyu.jiu_jitsu.ui.insets.StatusBarBackground
 import com.kyu.jiu_jitsu.ui.components.MainBottomNavigationBar
 import com.kyu.jiu_jitsu.ui.navigation.AppNavHost
-import com.kyu.jiu_jitsu.ui.routes.GrayScreen
+import com.kyu.jiu_jitsu.ui.routes.SettingScreen
 import com.kyu.jiu_jitsu.ui.routes.HomeGraph
 import com.kyu.jiu_jitsu.ui.routes.LoginGraph
 import com.kyu.jiu_jitsu.ui.routes.ProfileGraph
 import com.kyu.jiu_jitsu.ui.routes.ProfileScreen
-import com.kyu.jiu_jitsu.ui.routes.RedScreen
+import com.kyu.jiu_jitsu.ui.routes.HomeScreen
 import com.kyu.jiu_jitsu.ui.theme.JiuJitsuPjtTheme
 import com.kyu.jiu_jitsu.ui.theme.White
 import dagger.hilt.android.AndroidEntryPoint
@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
 fun AppRoot() {
     val navController = rememberNavController()
     var webFullscreen by remember { mutableStateOf(false) }
-    val mainBottomNavItems = listOf(RedScreen, GrayScreen, ProfileScreen)
+    val mainBottomNavItems = listOf(HomeScreen, ProfileScreen, SettingScreen)
 
     val bottomBarDestinations = remember { setOf(HomeGraph::class) }
     val backStack by navController.currentBackStackEntryAsState()

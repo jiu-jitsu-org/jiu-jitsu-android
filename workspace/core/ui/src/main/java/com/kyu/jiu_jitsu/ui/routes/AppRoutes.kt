@@ -6,9 +6,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable object HomeGraph
 @Serializable object ProfileScreen
-@Serializable object RedScreen
-@Serializable object BlueScreen
-@Serializable object GrayScreen
+@Serializable object HomeScreen
+@Serializable object SettingScreen
 
 @Serializable object LoginGraph
 @Serializable object LoginScreen

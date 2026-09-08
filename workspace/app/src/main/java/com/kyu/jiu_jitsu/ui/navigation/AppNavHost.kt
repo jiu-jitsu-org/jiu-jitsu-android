@@ -16,10 +16,10 @@ import com.kyu.jiu_jitsu.profile.screen.ModifyProfileScreen
 import com.kyu.jiu_jitsu.profile.screen.ProfileScreen
 import com.kyu.jiu_jitsu.profile.screen.ModifyCompetitionScreen
 import com.kyu.jiu_jitsu.profile.screen.ModifyMyStyleScreen
-import com.kyu.jiu_jitsu.ui.screen.GrayScreen
+import com.kyu.jiu_jitsu.setting.SettingRoute
 import com.kyu.jiu_jitsu.web.WebContentRoute
 import com.kyu.jiu_jitsu.ui.screen.SplashScreen
-import com.kyu.jiu_jitsu.ui.routes.GrayScreen
+import com.kyu.jiu_jitsu.ui.routes.SettingScreen
 import com.kyu.jiu_jitsu.ui.routes.HomeGraph
 import com.kyu.jiu_jitsu.ui.routes.LoginGraph
 import com.kyu.jiu_jitsu.ui.routes.LoginScreen
@@ -29,7 +29,7 @@ import com.kyu.jiu_jitsu.ui.routes.ModifyMyStyleScreen
 import com.kyu.jiu_jitsu.ui.routes.ModifyProfileScreen
 import com.kyu.jiu_jitsu.ui.routes.NickNameScreen
 import com.kyu.jiu_jitsu.ui.routes.ProfileScreen
-import com.kyu.jiu_jitsu.ui.routes.RedScreen
+import com.kyu.jiu_jitsu.ui.routes.HomeScreen
 import com.kyu.jiu_jitsu.ui.routes.SplashScreen
 
 @Composable
@@ -66,7 +66,7 @@ fun AppNavHost(
             )
         }
         // Home
-        navigation<HomeGraph>(startDestination = RedScreen) {
+        navigation<HomeGraph>(startDestination = HomeScreen) {
             composable<ProfileScreen> { backStackEntry ->
                 ProfileScreen(
                     modifier = modifier,
@@ -87,7 +87,7 @@ fun AppNavHost(
                 )
             }
 
-            composable<RedScreen> {
+            composable<HomeScreen> {
                 WebContentRoute(
                     modifier = Modifier.fillMaxSize(),
                     padding = padding,
@@ -96,8 +96,12 @@ fun AppNavHost(
                 )
             }
 
-            composable<GrayScreen> {
-                GrayScreen()
+            composable<SettingScreen> {
+                // 기존 설정 목적지를 설정 feature의 화면 진입점에 연결한다.
+                SettingRoute(
+                    modifier = Modifier.fillMaxSize(),
+                    padding = padding,
+                )
             }
         }
         // Login
