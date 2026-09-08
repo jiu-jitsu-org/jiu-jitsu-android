@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +34,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.kyu.jiu_jitsu.ui.insets.StatusBarBackground
 import com.kyu.jiu_jitsu.ui.components.MainBottomNavigationBar
 import com.kyu.jiu_jitsu.ui.navigation.AppNavHost
 import com.kyu.jiu_jitsu.ui.routes.GrayScreen
@@ -94,33 +96,39 @@ fun AppRoot() {
         EdgeBehavior.PadSystemBars -> WindowInsets.systemBars
     }
 
-    Scaffold(
-        contentWindowInsets = contentInsets,
-        bottomBar = {
-            AnimatedVisibility(
-                visible = showBottomBar,
-                enter = fadeIn(),
-            ) {
-                Surface(
-                    color = White,
-                    shadowElevation = 10.dp
+    // 시스템 바는 app만 소유한다. 투명 상태바 뒤에 흰 배경을 그리되, 실제 상태바 높이는
+    // 런타임 inset으로 계산한다. 이 배경은 padding을 추가하지 않으므로 Scaffold에서 전달한
+    // systemBars inset과 중복되지 않는다. 마지막 서브/로그인을 닫으면 기존 화면 색으로 복귀한다.
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
+            contentWindowInsets = contentInsets,
+            bottomBar = {
+                AnimatedVisibility(
+                    visible = showBottomBar,
+                    enter = fadeIn(),
                 ) {
-                    MainBottomNavigationBar(
-                        navHostController = navController,
-                        navItems = mainBottomNavItems,
-                    )
+                    Surface(
+                        color = White,
+                        shadowElevation = 10.dp
+                    ) {
+                        MainBottomNavigationBar(
+                            navHostController = navController,
+                            navItems = mainBottomNavItems,
+                        )
+                    }
                 }
             }
+        ) { innerPadding ->
+            AppNavHost(
+                nav = navController,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .consumeWindowInsets(innerPadding),
+                padding = innerPadding,
+                onWebFullscreenChanged = { webFullscreen = it },
+            )
         }
-    ) { innerPadding ->
-        AppNavHost(
-            nav = navController,
-            modifier = Modifier
-                .fillMaxSize()
-                .consumeWindowInsets(innerPadding),
-            padding = innerPadding,
-            onWebFullscreenChanged = { webFullscreen = it },
-        )
+        if (webFullscreen) StatusBarBackground(color = Color.White)
     }
 }
 

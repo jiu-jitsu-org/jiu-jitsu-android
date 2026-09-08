@@ -85,3 +85,10 @@ Run `bash scripts/check-architecture.sh` whenever module imports or Gradle depen
 ## Shared WebView
 
 Modules also include `:core:webview` and `:feature:web`. Read [WebView development](docs/development/webview.md) for web work. Keep runtime independent of data and feature implementations.
+
+For `OPEN_SUBVIEW` and native top-bar work, also read the
+[subview implementation direction](docs/workstreams/web-subview-native-chrome.md).
+The user authorized implementation on 2026-09-07 and explicitly reserved tests and work review
+for themselves for this change. Preserve the existing parent WebView stack and runtime reuse;
+native subview chrome belongs to `:feature:web`, system-bar appearance to `:app`.
+Record implementation and verification status separately; do not claim unperformed verification.

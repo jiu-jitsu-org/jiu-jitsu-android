@@ -86,27 +86,39 @@ internal class WebHostController(
         if (index < 0) return
         val url = page.currentUrl
         val style = entries[index].presentation
+        // 다시 시도로 교체된 자식도 최초 OPEN_SUBVIEW의 보조 초기화 정책을 유지한다.
+        val initializeOnFinished = page.initializeBridgeOnPageFinished
         entries.removeAt(index)
         page.destroy()
-        entries.add(index, createEntry(url, style))
+        entries.add(index, createEntry(url, style, initializeOnFinished))
     }
 
-    private fun createEntry(url: String, style: String): WebEntry = WebEntry(
-        WebViewPage(context, policy, url, model.debuggingEnabled, ::message, ::documentEnded, external, ::file), style,
+    private fun createEntry(url: String, style: String, initializeOnFinished: Boolean = false): WebEntry = WebEntry(
+        WebViewPage(context, policy, url, model.debuggingEnabled, ::message, ::documentEnded, external, ::file,
+            initializeBridgeOnPageFinished = initializeOnFinished), style,
     )
 
-    private fun open(url: String, style: String = "push") {
+    private fun open(url: String, style: String = "push", initializeOnFinished: Boolean = false) {
         if (!policy.isTrustedDocument(url) || entries.size >= 8) return
-        entries.add(createEntry(url, style))
+        // 부모 page에는 loadUrl/reload를 호출하지 않는다. 새 entry가 자신만의 WebView,
+        // 문서 ID, READY 상태와 응답 큐를 가지며 기존 부모는 entries 안에 그대로 남는다.
+        // 실제 최초 로드는 WebPageView의 LaunchedEffect(page)가 한 번 수행한다.
+        entries.add(createEntry(url, style, initializeOnFinished))
     }
 
+    /**
+     * 네이티브 상단 버튼과 시스템 Back의 공통 탐색 경로. IME 처리는 Route가 먼저 수행한다.
+     * BACK_GUARD가 처리 중이면 웹 응답을 기다리며 goBack/pop을 중복 실행하지 않는다.
+     * 정상 문서는 자신의 브라우저 히스토리를 먼저 소비하고, 없을 때만 서브 화면을 닫는다.
+     * 실패/renderer 종료 문서는 WebView 메서드 호출 대신 닫아 부모로 복귀할 수 있게 한다.
+     */
     fun back() {
         if (surface != null) { dismissSurface(); return }
         if (loginVisible) { completeLogin(false); return }
         val page = top ?: return
         if (page.requestBack()) return
-        if (entries.size > 1) close(page)
-        else if (page.canGoBack) page.view.goBack()
+        if (!page.failed && page.view.canGoBack()) page.view.goBack()
+        else if (entries.size > 1) close(page)
     }
 
     fun canHandleBack(): Boolean = surface != null || loginVisible || entries.size > 1 ||
@@ -114,6 +126,8 @@ internal class WebHostController(
 
     private fun close(page: WebViewPage) {
         if (page != top || entries.size <= 1) return
+        // CLOSE_SUBVIEW는 웹이 명시적으로 닫기를 결정한 메시지이므로 히스토리와 무관하다.
+        // 최상단 자식만 해제하며, 부모는 재로드 없이 같은 인스턴스로 다시 표시된다.
         entries.removeAt(entries.lastIndex)
         page.destroy()
     }
@@ -150,7 +164,7 @@ internal class WebHostController(
                 entries.forEach { it.page.send(it.page.document.generation, NativeMessage.logout) }
                 model.logout()
             }
-            is WebMessage.Open -> if (page == top && surface == null && !loginVisible) open(message.url, message.presentation)
+            is WebMessage.Open -> if (page == top && surface == null && !loginVisible) open(message.url, message.presentation, initializeOnFinished = true)
             WebMessage.Close -> close(page)
             is WebMessage.BackGuard -> Unit // Runtime updates this even before READY.
             is WebMessage.Confirm -> if (page.document.claim(message.request.requestId)) {

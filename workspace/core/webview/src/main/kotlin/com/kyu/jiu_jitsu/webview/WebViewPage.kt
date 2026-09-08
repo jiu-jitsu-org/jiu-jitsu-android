@@ -7,6 +7,7 @@ import android.net.Uri
 import android.net.http.SslError
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
@@ -29,6 +30,8 @@ class WebViewPage(
     private val onDocumentEnded: (WebViewPage) -> Unit,
     private val onExternalUrl: (String) -> Unit,
     private val onChooseFile: (WebViewPage, Long, ValueCallback<Array<Uri>>, WebChromeClient.FileChooserParams) -> Unit,
+    // 임시 대응: OPEN_SUBVIEW 생성 경로에서만 true를 전달한다. 루트/직접 진입은 기존 계약 유지.
+    val initializeBridgeOnPageFinished: Boolean = false,
 ) {
     val document = WebDocument(UUID.randomUUID().toString())
     var loading by mutableStateOf(true); private set
@@ -38,6 +41,8 @@ class WebViewPage(
     var currentUrl by mutableStateOf(initialUrl); private set
     private val handler = Handler(Looper.getMainLooper())
     private var readyBinding = false
+    // 웹 READY 검사 도중 pageFinished가 도착해도 보조 초기화 기회를 잃지 않도록 보관한다.
+    private var pendingFinishedBinding = false
     private var disposed = false
     private var rendererGone = false
     private var pendingBack = false
@@ -95,6 +100,14 @@ class WebViewPage(
                 failed = false
                 val generation = document.generation
                 handler.postDelayed({ if (document.matches(generation) && !document.ready) fail() }, READY_TIMEOUT_MS)
+            }
+            override fun onPageFinished(v: WebView, url: String?) {
+                // 페이지 완료는 웹 처리기 준비의 보장이 아니다. 허용된 현재 문서에서만
+                // 공통 준비 검사를 시도하며, 성공한 READY를 다시 실행하거나 인증을 재전송하지 않는다.
+                if (!initializeBridgeOnPageFinished || url == null || url != v.url ||
+                    !policy.isTrustedDocument(url) || failed || document.ready) return
+                if (readyBinding) pendingFinishedBinding = true
+                else tryInitializeBridge(document.generation)
             }
             override fun doUpdateVisitedHistory(v: WebView, url: String?, isReload: Boolean) {
                 canGoBack = v.canGoBack()
@@ -160,6 +173,12 @@ class WebViewPage(
         return true
     }
 
+    /**
+     * 부모 WebView를 파기하지 않고 표시 여부만 바꾼다. GONE은 숨겨진 문서의 터치와
+     * 접근성 노출을 막으며, 복귀 시 같은 인스턴스를 다시 표시하여 DOM/히스토리를 보존한다.
+     * onPause는 JavaScript 완전 정지가 아니다. 모든 WebView의 타이머를 멈추는
+     * pauseTimers를 호출하면 새 자식까지 멈추므로 여기서는 사용하지 않는다.
+     */
     fun setVisible(value: Boolean, resumed: Boolean) {
         if (disposed || rendererGone) return
         visible = value
@@ -188,6 +207,7 @@ class WebViewPage(
         backGuard = false
         canGoBack = false
         readyBinding = false
+        pendingFinishedBinding = false
         pendingBack = false
     }
 
@@ -198,6 +218,46 @@ class WebViewPage(
         loading = false
     }
 
+    /**
+     * 웹 READY와 선택적 pageFinished fallback이 공유하는 초기화 경로(메인 스레드 전용).
+     * 문서 세대가 바뀌면 늦게 도착한 JS 결과를 버린다. readyBinding은 동시 실행을,
+     * document.ready는 성공 후 인증 전달/큐 전송의 반복을 막는다.
+     *
+     * fallback 대상에서 수신 함수만 아직 없으면 fail()로 문서를 종료하지 않는다.
+     * 그래야 뒤에 오는 pageFinished 또는 웹 READY가 다시 시도할 수 있다. 반복 타이머는
+     * 추가하지 않으며 기존 20초 READY 제한이 최종 실패를 처리한다. origin 불일치나
+     * 스크립트 오류 및 HTTP/SSL 오류를 복구 대상으로 취급하지 않는다.
+     */
+    private fun tryInitializeBridge(generation: Long) {
+        if (!isCurrent(generation) || failed || document.ready || readyBinding) return
+        readyBinding = true
+        val script = """(() => {
+            if (location.origin !== ${BridgeCodec.literal(policy.origin)}) return false;
+            if (typeof window.WebBridge?.receive !== "function") return "receiver_missing";
+            window.__ossNativeDocument = ${BridgeCodec.literal(document.key)};
+            return true;
+        })();""".trimIndent()
+        view.evaluateJavascript(script) { result ->
+            if (!isCurrent(generation) || failed) return@evaluateJavascript
+            readyBinding = false
+            val retryAfterFinished = pendingFinishedBinding
+            pendingFinishedBinding = false
+            if (result != "true") {
+                if (initializeBridgeOnPageFinished && result == "\"receiver_missing\"") {
+                    // READY 검사 중 수신한 pageFinished를 최대 한 번 소비한다. 실패 시
+                    // 무한 재귀/폴링하지 않고 다음 웹 READY 또는 기존 timeout을 기다린다.
+                    if (retryAfterFinished) tryInitializeBridge(generation)
+                } else fail()
+                return@evaluateJavascript
+            }
+            if (document.markReady()) {
+                loading = false
+                onMessage(this@WebViewPage, generation, WebMessage.Ready)
+                flush()
+            }
+        }
+    }
+
     private inner class Transport {
         @JavascriptInterface
         fun postMessage(raw: String) {
@@ -206,24 +266,7 @@ class WebViewPage(
             handler.post {
                 if (!isCurrent(generation) || failed) return@post
                 if (message == WebMessage.Ready) {
-                    if (document.ready || readyBinding) return@post
-                    readyBinding = true
-                    val script = """(() => {
-                        if (location.origin !== ${BridgeCodec.literal(policy.origin)}) return false;
-                        if (typeof window.WebBridge?.receive !== "function") return false;
-                        window.__ossNativeDocument = ${BridgeCodec.literal(document.key)};
-                        return true;
-                    })();""".trimIndent()
-                    view.evaluateJavascript(script) { result ->
-                        if (!isCurrent(generation)) return@evaluateJavascript
-                        readyBinding = false
-                        if (result != "true") { fail(); return@evaluateJavascript }
-                        if (document.markReady()) {
-                            loading = false
-                            onMessage(this@WebViewPage, generation, message)
-                            flush()
-                        }
-                    }
+                    tryInitializeBridge(generation)
                 } else {
                     if (message is WebMessage.BackGuard) {
                         document.backGuard = message.enabled
