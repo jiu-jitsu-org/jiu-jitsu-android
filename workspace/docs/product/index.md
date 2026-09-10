@@ -68,3 +68,20 @@ A user-facing change is complete only when its acceptance criteria are met and t
 로그인/가입·확인창·신고 선택·사진 선택·공유는 네이티브 UI와 연결한다.
 설정 누락/세션 준비 실패/문서 오류는 안내와 재시도를 제공한다. 회전 후 웹 초안/선택 사진은
 복원하지 않는다. 실제 배포 검수와 웹 측 출시 조건은 [작업 계획](../workstreams/shared-webview.md)을 따른다.
+
+## Settings
+
+- The main settings tab groups notifications, legal links, app version, and account actions.
+- Notifications and withdrawal are visible only for an authenticated session. The account action
+  reads Login for guests and Logout for signed-in users.
+- Login opens the existing native login flow. Logout clears the local session and cached profile
+  through the existing session repository, matching web logout; server revocation is not implemented.
+- Version information displays the installed build's version name.
+- Notification details, service terms, privacy policy, and account withdrawal currently open
+  user-authorized `example.com` placeholder URLs in a browser. These URLs and detail flows must be
+  replaced before release; notification preferences and account deletion are not implemented.
+
+Settings verification (2026-09-08): debug app build and architecture boundary scan passed; four
+session-state/logout unit tests and fourteen adaptive screenshot cases passed. Emulator checks
+confirmed signed-in rows, logout switching to guest rows, and guest login opening the native login
+screen. Temporary detail pages and real account deletion remain outside this verification.

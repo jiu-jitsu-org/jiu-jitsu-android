@@ -1,13 +1,20 @@
-# Adaptive Compose UI and Screenshot Tests
+# Adaptive Compose UI
 
 - Status: Current
 - Applies to: `:core:ui`, `:feature:login`, `:feature:nickname`, `:feature:profile`,
   `:core:webview`, `:feature:web`, and app-level Compose scaffolding
 
 This document is the canonical project contract for edge-to-edge Compose layout, runtime system
-insets, adaptive device behavior, IME handling, and screenshot regression tests. Module-level
+insets, adaptive device behavior, and IME handling. Module-level
 `AGENTS.md` files should contain only ownership rules and feature-specific exceptions, then link here
 instead of copying this contract.
+
+## Verification Policy
+
+Screenshot-based verification was canceled by the user on 2026-09-08. Do not add, execute, or
+update screenshot tests, reference images, screenshot captures, or image-comparison reviews unless
+explicitly requested again. Existing screenshot tooling and fixtures in other modules are historical
+assets, not required checks. Adaptive layout and accessibility requirements below still apply.
 
 ## Ownership Model
 
@@ -88,14 +95,13 @@ Use the space offered to the composable, not cached physical-display dimensions.
 - Use an IME-aware scroll/action arrangement and focus/keyboard actions. Fixed vertical centering is
   not sufficient for short windows.
 - Hardware-keyboard and zero-IME-inset configurations must retain normal spacing.
-- Compose Preview/Layoutlib does not open the real platform keyboard. Screenshot tests therefore use
-  an injectable inset seam plus a deterministic test-only IME cover. A real device or emulator check
-  remains required for focus, pan/resize behavior, keyboard actions, and navigation-bar interaction.
+- Compose Preview/Layoutlib does not open the real platform keyboard. Use relevant device or emulator
+  interaction checks for focus, resize behavior, keyboard actions, and navigation-bar interaction.
 
-## Canonical Screenshot Matrix
+## Adaptive Layout Cases
 
-Screen-level screenshot suites use the shared preview annotations in
-[`AdaptivePreviews.kt`](../../core/ui/src/main/java/com/kyu/jiu_jitsu/ui/tooling/AdaptivePreviews.kt).
+Use these representative dimensions when evaluating layout behavior. They do not require screenshot
+capture or image-comparison tests.
 
 | Case | Viewport | Purpose |
 | --- | --- | --- |
@@ -104,74 +110,16 @@ Screen-level screenshot suites use the shared preview annotations in
 | Expanded | `600 x 960 dp` | Tablet/foldable single-pane bounds and excessive stretching |
 | Landscape | `800 x 360 dp` | Short-height scrolling and action reachability |
 | Font scale | `360 x 800 dp` at `1.0`, `1.3`, and `2.0` | Text wrapping, control growth, and overlap |
-| IME visible | `360 x 800 dp`, deterministic `280 dp` bottom inset/cover | Focused form and primary-action reachability |
+| IME visible | `360 x 800 dp`, real keyboard visible | Focused form and primary-action reachability |
 
-Add status-bar zero/non-zero, navigation mode, cutout, RTL, dark theme, error/loading, or long-content
-variants when the changed UI is sensitive to them. Do not multiply every component by the full matrix;
-apply the full size matrix to screen-level structure and focused state matrices to the owning component.
-
-## Screenshot Test Implementation Standard
-
-The project uses Google's experimental Compose Preview Screenshot Testing plugin. The current
-toolchain uses Gradle tasks because full IDE integration requires a newer AGP/Kotlin toolchain than
-this repository currently adopts.
-
-- Put screenshot preview functions in `src/screenshotTest/kotlin/`.
-- Mark every executable preview with both `@PreviewTest` and a shared or explicit `@Preview`.
-- Render stateless Screen/content composables with explicit sample state and no ViewModel, Hilt,
-  navigation, network, file, clock, or account dependency.
-- Use `JiuJitsuPjtTheme(dynamicColor = false)` and fixed light/dark selection so host/device dynamic
-  colors cannot change reference images.
-- Disable or control animations, clocks, random values, asynchronous image loading, and platform
-  dialogs. Use deterministic bundled resources and clearly fake non-sensitive data.
-- Name preview functions and groups stably. Renaming a `@PreviewTest` function changes its generated
-  reference-image identity.
-- Feature suites render the real feature Screen or component. The shared contract fixture in
-  [`AdaptiveUiContractScreenshotTest.kt`](../../core/ui/src/screenshotTest/kotlin/com/kyu/jiu_jitsu/ui/AdaptiveUiContractScreenshotTest.kt)
-  demonstrates configuration but does not replace feature coverage.
-
-Reference images are generated under `{module}/src/screenshotTestDebug/reference/` and are reviewed
-artifacts. Do not auto-approve them in normal validation or CI. A changed reference must be inspected
-alongside the rendered diff and the product/design intent.
-
-## Commands and Review Flow
-
-Generate or deliberately update the shared reference images:
-
-```bash
-./gradlew :core:ui:updateDebugScreenshotTest --no-daemon
-```
-
-Validate against approved references:
-
-```bash
-./gradlew :core:ui:validateDebugScreenshotTest --no-daemon
-```
-
-Screenshot tasks are already enabled for `:core:ui` and the three current UI feature modules. Replace
-`:core:ui` with the owning module after it has a `src/screenshotTest/` suite. Reports are written under
-`{module}/build/reports/screenshotTest/preview/debug/`.
-
-Reference update workflow:
-
-1. Run validation first and inspect the actual/reference/diff report.
-2. Decide whether the change is an intended UI change, an unstable fixture, or a regression.
-3. Fix regressions and nondeterminism before updating references.
-4. Run the update task only for an accepted visual change.
-5. Review new/changed PNGs, then rerun validation.
-6. Perform emulator/device verification for actual IME, system-bar contrast, gestures, and cutouts.
+Include status-bar presence, navigation mode, cutouts, RTL, long text, or other cases when relevant
+to the changed UI. Use non-screenshot interaction checks and focused tests in proportion to risk.
 
 ## Completion Checklist
 
 - Insets are owned and applied once; status/navigation bar absence remains valid.
 - Content and actions are reachable in compact and landscape viewports.
 - Expanded width is intentionally bounded or intentionally adaptive.
-- Font scale `2.0` has no overlap or inaccessible action.
+- Large text does not overlap or make actions inaccessible.
 - The IME scenario keeps the focused field and primary action reachable.
-- Screenshot fixtures are deterministic and contain no credentials or personal data.
-- Validation passes against reviewed references.
-- Real-device checks cover behavior Layoutlib cannot model.
-
-## External Reference
-
-- [Compose Preview Screenshot Testing](https://developer.android.com/studio/preview/compose-screenshot-testing)
+- Relevant device interaction checks cover behavior that compilation and unit tests cannot verify.

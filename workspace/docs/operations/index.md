@@ -4,7 +4,9 @@ This document records the currently evidenced build, release, and incident-respo
 
 ## Current Build Artifacts
 
-`:app` registers copy tasks that place APK and AAB outputs in `workspace/outputs/` after matching assemble/bundle tasks.
+APK and AAB artifacts remain in the standard module build directories: `app/build/outputs/apk/`
+and `app/build/outputs/bundle/`. The former `workspace/outputs/` directory and automatic copy tasks
+were removed at the user's request. Do not recreate them.
 
 Common commands:
 
@@ -14,7 +16,7 @@ Common commands:
 ./gradlew :app:bundleRelease --no-daemon
 ```
 
-Artifact names use the `oss_project_<build-type>_(timestamp)` pattern.
+Artifact names follow the Android Gradle plugin defaults; no timestamped duplicate is produced.
 
 ## Current Release Constraints
 

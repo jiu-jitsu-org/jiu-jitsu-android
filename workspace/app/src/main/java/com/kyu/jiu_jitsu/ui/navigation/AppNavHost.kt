@@ -16,6 +16,7 @@ import com.kyu.jiu_jitsu.profile.screen.ModifyProfileScreen
 import com.kyu.jiu_jitsu.profile.screen.ProfileScreen
 import com.kyu.jiu_jitsu.profile.screen.ModifyCompetitionScreen
 import com.kyu.jiu_jitsu.profile.screen.ModifyMyStyleScreen
+import com.kyu.jiu_jitsu.BuildConfig
 import com.kyu.jiu_jitsu.setting.SettingRoute
 import com.kyu.jiu_jitsu.web.WebContentRoute
 import com.kyu.jiu_jitsu.ui.screen.SplashScreen
@@ -99,6 +100,9 @@ fun AppNavHost(
             composable<SettingScreen> {
                 // 기존 설정 목적지를 설정 feature의 화면 진입점에 연결한다.
                 SettingRoute(
+                    versionName = BuildConfig.VERSION_NAME,
+                    onBack = { nav.popBackStack() },
+                    onLogin = { nav.navigate(LoginGraph) { launchSingleTop = true } },
                     modifier = Modifier.fillMaxSize(),
                     padding = padding,
                 )

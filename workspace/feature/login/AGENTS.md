@@ -38,7 +38,7 @@ The root guide and accepted ADRs win if instructions conflict.
 ## Adaptive Login UI
 
 Follow the canonical
-[Adaptive Compose UI and Screenshot Tests](../../docs/development/adaptive-ui.md) contract. The app
+[Adaptive Compose UI](../../docs/development/adaptive-ui.md) contract. The app
 root currently treats the login graph as edge-to-edge; the login background may draw behind bars,
 while the screen content owner protects buttons, text, and sheet actions.
 
@@ -49,9 +49,6 @@ while the screen content owner protects buttons, text, and sheet actions.
   not stretch indefinitely. Do not calculate button widths from the physical display.
 - Decorative provider logos use null descriptions when the adjacent button label already names the
   action; otherwise provide a localized, non-duplicative description.
-- Screenshot the real stateless login content for provider idle/loading/error and agreement-sheet
-  states. Do not launch provider SDKs, Hilt, or navigation from screenshot previews.
-
 ## Tests and Verification
 
 Cover at least:
@@ -66,9 +63,14 @@ Run from the Gradle root (`workspace/`):
 
 ```bash
 ./gradlew :feature:login:testDebugUnitTest :feature:login:compileDebugKotlin --no-daemon
-./gradlew :feature:login:validateDebugScreenshotTest --no-daemon
 bash scripts/check-architecture.sh
 ```
 
 Manually verify real provider redirects only with non-production test accounts and without recording
 credentials in logs or handoff notes.
+
+## Screenshot Verification Policy
+
+Screenshot-based verification is canceled by user direction. Do not add, run, or update screenshot
+tests, reference images, or screenshot captures/reviews unless the user explicitly requests them
+again. Use focused compilation, unit tests, and non-screenshot interaction checks as applicable.

@@ -51,7 +51,7 @@ The root guide and accepted ADRs win if instructions conflict.
 ## Adaptive Profile UI
 
 Follow the canonical
-[Adaptive Compose UI and Screenshot Tests](../../docs/development/adaptive-ui.md) contract. Profile
+[Adaptive Compose UI](../../docs/development/adaptive-ui.md) contract. Profile
 contains both an edge-to-edge colored header and protected edit/form screens, so preserve that
 feature-specific distinction explicitly.
 
@@ -73,10 +73,6 @@ feature-specific distinction explicitly.
   only with a clear product requirement and named window/posture input.
 - Verify draggable/flip cards and wheel pickers under narrow width, landscape height, touch
   exploration, and large font. Do not let gestures make the only path to a selection.
-- Screenshot the main profile header at representative belt colors and scroll chrome states. Cover
-  each edit screen's content/error state and bottom-sheet layout without camera/gallery launchers,
-  Hilt, navigation, or remote images in the preview.
-
 ## Tests and Verification
 
 Cover the changed paths, especially:
@@ -94,9 +90,14 @@ Run from the Gradle root (`workspace/`):
 
 ```bash
 ./gradlew :feature:profile:testDebugUnitTest :feature:profile:compileDebugKotlin --no-daemon
-./gradlew :feature:profile:validateDebugScreenshotTest --no-daemon
 bash scripts/check-architecture.sh
 ```
 
 Also run affected `:core:model`, `:core:domain`, or `:core:data` tests when profile contracts or
 mapping behavior changes, and manually verify camera/gallery behavior on applicable API levels.
+
+## Screenshot Verification Policy
+
+Screenshot-based verification is canceled by user direction. Do not add, run, or update screenshot
+tests, reference images, or screenshot captures/reviews unless the user explicitly requests them
+again. Use focused compilation, unit tests, and non-screenshot interaction checks as applicable.

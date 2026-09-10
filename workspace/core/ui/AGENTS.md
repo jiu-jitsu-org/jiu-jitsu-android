@@ -33,30 +33,30 @@ This guide applies to everything under `core/ui/`. It extends the repository-roo
 - Preserve the caller's modifier order intentionally: decide whether background draws behind insets
   before adding padding, clipping, or click handling.
 
-## Adaptive UI and Screenshot Ownership
+## Adaptive UI Ownership
 
 Follow the canonical
-[Adaptive Compose UI and Screenshot Tests](../../docs/development/adaptive-ui.md) contract for
+[Adaptive Compose UI](../../docs/development/adaptive-ui.md) contract for
 edge-to-edge, inset ownership, status-bar height, adaptive constraints, IME, accessibility, and the
-320/360/600 dp, landscape, and font-scale screenshot matrices.
+320/360/600 dp, landscape, and font-scale layout cases.
 
 This module additionally owns:
 
 - Shared multi-preview annotations in `ui/tooling/AdaptivePreviews.kt`. Change the canonical matrix
-  only together with the development document and all affected reference images.
+  only together with the development document.
 - Runtime inset helpers. `StatusBarBackground` remains decoration only; do not turn it into a hidden
   screen-level padding owner.
-- The deterministic shared screenshot contract fixture. It verifies shared configuration and
-  components but does not replace screenshots of a feature's real stateless Screen/component.
-- Screenshot plugin configuration for this module. Keep preview fixtures out of `main` unless they
-  are reusable tooling annotations or deliberate preview-only sample data.
-
 Run from the Gradle root (`workspace/`):
 
 ```bash
 ./gradlew :core:ui:testDebugUnitTest :core:ui:compileDebugKotlin --no-daemon
-./gradlew :core:ui:validateDebugScreenshotTest --no-daemon
 bash scripts/check-architecture.sh
 ```
 
 Compile at least one affected feature consumer when changing a shared composable API.
+
+## Screenshot Verification Policy
+
+Screenshot-based verification is canceled by user direction. Do not add, run, or update screenshot
+tests, reference images, or screenshot captures/reviews unless the user explicitly requests them
+again. Use focused compilation, unit tests, and non-screenshot interaction checks as applicable.

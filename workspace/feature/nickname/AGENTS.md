@@ -34,7 +34,7 @@ The root guide and accepted ADRs win if instructions conflict.
 ## Adaptive Nickname Form
 
 Follow the canonical
-[Adaptive Compose UI and Screenshot Tests](../../docs/development/adaptive-ui.md) contract.
+[Adaptive Compose UI](../../docs/development/adaptive-ui.md) contract.
 `NickNameScreen` receives root `PaddingValues`; it owns applying that contract and the form's IME
 avoidance without duplicating the same sides.
 
@@ -45,10 +45,6 @@ avoidance without duplicating the same sides.
   nonessential artwork before sacrificing input or action accessibility on compact heights.
 - Bound form width on tablets/foldables while retaining outer padding on narrow phones. Use offered
   constraints, not physical screen dimensions.
-- Screenshot idle, local-validation error, duplicate, available, submitting, and failure states using
-  stateless content. The IME case injects the canonical test inset; real keyboard behavior is still
-  verified on an emulator/device.
-
 ## Tests and Verification
 
 Cover at least:
@@ -64,8 +60,13 @@ Run from the Gradle root (`workspace/`):
 
 ```bash
 ./gradlew :feature:nickname:testDebugUnitTest :feature:nickname:compileDebugKotlin --no-daemon
-./gradlew :feature:nickname:validateDebugScreenshotTest --no-daemon
 bash scripts/check-architecture.sh
 ```
 
 Also run `:core:domain:test` when nickname validation policy changes there.
+
+## Screenshot Verification Policy
+
+Screenshot-based verification is canceled by user direction. Do not add, run, or update screenshot
+tests, reference images, or screenshot captures/reviews unless the user explicitly requests them
+again. Use focused compilation, unit tests, and non-screenshot interaction checks as applicable.

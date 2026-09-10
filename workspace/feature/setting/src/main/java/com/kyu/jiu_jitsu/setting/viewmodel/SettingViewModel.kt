@@ -1,5 +1,46 @@
 package com.kyu.jiu_jitsu.setting.viewmodel
 
-// 설정 값 조회·변경과 사용자 이벤트 처리를 담당할 ViewModel의 자리다.
-// 기능 구현 시 Repository 계약을 주입받고 불변 SettingUiState를 노출한다.
-// 단순 조회·변경은 Repository를 직접 호출하고, 복합 비즈니스 로직에만 UseCase를 사용한다.
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.kyu.jiu_jitsu.data.repository.SessionRepository
+import com.kyu.jiu_jitsu.setting.model.SettingUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+@HiltViewModel
+internal class SettingViewModel @Inject constructor(
+    private val sessions: SessionRepository,
+) : ViewModel() {
+    private val mutableState = MutableStateFlow(SettingUiState())
+    val uiState = mutableState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            sessions.accessToken.collect { token ->
+                mutableState.update { it.copy(isLoggedIn = !token.isNullOrBlank()) }
+            }
+        }
+    }
+
+    fun logout() {
+        if (uiState.value.isLoggedIn != true || uiState.value.isLoggingOut) return
+        mutableState.update { it.copy(isLoggingOut = true, logoutFailed = false) }
+        viewModelScope.launch {
+            try {
+                // Use the same local session invalidation as the existing web logout flow.
+                sessions.clearSession()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                mutableState.update { it.copy(logoutFailed = true) }
+            } finally {
+                mutableState.update { it.copy(isLoggingOut = false) }
+            }
+        }
+    }
+}

@@ -67,16 +67,12 @@ bash scripts/check-architecture.sh
 
 Run the narrowest relevant tests first and broaden verification in proportion to risk. If Firebase configuration blocks the app build, run unaffected module tasks and report the limitation.
 
-Compose screenshot reference generation and validation:
+Screenshot-based verification is canceled by user direction (2026-09-08). Do not add or run
+screenshot tests, generate/update reference images, capture screenshots for verification, or perform
+image-comparison reviews unless explicitly requested again. Use compilation, focused unit tests,
+architecture checks, and non-screenshot interaction checks appropriate to the change.
 
-```bash
-./gradlew :core:ui:updateDebugScreenshotTest --no-daemon
-./gradlew :core:ui:validateDebugScreenshotTest --no-daemon
-```
-
-Reference images must be deliberately reviewed before update. See
-[Adaptive Compose UI and Screenshot Tests](adaptive-ui.md) for the canonical viewport, font-scale,
-IME, determinism, and review contract.
+Build artifacts stay in `app/build/outputs/`; do not create or copy artifacts to `workspace/outputs/`.
 
 ## Gradle Rules
 
@@ -125,7 +121,7 @@ production logs.
 - Keep Screen composables stateless where practical.
 - Put user-facing text in resources.
 - Follow the [adaptive UI contract](adaptive-ui.md) for edge-to-edge, insets, IME, screen sizing,
-  accessibility, and screenshot coverage.
+  and accessibility.
 - Name continuing reads with `observe...` when they return a stream.
 - Do not broaden a feature task into an unrelated full architecture migration.
 

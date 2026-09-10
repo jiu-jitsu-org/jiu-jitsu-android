@@ -20,7 +20,7 @@ The data layer is the source of truth for application data. UI events flow downw
 | `:feature:login` | Social login UI and signup agreement flow |
 | `:feature:nickname` | Nickname validation, duplication check, signup completion |
 | `:feature:profile` | Community-profile display and editing |
-| `:feature:setting` | Settings tab scaffold: Route and empty Screen; state, ViewModel, and components are comment-only placeholders |
+| `:feature:setting` | Settings UI, observed session state, local logout, and temporary detail-page links |
 | `build-logic` | Shared Gradle convention plugins |
 
 Current module declarations are in [`settings.gradle.kts`](../../settings.gradle.kts).

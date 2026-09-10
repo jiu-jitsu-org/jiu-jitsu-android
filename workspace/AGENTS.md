@@ -32,6 +32,16 @@ The actual Gradle root is this `workspace/` directory. Current modules are `:app
 - Never print, commit, or document secrets from `local.properties`, Firebase files, signing files, or environment variables.
 - Run focused verification in proportion to risk and report commands, results, and limitations.
 
+## Artifact and Verification Policy
+
+- Do not create `workspace/outputs/` or copy/rename APKs or AABs into that directory. Use the standard
+  module build output locations under `app/build/outputs/`.
+- Screenshot-based verification is canceled by the user (2026-09-08). Do not add, run, or update
+  screenshot tests, reference images, screenshot captures, or image-comparison reviews unless the
+  user explicitly requests them again. This is not a completion requirement.
+- Continue focused compilation, unit tests, architecture checks, and relevant non-screenshot
+  interaction checks. Existing screenshot fixtures in other modules are inactive historical assets.
+
 ## Architecture Guardrails
 
 The accepted target is a Now in Android-style architecture, not strict Clean Architecture. See [ADR 0001](docs/architecture/decisions/0001-adopt-nia-style-architecture.md).

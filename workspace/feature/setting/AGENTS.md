@@ -7,12 +7,14 @@ This guide applies to everything under `feature/setting/`. It extends the parent
 
 ## Current Scope
 
-- This module is a scaffold for the settings page opened from the main bottom navigation.
-- `SettingRoute` connects the app destination to an empty `SettingScreen`.
-- `SettingViewModel.kt`, `SettingUiState.kt`, and `SettingItem.kt` currently contain package
-  declarations and role comments only. They do not implement settings behavior.
-- Add concrete menus, state, persistence, and actions only when required by the requested feature.
-  Do not infer supported settings or backend capabilities from these placeholder files.
+- Own the settings tab UI and session-dependent visibility. Signed-in users see notifications,
+  logout, and account withdrawal; guests see login and no account-only rows.
+- `SettingRoute` observes `SettingViewModel` state. Logout clears the existing local session through
+  `SessionRepository`; this does not implement server token revocation.
+- Notification, terms, privacy, and withdrawal destinations currently open temporary browser URLs
+  defined in `SettingUrls.kt`. Replace the marked URLs and finalize detail flows before release.
+- These placeholders do not implement notification preferences or account deletion.
+- The app supplies the actual version name and login/back navigation callbacks.
 
 ## Ownership and Structure
 
@@ -50,11 +52,11 @@ This guide applies to everything under `feature/setting/`. It extends the parent
   explicitly when persistence is introduced; do not display a failed write as successfully saved.
 - Add loading, error, retry, and duplicate-action handling in proportion to the implemented behavior.
 - Reuse `jjs.android.feature` for shared Gradle configuration. Add only dependencies actually used;
-  the scaffold does not require data or domain dependencies.
+  the feature currently uses the session repository from `:core:data` and has no domain dependency.
 
 ## Layout
 
-- Apply root `PaddingValues` once in `SettingScreen`, as the scaffold currently does. Do not also
+- Apply root `PaddingValues` once in `SettingScreen`, as the screen currently does. Do not also
   apply system-bar padding for the same sides or use fixed bottom-navigation compensation.
 - Let the app control system-bar appearance; expose semantic intent through callbacks when needed.
 - As content is added, keep menus reachable on compact and landscape windows and at large font
@@ -73,8 +75,12 @@ Run from the Gradle root (`workspace/`) for code or integration changes:
   is available, and verify settings-tab navigation on a device or emulator when behavior changes.
 - Add focused state and persistence tests when those behaviors exist. Do not add tests merely
   to mirror comment-only scaffolding.
-- Add screenshot coverage when concrete UI is implemented, following the shared adaptive UI guide.
-  The scaffold currently has no screenshot plugin or screenshot suite configured.
 - For documentation-only changes, check the diff and relative links; a Gradle build is unnecessary.
-- Report implemented behavior and performed verification separately. Do not describe the scaffold
-  as a completed settings feature.
+- Report implemented behavior and performed verification separately. Do not describe temporary URLs
+  as completed detail pages.
+
+## Screenshot Verification Policy
+
+Screenshot-based verification is canceled by user direction. Do not add, run, or update screenshot
+tests, reference images, or screenshot captures/reviews unless the user explicitly requests them
+again. Use focused compilation, unit tests, and non-screenshot interaction checks as applicable.
