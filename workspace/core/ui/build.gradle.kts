@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.kyu.jiu_jitsu.ui"
+    namespace = "kr.bjj_oss.ui"
 
     experimentalProperties["android.experimental.enableScreenshotTest"] = true
 

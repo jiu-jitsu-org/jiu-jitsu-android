@@ -20,6 +20,14 @@ Artifact names follow the Android Gradle plugin defaults; no timestamped duplica
 
 ## Current Release Constraints
 
+- The Android application ID is `kr.bjj_oss`; module namespaces and source packages use this prefix.
+  This is a separate installed app identity, so an existing installation under the previous ID is
+  not upgraded and its private data/session is not automatically migrated.
+- The checked-in debug Firebase configuration has been aligned with the new package for local
+  builds. This does not register an app with Firebase. Before service verification, supply a
+  configuration downloaded for `kr.bjj_oss` and update the Android package/signing registrations
+  used by Firebase, Google sign-in, and Kakao. Release Firebase configuration is not checked in.
+
 - Release minification is currently disabled.
 - Version code and version name are currently defined directly in `app/build.gradle.kts`.
 - Firebase configuration is required by the Google Services plugin.

@@ -1,5 +1,5 @@
 import com.android.build.api.dsl.ApplicationExtension
-import com.jiu_jitsu.buildlogic.configureAndroidCompose
+import kr.bjj_oss.buildlogic.configureAndroidCompose
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply

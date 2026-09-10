@@ -22,7 +22,7 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.kyu.jiu_jitsu" />
+                  <option name="appId" value="kr.bjj_oss" />
                   <option name="mobileSdkAppId" value="1:123456789012:android:debug0000000000" />
                   <option name="projectId" value="jiu-jitsu-debug" />
                   <option name="projectNumber" value="123456789012" />

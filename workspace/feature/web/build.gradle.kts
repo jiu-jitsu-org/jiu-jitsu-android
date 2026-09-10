@@ -1,5 +1,5 @@
 plugins { alias(libs.plugins.jjs.android.feature) }
-android { namespace = "com.kyu.jiu_jitsu.web" }
+android { namespace = "kr.bjj_oss.web" }
 dependencies {
     implementation(projects.core.webview)
     implementation(projects.core.data)

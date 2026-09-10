@@ -91,7 +91,7 @@ case-insensitive filesystem, `ColorSemantic.Transparent` and the former `ColorSe
 both write to the same class-file path. The resulting APK can omit `ColorSemantic$Transparent` and
 crash when `ColorComponents.Button.Text` initializes.
 
-[`ColorTokensTest`](../../core/ui/src/test/kotlin/com/kyu/jiu_jitsu/ui/theme/ColorTokensTest.kt) checks
+[`ColorTokensTest`](../../core/ui/src/test/kotlin/kr/bjj_oss/ui/theme/ColorTokensTest.kt) checks
 case-insensitive uniqueness of semantic/component token classes and initializes transparent component
 backgrounds. Run it with `:core:ui:testDebugUnitTest` when changing token groups.
 

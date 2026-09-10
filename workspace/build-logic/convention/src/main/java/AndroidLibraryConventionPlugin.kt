@@ -1,6 +1,6 @@
 import com.android.build.gradle.LibraryExtension
-import com.jiu_jitsu.buildlogic.configureKotlinAndroid
-import com.jiu_jitsu.buildlogic.libs
+import kr.bjj_oss.buildlogic.configureKotlinAndroid
+import kr.bjj_oss.buildlogic.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply

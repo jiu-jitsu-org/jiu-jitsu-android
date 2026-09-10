@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.kyu.jiu_jitsu.setting"
+    namespace = "kr.bjj_oss.setting"
 }
 
 dependencies {

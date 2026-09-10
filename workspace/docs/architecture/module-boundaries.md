@@ -86,13 +86,13 @@ Core modules must not depend on app or feature modules. Do not add feature-to-fe
 New code in `app`, `core:domain`, `core:ui`, and feature modules must not import:
 
 ```text
-com.kyu.jiu_jitsu.data.api.*
-com.kyu.jiu_jitsu.data.model.dto.*
-com.kyu.jiu_jitsu.data.datastore.*
-com.kyu.jiu_jitsu.data.module.*
-com.kyu.jiu_jitsu.data.session.*
-com.kyu.jiu_jitsu.data.repository.impl.*
-com.kyu.jiu_jitsu.data.model.singleton.*
+kr.bjj_oss.data.api.*
+kr.bjj_oss.data.model.dto.*
+kr.bjj_oss.data.datastore.*
+kr.bjj_oss.data.module.*
+kr.bjj_oss.data.session.*
+kr.bjj_oss.data.repository.impl.*
+kr.bjj_oss.data.model.singleton.*
 ```
 
 Existing violations are migration targets, not precedent. When a touched boundary can be corrected without broadening the task, reduce the violation.

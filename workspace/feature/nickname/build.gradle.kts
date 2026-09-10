@@ -11,7 +11,7 @@ properties.load(project.rootProject.file("local.properties").inputStream())
 
 
 android {
-    namespace = "com.kyu.jiu_jitsu.nickname"
+    namespace = "kr.bjj_oss.nickname"
 
     experimentalProperties["android.experimental.enableScreenshotTest"] = true
 

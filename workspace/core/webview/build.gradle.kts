@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 android {
-    namespace = "com.kyu.jiu_jitsu.webview"
+    namespace = "kr.bjj_oss.webview"
     defaultConfig { consumerProguardFiles("consumer-rules.pro") }
 }
 dependencies {

@@ -121,7 +121,7 @@
 
 ```bash
 ./gradlew :core:webview:testDebugUnitTest :core:data:testDebugUnitTest :core:ui:testDebugUnitTest :feature:login:testDebugUnitTest :app:assembleDebug --no-daemon
-./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.kyu.jiu_jitsu.web.WebViewTransportTest --no-daemon
+./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=kr.bjj_oss.web.WebViewTransportTest --no-daemon
 ./gradlew :core:webview:compileReleaseKotlin :core:data:compileReleaseKotlin :feature:web:compileReleaseKotlin --no-daemon
 bash scripts/check-architecture.sh
 ```

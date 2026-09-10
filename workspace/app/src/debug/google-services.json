@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:123456789012:android:debug0000000000",
         "android_client_info": {
-          "package_name": "com.kyu.jiu_jitsu"
+          "package_name": "kr.bjj_oss"
         }
       },
       "oauth_client": [],

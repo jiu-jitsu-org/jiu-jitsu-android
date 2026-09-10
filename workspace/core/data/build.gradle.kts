@@ -17,7 +17,7 @@ fun webOriginField(key: String, fallback: String): String {
 }
 
 android {
-    namespace = "com.kyu.jiu_jitsu.data"
+    namespace = "kr.bjj_oss.data"
 
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

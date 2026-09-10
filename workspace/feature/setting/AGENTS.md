@@ -34,7 +34,7 @@ This guide applies to everything under `feature/setting/`. It extends the parent
 
 - The app owns the root NavHost, main Scaffold, bottom navigation, and system-bar appearance.
 - Keep the settings entry within `HomeGraph` for its current bottom-tab placement.
-- The existing `com.kyu.jiu_jitsu.ui.routes.SettingScreen` object is the navigation destination;
+- The existing `kr.bjj_oss.ui.routes.SettingScreen` object is the navigation destination;
   it is distinct from this module's Screen composable. The app calls `SettingRoute` to connect them.
 - The centralized destination is transitional. Do not move it by introducing a dependency from
   `:core:ui` to this feature. Coordinate any future route migration with app-level tab wiring.

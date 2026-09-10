@@ -10,7 +10,7 @@ val properties = Properties()
 properties.load(project.rootProject.file("local.properties").inputStream())
 
 android {
-    namespace = "com.kyu.jiu_jitsu.login"
+    namespace = "kr.bjj_oss.login"
 
     experimentalProperties["android.experimental.enableScreenshotTest"] = true
 

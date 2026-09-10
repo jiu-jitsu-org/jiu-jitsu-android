@@ -13,7 +13,7 @@ fun String.asBuildConfigString(): String =
     "\"${replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
 android {
-    namespace = "com.kyu.jiu_jitsu.profile"
+    namespace = "kr.bjj_oss.profile"
 
     experimentalProperties["android.experimental.enableScreenshotTest"] = true
 

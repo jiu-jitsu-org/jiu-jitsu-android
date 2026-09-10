@@ -1,7 +1,7 @@
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
-import com.jiu_jitsu.buildlogic.configureGradleManagedDevices
-import com.jiu_jitsu.buildlogic.configureKotlinAndroid
+import kr.bjj_oss.buildlogic.configureGradleManagedDevices
+import kr.bjj_oss.buildlogic.configureKotlinAndroid
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply

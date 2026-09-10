@@ -5,12 +5,12 @@ This document is an inventory and navigation aid, not a replacement for backend 
 ## API Configuration
 
 - Backend base URL: supplied through BuildConfig from local project configuration.
-- Endpoint constants: [`NetworkConfig.kt`](../../core/data/src/main/java/com/kyu/jiu_jitsu/data/utils/NetworkConfig.kt)
-- Retrofit/OkHttp configuration: [`NetworkModule.kt`](../../core/data/src/main/java/com/kyu/jiu_jitsu/data/module/NetworkModule.kt)
-- Service bindings and authenticated/unauthenticated clients: [`ApiModule.kt`](../../core/data/src/main/java/com/kyu/jiu_jitsu/data/module/ApiModule.kt)
+- Endpoint constants: [`NetworkConfig.kt`](../../core/data/src/main/java/kr/bjj_oss/data/utils/NetworkConfig.kt)
+- Retrofit/OkHttp configuration: [`NetworkModule.kt`](../../core/data/src/main/java/kr/bjj_oss/data/module/NetworkModule.kt)
+- Service bindings and authenticated/unauthenticated clients: [`ApiModule.kt`](../../core/data/src/main/java/kr/bjj_oss/data/module/ApiModule.kt)
 - Stable repository result and app models: [`core/model`](../../core/model/)
-- Request DTOs: `core/data/src/main/java/com/kyu/jiu_jitsu/data/model/dto/request/`
-- Response DTOs: `core/data/src/main/java/com/kyu/jiu_jitsu/data/model/dto/response/`
+- Request DTOs: `core/data/src/main/java/kr/bjj_oss/data/model/dto/request/`
+- Response DTOs: `core/data/src/main/java/kr/bjj_oss/data/model/dto/response/`
 
 Do not place real base URLs, OAuth secrets, Firebase configuration, or signing material in this document.
 
@@ -61,9 +61,9 @@ Current local persistence uses Preferences DataStore plus Android Keystore AES/G
 
 Canonical implementation:
 
-- [`PreferencesDatastore.kt`](../../core/data/src/main/java/com/kyu/jiu_jitsu/data/datastore/PreferencesDatastore.kt)
-- [`SecureCrypto.kt`](../../core/data/src/main/java/com/kyu/jiu_jitsu/data/utils/SecureCrypto.kt)
-- [`SessionLocalDataSource.kt`](../../core/data/src/main/java/com/kyu/jiu_jitsu/data/session/SessionLocalDataSource.kt)
+- [`PreferencesDatastore.kt`](../../core/data/src/main/java/kr/bjj_oss/data/datastore/PreferencesDatastore.kt)
+- [`SecureCrypto.kt`](../../core/data/src/main/java/kr/bjj_oss/data/utils/SecureCrypto.kt)
+- [`SessionLocalDataSource.kt`](../../core/data/src/main/java/kr/bjj_oss/data/session/SessionLocalDataSource.kt)
 
 ## Contract Change Checklist
 

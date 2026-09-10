@@ -60,13 +60,13 @@ The accepted target is a Now in Android-style architecture, not strict Clean Arc
 New upper-layer code must not import:
 
 ```text
-com.kyu.jiu_jitsu.data.api.*
-com.kyu.jiu_jitsu.data.model.dto.*
-com.kyu.jiu_jitsu.data.datastore.*
-com.kyu.jiu_jitsu.data.module.*
-com.kyu.jiu_jitsu.data.session.*
-com.kyu.jiu_jitsu.data.repository.impl.*
-com.kyu.jiu_jitsu.data.model.singleton.*
+kr.bjj_oss.data.api.*
+kr.bjj_oss.data.model.dto.*
+kr.bjj_oss.data.datastore.*
+kr.bjj_oss.data.module.*
+kr.bjj_oss.data.session.*
+kr.bjj_oss.data.repository.impl.*
+kr.bjj_oss.data.model.singleton.*
 ```
 
 Detailed responsibilities and exceptions are defined in [Module boundaries](docs/architecture/module-boundaries.md) and the active [NIA migration](docs/workstreams/nia-architecture-migration.md).

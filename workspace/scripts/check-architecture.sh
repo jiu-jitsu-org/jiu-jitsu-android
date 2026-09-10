@@ -12,7 +12,7 @@ readonly UPPER_LAYER_PATHS=(
   "feature"
 )
 
-readonly FORBIDDEN_IMPORT_PATTERN='^import com\.kyu\.jiu_jitsu\.data\.(api\.|model\.dto\.|datastore\.|module\.|session\.|repository\.impl\.|model\.singleton\.)'
+readonly FORBIDDEN_IMPORT_PATTERN='^import kr\.bjj_oss\.data\.(api\.|model\.dto\.|datastore\.|module\.|session\.|repository\.impl\.|model\.singleton\.)'
 
 failed=0
 

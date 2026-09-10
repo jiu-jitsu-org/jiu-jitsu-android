@@ -12,10 +12,10 @@ val properties = Properties()
 properties.load(project.rootProject.file("local.properties").inputStream())
 
 android {
-    namespace = "com.kyu.jiu_jitsu"
+    namespace = "kr.bjj_oss"
 
     defaultConfig {
-        applicationId = "com.kyu.jiu_jitsu"
+        applicationId = "kr.bjj_oss"
         versionCode = 1
         versionName = "1.0"
 
