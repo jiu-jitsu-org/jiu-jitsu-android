@@ -6,11 +6,12 @@
 ## OPEN_SUBVIEW 네이티브 상단 바
 
 [상단 바·부모 보존 구현 방향](../workstreams/web-subview-native-chrome.md)에 따라
-기존 Activity 안의 독립 WebView 스택을 재사용한다. 서브 화면에는 항상 네이티브 상단 바를
-표시하고 로딩/오류는 본문에만 표시한다. app이 흰색 상태바 배경을 그린다.
+기존 Activity 안의 독립 WebView 스택을 재사용한다. 서브 화면에는 전체 WebView 영역 위에
+55dp 높이의 투명한 네이티브 상단 바를 겹쳐 표시한다. 좌측 뒤로가기 버튼은 로딩/오류 표면보다
+위에 표시한다. app이 흰색 상태바 배경을 그린다.
 일반 뒤로가기는 보호 처리 후 히스토리 우선이며, CLOSE_SUBVIEW는 명시적 닫기다.
-WebContentRoute의 subviewActions(url)에서 WebSubviewActions callback을 전달하면 알림/더보기를
-개별 표시한다. 기본값은 숨김이며 기존 웹 payload는 변경하지 않는다.
+WebContentRoute의 subviewActions(url) 계약은 유지하지만 현재 상단 바는 뒤로가기 버튼만 표시한다.
+기존 웹 payload는 변경하지 않는다.
 2026-09-07 구현 요청에서 사용자가 테스트·작업 검토를 직접 진행하기로 했으므로 현재 미검증이다.
 웹 헤더 중복 제거와 알림/더보기 목적지·노출 정책은 공동 작업으로 남아 있다.
 

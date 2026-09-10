@@ -3,8 +3,6 @@ package kr.bjj_oss.web
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -13,6 +11,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 
 /**
  * 서브 화면의 네이티브 액션 계약. null인 액션은 버튼 자체를 만들지 않는다.
@@ -28,9 +27,10 @@ data class WebSubviewActions(
 )
 
 /**
- * WebView와 독립된 네이티브 상단 바. 상태바 inset은 app에서 전달한 padding이 이미 처리한다.
+ * WebView 위에 겹쳐 표시하는 투명한 네이티브 상단 바.
+ * 상태바 inset은 app에서 전달한 padding이 이미 처리한다.
  * TopAppBar의 기본 statusBars inset을 다시 적용하면 상단 여백이 두 번 생기므로 0으로 둔다.
- * 숨겨진 부모도 같은 높이를 유지하되 enabled=false로 입력을 막아 복귀 시 레이아웃을 보존한다.
+ * 좌측 뒤로가기 버튼은 화면에서 전달한 히스토리 이동/서브 화면 종료 경로를 호출한다.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,29 +40,19 @@ internal fun WebSubviewTopBar(
     onBack: () -> Unit,
 ) {
     TopAppBar(
+        // 내부 버튼은 TopAppBar의 기본 수직 중앙 정렬로 55dp 영역 중앙에 배치한다.
+        expandedHeight = 55.dp,
         title = {},
         navigationIcon = {
             IconButton(onClick = onBack, enabled = enabled) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.web_back))
             }
         },
-        actions = {
-            actions.onNotifications?.let { onClick ->
-                IconButton(onClick = onClick, enabled = enabled) {
-                    Icon(Icons.Outlined.Notifications, stringResource(R.string.web_notifications))
-                }
-            }
-            actions.onMore?.let { onClick ->
-                IconButton(onClick = onClick, enabled = enabled) {
-                    Icon(Icons.Filled.MoreVert, stringResource(R.string.web_more))
-                }
-            }
-        },
         windowInsets = WindowInsets(0, 0, 0, 0),
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.White,
+            containerColor = Color.Transparent,
+            scrolledContainerColor = Color.Transparent,
             navigationIconContentColor = Color.Black,
-            actionIconContentColor = Color.Black,
         ),
     )
 }

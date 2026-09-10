@@ -127,33 +127,29 @@ fun WebContentRoute(
                         val visible = index == host.entries.lastIndex && !host.loginVisible
                         // 모든 entry를 composition에 유지해야 AndroidView가 재생성되지 않는다.
                         // 부모는 그리기/접근성에서 제외하고 실제 WebView는 setVisible의 GONE과
-                        // onPause로 입력을 막는다. 상단 바 높이는 유지하여 부모의 viewport가
-                        // 자식 push/pop 때 상단 바 유무 때문에 달라지지 않도록 한다.
+                        // onPause로 입력을 막는다. 상단 바는 별도로 겹쳐 viewport 높이를 유지한다.
                         val visibilityModifier = if (visible) Modifier else Modifier
                             .graphicsLayer { alpha = 0f }
                             .clearAndSetSemantics { }
-                        Column(Modifier.fillMaxSize().then(visibilityModifier)) {
-                            if (index > 0) {
-                                WebSubviewTopBar(
-                                    actions = subviewActions(entry.page.currentUrl),
-                                    enabled = visible,
-                                    onBack = onBack,
-                                )
-                            }
-                            // 오류/로딩 overlay는 본문에만 배치한다. READY timeout이나 네트워크
-                            // 실패 중에도 상단 뒤로가기로 자식 화면을 닫을 수 있어야 한다.
-                            Box(Modifier.weight(1f).fillMaxWidth()) {
-                                WebPageView(entry.page, visible, Modifier.fillMaxSize())
-                                if (visible && entry.page.loading) WebLoading()
-                                if (visible && entry.page.failed) {
-                                    WebFailure(stringResource(R.string.web_load_failed), { host.retry(entry.page) })
-                                }
+                        Box(Modifier.fillMaxSize().then(visibilityModifier)) {
+                            WebPageView(entry.page, visible, Modifier.fillMaxSize())
+                            if (visible && entry.page.loading) WebLoading()
+                            if (visible && entry.page.failed) {
+                                WebFailure(stringResource(R.string.web_load_failed), { host.retry(entry.page) })
                             }
                         }
                     }
                 }
                 if (host.preparing) WebLoading()
                 if (host.preparationFailed) WebFailure(stringResource(R.string.web_load_failed), host::prepare)
+                // 웹뷰와 로딩/오류 표면 위에 배치하여 뒤로가기 버튼을 계속 사용할 수 있게 한다.
+                if (host.entries.size > 1 && !host.loginVisible) {
+                    WebSubviewTopBar(
+                        actions = subviewActions(host.entries.last().page.currentUrl),
+                        enabled = true,
+                        onBack = onBack,
+                    )
+                }
             }
         }
         if (host.loginVisible) Surface(Modifier.fillMaxSize()) { loginContent(host::completeLogin) }
