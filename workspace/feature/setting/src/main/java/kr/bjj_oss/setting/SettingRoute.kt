@@ -20,6 +20,7 @@ fun SettingRoute(
     versionName: String,
     onBack: () -> Unit,
     onLogin: () -> Unit,
+    onNotifications: () -> Unit,
     modifier: Modifier = Modifier,
     padding: PaddingValues = PaddingValues(),
 ) {
@@ -37,7 +38,7 @@ fun SettingRoute(
     }
     SettingScreen(
         state = state, versionName = versionName, onBack = onBack,
-        onNotifications = { if (state.isLoggedIn == true) openPage(SettingUrls.NOTIFICATIONS) },
+        onNotifications = { if (state.isLoggedIn == true) onNotifications() },
         onTerms = { openPage(SettingUrls.TERMS) },
         onPrivacy = { openPage(SettingUrls.PRIVACY) },
         onLogin = onLogin, onLogout = model::logout,

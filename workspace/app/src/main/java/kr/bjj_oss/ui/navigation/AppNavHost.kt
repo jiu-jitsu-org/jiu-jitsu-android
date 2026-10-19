@@ -18,6 +18,8 @@ import kr.bjj_oss.profile.screen.ModifyCompetitionScreen
 import kr.bjj_oss.profile.screen.ModifyMyStyleScreen
 import kr.bjj_oss.BuildConfig
 import kr.bjj_oss.setting.SettingRoute
+import kr.bjj_oss.setting.NotificationRoute
+import kr.bjj_oss.setting.NotificationDestination
 import kr.bjj_oss.web.WebContentRoute
 import kr.bjj_oss.ui.screen.SplashScreen
 import kr.bjj_oss.ui.routes.SettingScreen
@@ -103,10 +105,19 @@ fun AppNavHost(
                     versionName = BuildConfig.VERSION_NAME,
                     onBack = { nav.popBackStack() },
                     onLogin = { nav.navigate(LoginGraph) { launchSingleTop = true } },
+                    onNotifications = { nav.navigate(NotificationDestination) { launchSingleTop = true } },
                     modifier = Modifier.fillMaxSize(),
                     padding = padding,
                 )
             }
+        }
+        // A detail destination outside HomeGraph hides the bottom tabs and preserves Settings below it.
+        composable<NotificationDestination> {
+            NotificationRoute(
+                onBack = { nav.popBackStack() },
+                modifier = Modifier.fillMaxSize(),
+                padding = padding,
+            )
         }
         // Login
         navigation<LoginGraph>(startDestination = LoginScreen) {

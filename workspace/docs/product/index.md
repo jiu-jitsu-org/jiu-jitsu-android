@@ -77,11 +77,22 @@ A user-facing change is complete only when its acceptance criteria are met and t
 - Login opens the existing native login flow. Logout clears the local session and cached profile
   through the existing session repository, matching web logout; server revocation is not implemented.
 - Version information displays the installed build's version name.
-- Notification details, service terms, privacy policy, and account withdrawal currently open
-  user-authorized `example.com` placeholder URLs in a browser. These URLs and detail flows must be
-  replaced before release; notification preferences and account deletion are not implemented.
+- Signed-in users open a native notification screen from Settings. It has its own back-stack entry;
+  toolbar and system Back return to the retained Settings entry. Bottom tabs are hidden on this detail.
+- The notification screen shows account/security, service, community, and marketing switches, with
+  design defaults on/on/on/off. Toggles are UI-only and survive recreation of the current entry;
+  leaving and reopening starts with defaults. No notification delivery, consent, server, or persistent
+  preference is changed. Connecting real preference storage is a separate follow-up.
+- Service terms, privacy policy, and withdrawal still open temporary `example.com` browser URLs.
+  These flows must be replaced before release; account deletion is not implemented.
 
 Settings verification (2026-09-08): debug app build and architecture boundary scan passed; four
 session-state/logout unit tests and fourteen adaptive screenshot cases passed. Emulator checks
 confirmed signed-in rows, logout switching to guest rows, and guest login opening the native login
 screen. Temporary detail pages and real account deletion remain outside this verification.
+
+Native notification screen verification (2026-09-10): setting compilation and unit tests,
+`:app:assembleDebug`, and the architecture boundary scan passed. Emulator UI-hierarchy checks
+confirmed signed-in Settings → Notifications, hidden bottom tabs, on/on/on/off defaults, marketing
+switch interaction, and both system and toolbar Back returning to Settings. No screenshots were
+captured; guest visibility retains the existing session check.

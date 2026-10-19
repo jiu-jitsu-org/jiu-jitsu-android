@@ -11,9 +11,12 @@ This guide applies to everything under `feature/setting/`. It extends the parent
   logout, and account withdrawal; guests see login and no account-only rows.
 - `SettingRoute` observes `SettingViewModel` state. Logout clears the existing local session through
   `SessionRepository`; this does not implement server token revocation.
-- Notification, terms, privacy, and withdrawal destinations currently open temporary browser URLs
-  defined in `SettingUrls.kt`. Replace the marked URLs and finalize detail flows before release.
-- These placeholders do not implement notification preferences or account deletion.
+- Notifications open the native `NotificationRoute` through an app-provided callback after the
+  existing signed-in check. `NotificationDestination` belongs to this feature and is registered
+  outside `HomeGraph` as a detail entry, preserving Settings below it and hiding bottom tabs.
+- Notification switches currently use entry-scoped saveable UI state, not persistent preferences.
+- Terms, privacy, and withdrawal still open temporary browser URLs defined in `SettingUrls.kt`.
+  Replace these marked URLs before release; account deletion is not implemented.
 - The app supplies the actual version name and login/back navigation callbacks.
 
 ## Ownership and Structure

@@ -11,4 +11,12 @@
     <string name="setting_withdrawal">회원 탈퇴</string>
     <string name="setting_logout_error">로그아웃하지 못했습니다. 다시 시도해 주세요.</string>
     <string name="setting_page_unavailable">페이지를 열 수 있는 앱이 없습니다.</string>
+    <string name="notification_security">계정·보안 알림</string>
+    <string name="notification_security_description">로그인, 신고 처리 결과 등</string>
+    <string name="notification_service">서비스 공지 알림</string>
+    <string name="notification_service_description">정책 변경, 공지사항</string>
+    <string name="notification_community">커뮤니티 활동 알림</string>
+    <string name="notification_community_description">댓글, 답글, 언급 등</string>
+    <string name="notification_marketing">마케팅 정보 알림</string>
+    <string name="notification_marketing_description">이벤트, 혜택 안내</string>
 </resources>
