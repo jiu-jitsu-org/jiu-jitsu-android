@@ -65,7 +65,7 @@ object BridgeCodec {
         val obj = json.parseToJsonElement(raw).jsonObject
         val type = obj.requiredString("type")
         val p = obj["payload"]?.jsonObject ?: JsonObject(emptyMap())
-        Log.d("@@@@@@@@" , "BridgeCodex >> $type")
+        Log.d("@@@@@@@@" , "BridgeCodex >> $type >> $p" )
         when (type) {
             "WEBVIEW_READY" -> WebMessage.Ready
             "AUTH_LOGIN_PROMPT", "AUTH_LOGIN_MODAL" -> WebMessage.Login(type == "AUTH_LOGIN_PROMPT", p.optionalString("reason"))

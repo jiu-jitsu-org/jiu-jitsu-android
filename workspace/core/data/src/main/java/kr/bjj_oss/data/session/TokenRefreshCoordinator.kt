@@ -27,7 +27,7 @@ class TokenRefreshCoordinator @Inject constructor(private val store: SessionLoca
         .retryOnConnectionFailure(false).callTimeout(8, TimeUnit.SECONDS).build()
     private val requestAdapter = moshi.adapter(RefreshTokenRequest::class.java)
     private val responseAdapter = moshi.adapter(SnsLoginResponse::class.java)
-    private val url = BuildConfig.BASE_URL.toHttpUrl().newBuilder()
+    private val url = BuildConfig.OSS_BASE_URL.toHttpUrl().newBuilder()
         .addPathSegments(NetworkConfig.Authentication.REFRESH).build()
     private val gate = RefreshGate(store::tokenSnapshot, ::fetch, store::updateTokensIfCurrent)
 

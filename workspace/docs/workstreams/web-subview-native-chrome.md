@@ -17,6 +17,19 @@
 `bash scripts/check-architecture.sh`와 `git diff --check` 통과.
 단위/기기/웹 연동 테스트와 스크린샷 검증은 실행하지 않았다.
 
+## 2026-10-20 네이티브 알림/내 커뮤니티 진입
+
+- 루트의 두 TODO_NOW를 host.openNativeSubview 진입점으로 연결했다.
+- AppNavHost는 상대 경로만 전달하고 런타임 origin/문서 allowlist 검증은 WebUrlPolicy가 소유한다.
+- 알림/내 커뮤니티의 정확한 두 경로만 허용하고 미설정/잘못된 목적지의 아이콘은 비활성화한다.
+- 기존 부모 보존, 자식 생성, OPEN_SUBVIEW 초기화 옵션, Back/CLOSE_SUBVIEW를 재사용한다.
+- 준비/로그인/네이티브 표면/파일 선택/guard 상태와 중복 클릭을 host에서도 차단한다.
+- 검색과 루트 상단 바 composition 구조는 이번 변경에 포함하지 않는다.
+- 검증: 추가한 nativeSubviewPathsResolveOnlyAllowedSameOriginScreens 테스트와 웹/앱 Kotlin 컴파일 성공.
+- 전체 WebView JVM 테스트는 9개 중 8개 통과, 기존 allElevenInboundContractsDecode가 WEBVIEW_READY에서 실패했다.
+  해당 디코더의 Android Log 호출은 기존 사용자 변경을 보존했으며 이번 작업에서 수정하지 않았다.
+- 아키텍처 검사와 git diff --check 통과. 실제 웹/기기 동작과 로그인/복귀 상호작용은 미검증이다.
+
 ## 구현 반영 기록 (2026-09-07)
 
 - 기존 createEntry/entries를 유지하고 별도 Activity 없이 서브 화면별 네이티브 상단 바를 추가했다.

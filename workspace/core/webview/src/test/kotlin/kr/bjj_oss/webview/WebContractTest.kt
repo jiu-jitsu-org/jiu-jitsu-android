@@ -20,6 +20,25 @@ class WebContractTest {
             "https://web.example.com/community/%33", "https://web.example.com/policies/../api/auth/session",
         ).forEach { assertFalse(it, policy.isTrustedDocument(it)) }
     }
+    @Test fun nativeSubviewPathsResolveOnlyAllowedSameOriginScreens() {
+        listOf("/community/notification", "/community/me").forEach { path ->
+            val url = "https://web.example.com$path"
+            assertEquals(url, policy.resolveScreenPath(path))
+            // 자식 화면의 동일 URL 탐색도 기존 문서 정책을 통과한다.
+            assertTrue(policy.isTrustedDocument(url))
+        }
+        assertEquals("https://web.example.com/community/me?tab=posts",
+            policy.resolveScreenPath("/community/me?tab=posts"))
+        listOf(null, "", " ", "community/me", "//evil.test/community/me",
+            "https://web.example.com/community/me", "https://evil.test/community/me",
+            "/api/health", "/community/me/edit", "/community/notifications",
+            "/community/%6De", "/community/me/../write", "/community/me\\edit",
+            "/community/me with spaces").forEach { assertNull(it, policy.resolveScreenPath(it)) }
+        assertFalse(policy.isTrustedDocument("https://evil.test/community/me"))
+        assertFalse(policy.isTrustedDocument("https://web.example.com:444/community/notification"))
+        assertEquals("http://localhost:3000/community/me",
+            WebUrlPolicy("http://localhost:3000", true).resolveScreenPath("/community/me"))
+    }
     @Test fun localhostHttpRequiresDebug() {
         assertTrue(WebUrlPolicy("http://localhost:3000", true).isTrustedDocument("http://localhost:3000/"))
         assertTrue(runCatching { WebUrlPolicy("http://localhost:3000") }.isFailure)

@@ -21,8 +21,15 @@
 동일 URL 재선택은 정상 문서에서 무시하며 실패 문서는 다시 생성한다.
 보호 중인 문서, 로그인/표면/파일 선택/세션 준비 중에는 탭 전환을 차단한다.
 
-알림/검색/프로필은 WebRootActions로 AppNavHost까지 클릭을 연결하되 사용자 요청에 따라
-각 callback 본문은 TODO만 둔다. 현재 클릭해도 목적지로 이동하지 않는다.
+알림/내 커뮤니티는 AppNavHost에서 BuildConfig의 COMMUNITY_NOTIFICATION_PATH/COMMUNITY_ME_PATH를
+상대 경로로 전달한다. Route는 아이콘별 경로 유효성을 표시하고 host.openNativeSubview로 진입한다.
+WebUrlPolicy.resolveScreenPath가 런타임 origin과 조합하며 전체 URL/프로토콜 상대 URL/미허용 경로는 거절한다.
+현재 허용 목적지는 `/community/notification`, `/community/me`이며 하위 경로를 포괄 허용하지 않는다.
+누락/공백/잘못된 경로는 해당 아이콘을 비활성화한다. 검색은 기존 TODO로 남아 있다.
+네이티브 push는 루트에서만 허용하며 세션 준비/로그인/네이티브 표면/파일 선택/유효 문서의 back guard 중에는
+진입하지 않는다. 첫 push 직후 루트 조건이 해제되어 연속 클릭으로 중복 push하지 않는다.
+자식은 기존 OPEN_SUBVIEW와 동일한 initializeBridgeOnPageFinished 옵션으로 생성하고 부모에는 탐색을 강제하지 않는다.
+로그인이 필요하면 기존 웹 로그인 브리지 흐름을 사용하며 네이티브에서 인증 요구를 추측하지 않는다.
 기존 subviewActions/WebSubviewActions는 호출부 호환을 위해 유지하나 더 이상 UI에 적용하지 않는다.
 서브뷰 복귀는 시스템 Back 또는 웹의 기존 CLOSE_SUBVIEW를 사용한다.
 일반 Back의 IME/guard/히스토리 처리와 부모 WebView 보존 정책은 유지한다.

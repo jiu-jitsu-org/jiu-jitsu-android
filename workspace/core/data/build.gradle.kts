@@ -38,16 +38,16 @@ android {
 
             // 개발여부설정 : false
             buildConfigField ("boolean", "DEV", "false")
-            buildConfigField("String", "BASE_URL", properties.getProperty("BASE_URL"))
-            buildConfigField("String", "WEB_ORIGIN", webOriginField("WEB_ORIGIN", "https://oss-front.bjj-oss.kr"))
+            buildConfigField("String", "OSS_BASE_URL", properties.getProperty("BASE_URL"))
+            buildConfigField("String", "OSS_WEB_ORIGIN", webOriginField("WEB_ORIGIN", ""))
 //            buildConfigField("String", "NAVER_MAP_BASE_URL", properties.getProperty("NAVER_MAP_URL"))
 //            buildConfigField("String", "GOOGLE_CLOUD_CLIENT_ID", properties.getProperty("GOOGLE_CLOUD_CLIENT_ID"))
         }
         getByName("debug") {
             // 개발여부설정 : true
             buildConfigField("boolean", "DEV", "true")
-            buildConfigField("String", "BASE_URL", properties.getProperty("DEV_BASE_URL"))
-            buildConfigField("String", "WEB_ORIGIN", webOriginField("DEV_WEB_ORIGIN", "https://dev-oss-front.bjj-oss.kr"))
+            buildConfigField("String", "OSS_BASE_URL", properties.getProperty("DEV_BASE_URL"))
+            buildConfigField("String", "OSS_WEB_ORIGIN", webOriginField("DEV_WEB_ORIGIN", ""))
 //            buildConfigField("String", "NAVER_MAP_BASE_URL", properties.getProperty("NAVER_MAP_URL"))
 //            buildConfigField("String", "GOOGLE_CLOUD_CLIENT_ID", properties.getProperty("GOOGLE_CLOUD_CLIENT_ID"))
         }

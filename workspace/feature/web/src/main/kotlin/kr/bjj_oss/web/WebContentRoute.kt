@@ -38,7 +38,9 @@ fun WebContentRoute(
     subviewActions: (url: String) -> WebSubviewActions = { WebSubviewActions() },
     // 같은 origin의 상대 경로. null이면 주소 연결 전인 카테고리 탭을 비활성화한다.
     categoryPath: String? = null,
-    rootActions: WebRootActions = WebRootActions(),
+    // 같은-origin 상대 경로. 미설정/허용되지 않은 주소는 해당 아이콘을 비활성화한다.
+    notificationPath: String? = null,
+    myCommunityPath: String? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -145,6 +147,8 @@ fun WebContentRoute(
                                     } == true,
                                     enabled = visible && !host.preparing && !host.preparationFailed &&
                                         (entry.page.failed || !entry.page.backGuard) && host.surface == null,
+                                    notificationsEnabled = policy.resolveScreenPath(notificationPath) != null,
+                                    profileEnabled = policy.resolveScreenPath(myCommunityPath) != null,
                                     onTabSelected = { tab ->
                                         val path = when (tab) {
                                             WebRootTab.Feed -> "/"
@@ -152,7 +156,17 @@ fun WebContentRoute(
                                         }
                                         if (path != null) host.selectRootPath(path)
                                     },
-                                    actions = rootActions,
+                                    actions = WebRootActions(
+                                        onNotifications = {
+                                            host.openNativeSubview(notificationPath)
+                                        },
+                                        onSearch = {
+                                            // TODO: 검색 목적지 또는 웹 서브뷰 연결은 다음 작업에서 구현합니다.
+                                        },
+                                        onProfile = {
+                                            host.openNativeSubview(myCommunityPath)
+                                        },
+                                    ),
                                 )
                             }
                             // 바깥 Column은 스크롤하지 않는다. 서브뷰에는 헤더가 없으므로

@@ -33,7 +33,7 @@ internal class WebSessionRepositoryImpl @Inject constructor(
     private val refresh: TokenRefreshCoordinator,
     moshi: Moshi,
 ) : WebSessionRepository {
-    override val origin = BuildConfig.WEB_ORIGIN
+    override val origin = BuildConfig.OSS_WEB_ORIGIN
     override val debuggingEnabled = BuildConfig.DEBUG
     private val lock = Mutex()
     private val client = OkHttpClient.Builder().followRedirects(false).followSslRedirects(false)

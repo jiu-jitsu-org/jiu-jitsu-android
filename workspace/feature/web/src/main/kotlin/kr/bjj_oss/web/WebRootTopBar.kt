@@ -34,6 +34,8 @@ internal fun WebRootTopBar(
     enabled: Boolean,
     onTabSelected: (WebRootTab) -> Unit,
     actions: WebRootActions,
+    notificationsEnabled: Boolean = true,
+    profileEnabled: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier = modifier, color = MaterialTheme.colorScheme.surface) {
@@ -74,13 +76,13 @@ internal fun WebRootTopBar(
                         }
                     }
                 }
-                IconButton(onClick = actions.onNotifications, enabled = enabled) {
+                IconButton(onClick = actions.onNotifications, enabled = enabled && notificationsEnabled) {
                     Icon(Icons.Outlined.Notifications, stringResource(R.string.web_notifications))
                 }
                 IconButton(onClick = actions.onSearch, enabled = enabled) {
                     Icon(Icons.Outlined.Search, stringResource(R.string.web_search))
                 }
-                IconButton(onClick = actions.onProfile, enabled = enabled) {
+                IconButton(onClick = actions.onProfile, enabled = enabled && profileEnabled) {
                     Icon(Icons.Outlined.AccountCircle, stringResource(R.string.web_profile))
                 }
             }

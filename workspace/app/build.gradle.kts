@@ -11,6 +11,14 @@ plugins {
 val properties = Properties()
 properties.load(project.rootProject.file("local.properties").inputStream())
 
+// Public frontend origins; local/CI overrides never derive from backend API URLs.
+fun webOriginField(key: String, fallback: String): String {
+    val value = providers.gradleProperty(key).orNull ?: properties.getProperty(key) ?: fallback
+    val origin = value.trim().removeSurrounding("\"").trimEnd('/')
+    require(origin.none { it == '\n' || it == '\r' || it == '\\' || it == '"' })
+    return "\"$origin\""
+}
+
 android {
     namespace = "kr.bjj_oss"
 
@@ -37,11 +45,19 @@ android {
             )
 
             buildConfigField ("boolean", "DEV", "false")
+            buildConfigField("String", "OSS_BASE_URL", properties.getProperty("BASE_URL"))
+            buildConfigField("String", "OSS_WEB_ORIGIN", webOriginField("WEB_ORIGIN", ""))
+            buildConfigField("String", "COMMUNITY_NOTIFICATION_PATH", properties.getProperty("COMMUNITY_NOTIFICATION_PATH"))
+            buildConfigField("String", "COMMUNITY_ME_PATH", properties.getProperty("COMMUNITY_ME_PATH"))
         }
 
         getByName("debug") {
 
             buildConfigField("boolean", "DEV", "true")
+            buildConfigField("String", "OSS_BASE_URL", properties.getProperty("DEV_BASE_URL"))
+            buildConfigField("String", "OSS_WEB_ORIGIN", webOriginField("DEV_WEB_ORIGIN", ""))
+            buildConfigField("String", "COMMUNITY_NOTIFICATION_PATH", properties.getProperty("COMMUNITY_NOTIFICATION_PATH"))
+            buildConfigField("String", "COMMUNITY_ME_PATH", properties.getProperty("COMMUNITY_ME_PATH"))
         }
     }
 }

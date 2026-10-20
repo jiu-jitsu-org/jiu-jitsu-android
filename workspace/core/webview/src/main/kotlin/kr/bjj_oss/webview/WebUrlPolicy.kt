@@ -23,6 +23,12 @@ class WebUrlPolicy(origin: String, private val debug: Boolean = false) {
             port(uri) == port(base) && isScreenPath(uri.rawPath.orEmpty())
     }
 
+    /** 네이티브 목적지 설정은 같은-origin의 절대 경로만 받는다. 전체/프로토콜 상대 URL은 거절한다. */
+    fun resolveScreenPath(path: String?): String? {
+        if (path.isNullOrBlank() || !path.startsWith("/") || path.startsWith("//")) return null
+        return (origin + path).takeIf(::isTrustedDocument)
+    }
+
     fun isExternalWebUrl(url: String): Boolean {
         val uri = parse(url) ?: return false
         return uri.scheme.lowercase() in setOf("http", "https") && !sameOrigin(uri)
@@ -35,7 +41,8 @@ class WebUrlPolicy(origin: String, private val debug: Boolean = false) {
         uri.host.equals(base.host, true) && port(uri) == port(base)
 
     private fun isScreenPath(path: String): Boolean = path in setOf(
-        "", "/", "/community/write", "/policies", "/policies/terms-of-service",
+        "", "/", "/community/write", "/community/notifications", "/community/me",
+        "/policies", "/policies/terms-of-service",
         "/policies/privacy-policy", "/policies/marketing-consent", "/service-info", "/version-info",
     ) || Regex("/community/[1-9][0-9]*").matches(path)
 

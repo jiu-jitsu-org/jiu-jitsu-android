@@ -107,6 +107,17 @@ internal class WebHostController(
         entries.add(createEntry(url, style, initializeOnFinished))
     }
 
+    /** 네이티브 루트 액션도 기존 OPEN_SUBVIEW 생성/브리지 초기화 경로를 사용한다. */
+    fun openNativeSubview(path: String?) {
+        // 첫 클릭이 자식을 추가하면 size가 즉시 바뀌므로 연속 클릭도 중복 push하지 않는다.
+        if (disposed || preparing || preparationFailed || entries.size != 1 ||
+            loginVisible || surface != null || fileRequest != null) return
+        val page = top ?: return
+        if (!page.failed && page.backGuard) return
+        val url = policy.resolveScreenPath(path) ?: return
+        open(url, initializeOnFinished = true)
+    }
+
     /** 루트 탭은 push가 아니다. 문서를 교체해 탭 클릭 이력을 Back 스택에 쌓지 않는다. */
     fun selectRootPath(path: String) {
         if (disposed || preparing || preparationFailed || entries.size != 1 ||

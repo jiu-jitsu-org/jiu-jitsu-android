@@ -23,7 +23,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    private const val BASE_URL = BuildConfig.BASE_URL
+    private const val BASE_URL = BuildConfig.OSS_BASE_URL
 
     // Seconds, not milliseconds. The previous 3,000-second values could leave a failed request
     // hanging for almost an hour and made offline recovery appear frozen.
