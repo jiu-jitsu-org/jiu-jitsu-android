@@ -39,6 +39,7 @@ internal class WebHostController(
 ) {
     val entries = mutableStateListOf<WebEntry>()
     val top get() = entries.lastOrNull()?.page
+    var rootPath by mutableStateOf("/"); private set
     var preparing by mutableStateOf(true); private set
     var preparationFailed by mutableStateOf(false); private set
     var surface by mutableStateOf<WebSurface?>(null); private set
@@ -104,6 +105,22 @@ internal class WebHostController(
         // 문서 ID, READY 상태와 응답 큐를 가지며 기존 부모는 entries 안에 그대로 남는다.
         // 실제 최초 로드는 WebPageView의 LaunchedEffect(page)가 한 번 수행한다.
         entries.add(createEntry(url, style, initializeOnFinished))
+    }
+
+    /** 루트 탭은 push가 아니다. 문서를 교체해 탭 클릭 이력을 Back 스택에 쌓지 않는다. */
+    fun selectRootPath(path: String) {
+        if (disposed || preparing || preparationFailed || entries.size != 1 ||
+            loginVisible || surface != null || fileRequest != null) return
+        val page = top ?: return
+        // BACK_GUARD는 탭 이동 승인 계약이 아니므로 보호 중인 문서를 임의로 버리지 않는다.
+        if (!page.failed && page.backGuard) return
+        val url = policy.origin + path
+        if (!path.startsWith("/") || !policy.isTrustedDocument(url)) return
+        if (rootPath == path && page.currentUrl == url && !page.failed) return
+        val replacement = createEntry(url, "push")
+        entries[0] = replacement
+        rootPath = path
+        page.destroy()
     }
 
     /**
@@ -281,6 +298,7 @@ internal class WebHostController(
         loginTargets.clear()
         val old = entries.toList()
         entries.clear()
+        rootPath = "/"
         old.forEach { it.page.destroy() }
         token = null
     }

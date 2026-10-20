@@ -6,6 +6,17 @@
 - 기준: [ADR 0003](../architecture/decisions/0003-isolate-shared-webview-runtime.md), [WebView 개발](../development/webview.md), [Adaptive UI](../development/adaptive-ui.md).
 - 기존 ADR의 단일 Activity/보존 스택 결정을 유지하는 UI 확장 제안이다. 새로운 Activity 분리 결정은 하지 않는다.
 
+## 2026-10-20 루트 상단 바 요구사항으로 변경
+
+이 절이 아래 과거 서브뷰 상단 바 배치/버튼 요구사항보다 우선한다.
+루트에 고정 탭/액션 바를 배치하고 서브뷰에서는 네이티브 바와 해당 여백을 제거한다.
+부모 entry를 composition에 유지하는 기존 정책과 시스템 Back/브리지 닫기는 유지한다.
+카테고리 URL과 우측 아이콘 목적지는 사용자 요청에 따라 TODO로 이관했다.
+현재 동작은 [WebView 개발 지침](../development/webview.md)의 루트 상단 바 절을 따른다.
+검증: `:feature:web:compileDebugKotlin :app:compileDebugKotlin` 컴파일 성공,
+`bash scripts/check-architecture.sh`와 `git diff --check` 통과.
+단위/기기/웹 연동 테스트와 스크린샷 검증은 실행하지 않았다.
+
 ## 구현 반영 기록 (2026-09-07)
 
 - 기존 createEntry/entries를 유지하고 별도 Activity 없이 서브 화면별 네이티브 상단 바를 추가했다.

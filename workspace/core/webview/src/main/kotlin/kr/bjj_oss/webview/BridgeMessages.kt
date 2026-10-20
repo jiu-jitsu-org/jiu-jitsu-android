@@ -1,5 +1,6 @@
 package kr.bjj_oss.webview
 
+import android.util.Log
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
@@ -64,6 +65,7 @@ object BridgeCodec {
         val obj = json.parseToJsonElement(raw).jsonObject
         val type = obj.requiredString("type")
         val p = obj["payload"]?.jsonObject ?: JsonObject(emptyMap())
+        Log.d("@@@@@@@@" , "BridgeCodex >> $type")
         when (type) {
             "WEBVIEW_READY" -> WebMessage.Ready
             "AUTH_LOGIN_PROMPT", "AUTH_LOGIN_MODAL" -> WebMessage.Login(type == "AUTH_LOGIN_PROMPT", p.optionalString("reason"))

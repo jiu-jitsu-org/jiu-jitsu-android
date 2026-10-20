@@ -21,6 +21,7 @@ import kr.bjj_oss.setting.SettingRoute
 import kr.bjj_oss.setting.NotificationRoute
 import kr.bjj_oss.setting.NotificationDestination
 import kr.bjj_oss.web.WebContentRoute
+import kr.bjj_oss.web.WebRootActions
 import kr.bjj_oss.ui.screen.SplashScreen
 import kr.bjj_oss.ui.routes.SettingScreen
 import kr.bjj_oss.ui.routes.HomeGraph
@@ -96,6 +97,21 @@ fun AppNavHost(
                     padding = padding,
                     onFullscreenChanged = onWebFullscreenChanged,
                     loginContent = { done -> WebLoginFlow(padding, done) },
+                    // TODO: 카테고리의 실제 상대 주소를 입력하세요: categoryPath = "/실제-경로"
+                    // 새 경로는 core:webview의 WebUrlPolicy와 계약 테스트에도 함께 등록해야 합니다.
+                    // 연결 전에는 카테고리 탭을 비활성화합니다. 피드는 기존 루트 "/"를 사용합니다.
+                    categoryPath = "/service-info",
+                    rootActions = WebRootActions(
+                        onNotifications = {
+                            // TODO: 알림 목록 목적지로 이동. 기존 NotificationDestination은 수신 설정 화면입니다.
+                        },
+                        onSearch = {
+                            // TODO: 검색 목적지 또는 웹 서브뷰 연결은 다음 작업에서 구현합니다.
+                        },
+                        onProfile = {
+                            // TODO: 프로필의 MY 탭 전환/상세 push 정책 확정 후 연결합니다.
+                        },
+                    ),
                 )
             }
 

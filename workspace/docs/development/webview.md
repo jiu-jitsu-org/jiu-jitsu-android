@@ -3,17 +3,30 @@
 상태: Current. [분석·작업 계획](../workstreams/shared-webview.md)과
 [ADR 0003](../architecture/decisions/0003-isolate-shared-webview-runtime.md)을 먼저 읽는다.
 
-## OPEN_SUBVIEW 네이티브 상단 바
+## 루트 상단 바와 OPEN_SUBVIEW
 
-[상단 바·부모 보존 구현 방향](../workstreams/web-subview-native-chrome.md)에 따라
-기존 Activity 안의 독립 WebView 스택을 재사용한다. 서브 화면에는 전체 WebView 영역 위에
-55dp 높이의 투명한 네이티브 상단 바를 겹쳐 표시한다. 좌측 뒤로가기 버튼은 로딩/오류 표면보다
-위에 표시한다. app이 흰색 상태바 배경을 그린다.
-일반 뒤로가기는 보호 처리 후 히스토리 우선이며, CLOSE_SUBVIEW는 명시적 닫기다.
-WebContentRoute의 subviewActions(url) 계약은 유지하지만 현재 상단 바는 뒤로가기 버튼만 표시한다.
-기존 웹 payload는 변경하지 않는다.
-2026-09-07 구현 요청에서 사용자가 테스트·작업 검토를 직접 진행하기로 했으므로 현재 미검증이다.
-웹 헤더 중복 제거와 알림/더보기 목적지·노출 정책은 공동 작업으로 남아 있다.
+2026-10-20 요구사항으로 네이티브 상단 바는 루트에만 표시한다.
+`entries.size == 1 && !loginVisible`에서 피드/카테고리와 알림/검색/프로필이 보이며,
+루트 entry의 Column 안에 고정 헤더와 남은 높이의 WebView를 배치한다.
+외부 Compose 컨테이너는 스크롤하지 않는다. 상단/하단 시스템 inset은 기존 소유권을 유지한다.
+서브뷰는 네이티브 상단 바나 헤더 여백 없이 WebView 전체 영역을 사용한다.
+모든 entry의 composition과 document.id 키는 유지하며 부모 entry 전체를 숨긴다.
+부모 헤더 공간은 자식 진입 시 제거하지 않지만 app 하단 바/padding 변경으로 인한 viewport 변화까지
+없다고 보장하지는 않는다. 복귀 시 스크롤/DOM 동작은 실제 웹과 기기에서 검증해야 한다.
+
+피드는 기존 `/`로 연결한다. 카테고리는 AppNavHost의 `categoryPath = null` TODO를 실제 같은-origin
+상대 경로로 교체하고 WebUrlPolicy/계약 테스트에 허용 경로를 등록한 뒤 활성화한다.
+탭 전환은 루트 문서를 교체하며 자식/브라우저 히스토리를 쌓지 않는다. 탭별 DOM/스크롤은 보존하지 않는다.
+선택 상태는 host의 rootPath로 관리하며 웹 내부 라우트 변경과의 자동 동기화는 후속 계약이다.
+동일 URL 재선택은 정상 문서에서 무시하며 실패 문서는 다시 생성한다.
+보호 중인 문서, 로그인/표면/파일 선택/세션 준비 중에는 탭 전환을 차단한다.
+
+알림/검색/프로필은 WebRootActions로 AppNavHost까지 클릭을 연결하되 사용자 요청에 따라
+각 callback 본문은 TODO만 둔다. 현재 클릭해도 목적지로 이동하지 않는다.
+기존 subviewActions/WebSubviewActions는 호출부 호환을 위해 유지하나 더 이상 UI에 적용하지 않는다.
+서브뷰 복귀는 시스템 Back 또는 웹의 기존 CLOSE_SUBVIEW를 사용한다.
+일반 Back의 IME/guard/히스토리 처리와 부모 WebView 보존 정책은 유지한다.
+이전 투명 서브뷰 상단 바 요구사항은 [과거 구현 기록](../workstreams/web-subview-native-chrome.md)을 참고한다.
 
 ## 소유권과 구현 순서
 

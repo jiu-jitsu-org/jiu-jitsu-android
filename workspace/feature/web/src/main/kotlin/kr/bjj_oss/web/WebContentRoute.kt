@@ -34,9 +34,11 @@ fun WebContentRoute(
     modifier: Modifier = Modifier,
     initialPath: String = "/",
     model: WebViewModel = hiltViewModel(),
-    // URL별로 네이티브 버튼의 표시와 동작을 지정한다. 웹 payload 계약을 확장하지 않으며
-    // callback이 없는 버튼은 숨긴다. 호출자는 Compose 상태를 읽어 동적으로 바꿀 수 있다.
+    // 기존 호출부 호환용. 서브뷰에는 네이티브 상단 바를 표시하지 않는다.
     subviewActions: (url: String) -> WebSubviewActions = { WebSubviewActions() },
+    // 같은 origin의 상대 경로. null이면 주소 연결 전인 카테고리 탭을 비활성화한다.
+    categoryPath: String? = null,
+    rootActions: WebRootActions = WebRootActions(),
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -126,30 +128,47 @@ fun WebContentRoute(
                     key(entry.page.document.id) {
                         val visible = index == host.entries.lastIndex && !host.loginVisible
                         // 모든 entry를 composition에 유지해야 AndroidView가 재생성되지 않는다.
-                        // 부모는 그리기/접근성에서 제외하고 실제 WebView는 setVisible의 GONE과
-                        // onPause로 입력을 막는다. 상단 바는 별도로 겹쳐 viewport 높이를 유지한다.
+                        // 부모는 그리기/접근성에서 제외하고 실제 WebView는 GONE/onPause 처리한다.
+                        // 루트의 헤더 공간은 entry에 귀속시켜 자식 진입 시 제거하지 않는다.
                         val visibilityModifier = if (visible) Modifier else Modifier
                             .graphicsLayer { alpha = 0f }
                             .clearAndSetSemantics { }
-                        Box(Modifier.fillMaxSize().then(visibilityModifier)) {
-                            WebPageView(entry.page, visible, Modifier.fillMaxSize())
-                            if (visible && entry.page.loading) WebLoading()
-                            if (visible && entry.page.failed) {
-                                WebFailure(stringResource(R.string.web_load_failed), { host.retry(entry.page) })
+                        Column(Modifier.fillMaxSize().then(visibilityModifier)) {
+                            if (index == 0) {
+                                // 사용자에게는 entries.size == 1 && !loginVisible일 때만 보인다.
+                                // 숨겨진 부모도 같은 composition/레이아웃 구조를 유지한다.
+                                WebRootTopBar(
+                                    selectedTab = if (categoryPath != null && host.rootPath == categoryPath)
+                                        WebRootTab.Category else WebRootTab.Feed,
+                                    categoryEnabled = categoryPath?.let {
+                                        it.startsWith("/") && policy.isTrustedDocument(policy.origin + it)
+                                    } == true,
+                                    enabled = visible && !host.preparing && !host.preparationFailed &&
+                                        (entry.page.failed || !entry.page.backGuard) && host.surface == null,
+                                    onTabSelected = { tab ->
+                                        val path = when (tab) {
+                                            WebRootTab.Feed -> "/"
+                                            WebRootTab.Category -> categoryPath
+                                        }
+                                        if (path != null) host.selectRootPath(path)
+                                    },
+                                    actions = rootActions,
+                                )
+                            }
+                            // 바깥 Column은 스크롤하지 않는다. 서브뷰에는 헤더가 없으므로
+                            // 이 본문이 상단 바 영역까지 포함한 남은 전체 높이를 사용한다.
+                            Box(Modifier.weight(1f).fillMaxWidth()) {
+                                WebPageView(entry.page, visible, Modifier.fillMaxSize())
+                                if (visible && entry.page.loading) WebLoading()
+                                if (visible && entry.page.failed) {
+                                    WebFailure(stringResource(R.string.web_load_failed), { host.retry(entry.page) })
+                                }
                             }
                         }
                     }
                 }
                 if (host.preparing) WebLoading()
                 if (host.preparationFailed) WebFailure(stringResource(R.string.web_load_failed), host::prepare)
-                // 웹뷰와 로딩/오류 표면 위에 배치하여 뒤로가기 버튼을 계속 사용할 수 있게 한다.
-                if (host.entries.size > 1 && !host.loginVisible) {
-                    WebSubviewTopBar(
-                        actions = subviewActions(host.entries.last().page.currentUrl),
-                        enabled = true,
-                        onBack = onBack,
-                    )
-                }
             }
         }
         if (host.loginVisible) Surface(Modifier.fillMaxSize()) { loginContent(host::completeLogin) }
