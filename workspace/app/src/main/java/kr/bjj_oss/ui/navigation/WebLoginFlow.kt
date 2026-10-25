@@ -22,7 +22,7 @@ internal fun WebLoginFlow(padding: PaddingValues, onFinished: (Boolean) -> Unit)
     val nav = rememberNavController()
     NavHost(nav, startDestination = LoginDestination, modifier = Modifier.fillMaxSize().padding(padding)) {
         composable<LoginDestination> {
-            LoginScreen(Modifier.fillMaxSize(), goHome = { onFinished(true) }, onSkip = { onFinished(false) }, goInputNickName = {
+            LoginScreen(Modifier.fillMaxSize(), serviceTermsContent = { type, onClose -> ServiceTermsDialog(type, onClose) }, goHome = { onFinished(true) }, onSkip = { onFinished(false) }, goInputNickName = {
                 nav.navigate(NicknameDestination(it))
             })
         }

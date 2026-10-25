@@ -11,6 +11,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import kr.bjj_oss.ui.state.UiState
 import kr.bjj_oss.login.LoginViewModel
 import kr.bjj_oss.login.R
+import kr.bjj_oss.model.AgreementPolicyType
 import kr.bjj_oss.login.components.SignUpBottomSheet
 import kr.bjj_oss.login.components.SignUpAgreeType
 import kr.bjj_oss.login.model.LoginType
@@ -52,12 +57,15 @@ fun LoginScreen(
     modifier: Modifier,
     goHome: () -> Unit,
     goInputNickName: (isMarketingAgreed: Boolean) -> Unit,
+    serviceTermsContent: @Composable (type: AgreementPolicyType, onClose: () -> Unit) -> Unit,
     onSkip: () -> Unit = goHome,
 ) {
     val context = LocalContext.current
     val viewModel = hiltViewModel<LoginViewModel>()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var open by rememberSaveable { mutableStateOf(false) }
+    // 시트는 composition에 유지하고 약관만 위에 띄워 기존 동의 선택을 보존한다.
+    var serviceTermsType by rememberSaveable { mutableStateOf<AgreementPolicyType?>(null) }
 
     LaunchedEffect(viewModel.loginUiState) {
         val uiState = viewModel.loginUiState
@@ -86,10 +94,15 @@ fun LoginScreen(
         color = CoolGray75,
         modifier = modifier
     ) {
+        // 좁은/가로 창은 스크롤하고, 넓은 창에서는 로그인 버튼 폭을 제한한다.
         Column(
             modifier = Modifier
                 .fillMaxHeight()
                 .windowInsetsPadding(WindowInsets.systemBars)
+                .wrapContentWidth(Alignment.CenterHorizontally)
+                .widthIn(max = 560.dp)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(35.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -213,6 +226,7 @@ fun LoginScreen(
             scrimColor = ColorComponents.BottomSheet.Selected.Container.Scrim,
             sheetState = sheetState,
             onDismissRequest = {
+                serviceTermsType = null
                 open = false
             },
             shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp),
@@ -224,7 +238,8 @@ fun LoginScreen(
                 )
             },
         ) {
-            SignUpBottomSheet { agreeList ->
+            SignUpBottomSheet(onServiceTermsClick = { type -> serviceTermsType = type }) { agreeList ->
+                serviceTermsType = null
                 open = false
                 // Marketing is optional. Derive the backend flag from the actual selection rather
                 // than treating submission of the required agreements as marketing consent.
@@ -233,5 +248,10 @@ fun LoginScreen(
         }
     }
 
+    val selectedPolicy = serviceTermsType
+    if (open && selectedPolicy != null) {
+        // 선택한 약관 종류를 app slot으로 전달하고, 닫을 때만 선택 목적지를 초기화한다.
+        serviceTermsContent(selectedPolicy) { serviceTermsType = null }
+    }
 
 }

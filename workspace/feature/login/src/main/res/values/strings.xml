@@ -1,4 +1,5 @@
 <resources>
+    <string name="signup_agreement_details">%1$s 상세보기</string>
     <string name="signup_bottom_sheet_title">최소한의 정보만 받을게요</string>
 
     <string name="signup_agree_list_1">서비스 이용약관 동의</string>

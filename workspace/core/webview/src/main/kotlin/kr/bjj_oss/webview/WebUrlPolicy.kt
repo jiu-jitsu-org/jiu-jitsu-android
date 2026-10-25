@@ -3,7 +3,12 @@ package kr.bjj_oss.webview
 import java.net.URI
 
 /** Document allowlist; resource/CDN requests are deliberately outside this policy. */
-class WebUrlPolicy(origin: String, private val debug: Boolean = false) {
+class WebUrlPolicy private constructor(
+    origin: String,
+    private val debug: Boolean,
+    private val documentPath: String?,
+) {
+    constructor(origin: String, debug: Boolean = false) : this(origin, debug, null)
     private val base = parse(origin) ?: error("Invalid web origin")
     val origin: String
     init {
@@ -19,8 +24,13 @@ class WebUrlPolicy(origin: String, private val debug: Boolean = false) {
 
     fun isTrustedDocument(url: String?): Boolean {
         val uri = parse(url) ?: return false
+        val trustedPath = if (documentPath == null) {
+            isScreenPath(uri.rawPath.orEmpty())
+        } else {
+            uri.rawPath.orEmpty().ifEmpty { "/" } == documentPath
+        }
         return uri.scheme.equals(base.scheme, true) && uri.host.equals(base.host, true) &&
-            port(uri) == port(base) && isScreenPath(uri.rawPath.orEmpty())
+            port(uri) == port(base) && trustedPath
     }
 
     /** 네이티브 목적지 설정은 같은-origin의 절대 경로만 받는다. 전체/프로토콜 상대 URL은 거절한다. */
@@ -47,6 +57,15 @@ class WebUrlPolicy(origin: String, private val debug: Boolean = false) {
     ) || Regex("/community/[1-9][0-9]*").matches(path)
 
     companion object {
+        /** 환경 설정의 공개 약관 URL만 허용한다. 커뮤니티의 공통 allowlist는 확장하지 않는다. */
+        fun forDocument(url: String, debug: Boolean = false): WebUrlPolicy {
+            val uri = parse(url) ?: error("Invalid policy URL")
+            val origin = "${uri.scheme}://${uri.rawAuthority}"
+            return WebUrlPolicy(origin, debug, uri.rawPath.orEmpty().ifEmpty { "/" }).also {
+                require(it.isTrustedDocument(url))
+            }
+        }
+
         private val LOCAL_HOSTS = setOf("localhost", "127.0.0.1", "10.0.2.2")
         private fun parse(value: String?): URI? = runCatching {
             require(!value.isNullOrBlank() && value.none { it.isWhitespace() || it == '\\' })

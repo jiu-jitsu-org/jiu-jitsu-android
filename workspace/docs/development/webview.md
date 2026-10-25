@@ -121,3 +121,48 @@ bash scripts/check-architecture.sh
 한 번 보관해 재시도하며, 성공 후 중복 초기화는 차단한다. 기존 20초 제한과 HTTP/SSL 오류 처리는 유지한다.
 페이지 완료 이후에도 내부 웹 처리기가 준비되지 않은 문제까지 해결하는 계약은 아니다.
 테스트·빌드·작업 검토는 사용자 요청에 따라 실행하지 않았다.
+
+## 가입 서비스 약관 열람 (2026-10-25)
+
+`SignUpBottomSheet`의 서비스/개인정보/마케팅 상세보기 → `LoginScreen.serviceTermsContent` slot →
+app의 `ServiceTermsDialog` → `feature:web.ServiceTermsContent` 순서로 연결한다.
+`core:model.AgreementPolicyType` enum을 모든 단계에 전달하며 화면 리소스/문자열 코드와 분리한다.
+만 14세 이상 항목은 문서 목적지가 없어 기존 동의 선택 동작만 유지한다.
+일반 로그인과 웹에서 시작한 로그인 모두 같은 slot을 제공한다. 별도 전체 화면 Dialog가 시트 위를
+덮으므로 닫기/시스템 Back 후 기존 필수·선택 동의가 유지된다. 열람 자체는 동의로 처리하지 않는다.
+선택 코드는 `rememberSaveable`로 복원하고, 필수 항목 충족 여부는 선택에서 파생한다.
+
+목적지는 `ServiceTermsContent`에서 타입으로 분기한다.
+Service는 설정된 웹 origin의 `/policies/terms-of-service`, Privacy는 `BuildConfig.PRIVACY_POLICY`,
+Marketing은 `BuildConfig.MARKETING_POLICY`를 사용한다. 두 BuildConfig 값은 app의 Secrets Gradle
+plugin이 기존 `local.properties` 설정으로 생성하며, app이 웹 화면에 인자로 주입한다.
+Privacy/Marketing에는 절대 URL을 설정한다. 이미지의 본문은 배치 참고이며 약관 문구를 앱에 복사하지 않는다. app이 Dialog의 밝은 시스템 바 대비와 safeDrawing inset을
+소유한다. 네이티브 툴바 없이 상태바 아래에서 본문이 시작하고, 닫기 버튼은 탐색바 위 중앙에 뜬다.
+
+공개 약관에 한해 `WebViewPage(bridgeEnabled = false)`를 사용한다.
+`WebUrlPolicy.forDocument`는 설정된 URL의 origin과 문서 경로만 허용한다. 외부 origin의 약관도
+같은 HTTPS/개발용 로컬 HTTP 규칙으로 열 수 있으며, 커뮤니티의 공통 allowlist는 확장하지 않는다.
+다른 경로/origin으로 자동 리다이렉트되는 주소 대신 최종 문서 주소를 설정해야 한다.
+URL이 비어 있거나 유효하지 않으면 기존 연결 준비 안내를 표시하고 닫기 버튼을 유지한다. 기존 커뮤니티 브리지 모드는
+기본값 true이며 그대로 유지한다. 공개 열람 모드는 AppBridge를 등록하지 않고 pageFinished로
+로딩을 끝낸다. 인증/토큰 전송, 웹 세션 준비, 파일 선택은 실행하지 않는다. URL allowlist,
+SSL 취소, 20초 로드 제한, 생명주기/해제 처리는 공통 런타임을 재사용한다.
+
+버튼의 실제 측정 높이 + 위아래 간격을 `setBottomContentInset(px)`로 전달한다.
+공통 런타임은 신뢰 문서의 body 끝에 접근성에서 제외된 여백을 한 번 생성하고, 로드 완료/폭 변경 시
+CSS viewport 비율로 높이를 갱신한다. 기존 body 스타일을 덮어쓰거나 WebView viewport를 줄이지
+않는다. 실제 웹이 body 대신 별도 내부 컨테이너를 스크롤한다면 웹과 스크롤 영역 계약을 조정해야 한다.
+로딩/오류/재시도 중에도 닫기 버튼은 유지한다.
+
+검증 (2026-10-25): 앱 debug 빌드, 로그인 단위 테스트, 구조 검사 통과.
+에뮬레이터에서 `SignUpAgreementTest`(상세보기/필수·선택/저장 상태 복원)와
+`ServiceTermsWebViewTest`(로컬 HTTP 문서, 브리지 미등록, 마지막 문단 스크롤) 각 1건 통과.
+기존 `WebViewTransportTest`의 READY/메시지 왕복 계측 검증도 1건 통과했다.
+실제 배포 약관과 Dialog의 기기별 시스템 바/큰 글꼴 검수는 별도다. 스크린샷 검증은 수행하지 않았다.
+전체 `core:webview` 단위 테스트는 9건 중 7건 통과, 변경하지 않은 계약의
+`nativeSubviewPathsResolveOnlyAllowedSameOriginScreens`(notification/notifications 불일치)와
+`allElevenInboundContractsDecode`(메시지 디코딩) 2건 실패로 남아 있다.
+
+추가 변경 (2026-10-25): 타입 전달과 BuildConfig 정책 URL 분기 반영.
+사용자가 직접 검증하기로 요청하여 이번 추가 변경에는 테스트 작성·실행, 빌드, 구조 검사를 수행하지 않았다.
+위 검증 결과는 추가 변경 전 구현에 대한 기록이다.

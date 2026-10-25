@@ -131,6 +131,7 @@ fun AppNavHost(
         navigation<LoginGraph>(startDestination = LoginScreen) {
             composable<LoginScreen> {
                 LoginScreen(
+                    serviceTermsContent = { type, onClose -> ServiceTermsDialog(type, onClose) },
                     modifier = modifier,
                     goHome = {
                         nav.navigate(HomeGraph) {

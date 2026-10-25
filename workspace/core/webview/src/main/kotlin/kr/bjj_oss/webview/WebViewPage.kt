@@ -32,6 +32,8 @@ class WebViewPage(
     private val onChooseFile: (WebViewPage, Long, ValueCallback<Array<Uri>>, WebChromeClient.FileChooserParams) -> Unit,
     // 임시 대응: OPEN_SUBVIEW 생성 경로에서만 true를 전달한다. 루트/직접 진입은 기존 계약 유지.
     val initializeBridgeOnPageFinished: Boolean = false,
+    // 공개 약관 열람은 로그인/토큰 브리지와 READY 협상 없이 문서 로드만 수행한다.
+    private val bridgeEnabled: Boolean = true,
 ) {
     val document = WebDocument(UUID.randomUUID().toString())
     var loading by mutableStateOf(true); private set
@@ -48,6 +50,7 @@ class WebViewPage(
     private var pendingBack = false
     private var loaded = false
     private var visible = true
+    private var bottomContentInset: Int? = null
     val view = WebView(context)
 
     init {
@@ -69,7 +72,10 @@ class WebViewPage(
             setAcceptCookie(true)
             setAcceptThirdPartyCookies(view, false)
         }
-        view.addJavascriptInterface(Transport(), "AppBridge")
+        view.addOnLayoutChangeListener { _, left, _, right, _, oldLeft, _, oldRight, _ ->
+            if (right - left != oldRight - oldLeft) applyBottomContentInset()
+        }
+        if (bridgeEnabled) view.addJavascriptInterface(Transport(), "AppBridge")
         view.webChromeClient = object : WebChromeClient() {
             override fun onShowFileChooser(v: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean {
                 if (!isCurrent(document.generation) || !visible) { callback.onReceiveValue(null); return true }
@@ -99,13 +105,21 @@ class WebViewPage(
                 loading = true
                 failed = false
                 val generation = document.generation
-                handler.postDelayed({ if (document.matches(generation) && !document.ready) fail() }, READY_TIMEOUT_MS)
+                handler.postDelayed({
+                    val waiting = if (bridgeEnabled) !document.ready else loading
+                    if (document.matches(generation) && waiting) fail()
+                }, READY_TIMEOUT_MS)
             }
             override fun onPageFinished(v: WebView, url: String?) {
+                if (url == null || url != v.url || !policy.isTrustedDocument(url) || failed) return
+                applyBottomContentInset()
+                if (!bridgeEnabled) {
+                    loading = false
+                    return
+                }
                 // 페이지 완료는 웹 처리기 준비의 보장이 아니다. 허용된 현재 문서에서만
                 // 공통 준비 검사를 시도하며, 성공한 READY를 다시 실행하거나 인증을 재전송하지 않는다.
-                if (!initializeBridgeOnPageFinished || url == null || url != v.url ||
-                    !policy.isTrustedDocument(url) || failed || document.ready) return
+                if (!initializeBridgeOnPageFinished || document.ready) return
                 if (readyBinding) pendingFinishedBinding = true
                 else tryInitializeBridge(document.generation)
             }
@@ -139,6 +153,35 @@ class WebViewPage(
         if (loaded || disposed) return
         loaded = true
         view.loadUrl(currentUrl)
+    }
+
+    /** 실제 버튼 높이(px)를 웹 문서의 스크롤 가능한 끝 여백으로 반영한다. 메인 스레드 전용. */
+    fun setBottomContentInset(pixels: Int) {
+        check(Looper.myLooper() == Looper.getMainLooper())
+        val inset = pixels.coerceAtLeast(0)
+        if (bottomContentInset == inset) return
+        bottomContentInset = inset
+        applyBottomContentInset()
+    }
+
+    private fun applyBottomContentInset() {
+        val inset = bottomContentInset ?: return
+        if (view.width == 0 || !isCurrent(document.generation) || failed) return
+        // AndroidView 바깥 padding은 viewport만 줄인다. DOM 끝에 여백을 두어 버튼 아래까지
+        // 본문이 이어지면서 마지막 문단은 버튼 위로 스크롤할 수 있게 한다. 기존 body 스타일은 보존한다.
+        view.evaluateJavascript("""(() => {
+            if (location.origin !== ${BridgeCodec.literal(policy.origin)} || !document.body) return;
+            let spacer = document.getElementById('__ossNativeBottomInset');
+            if (!spacer) {
+                spacer = document.createElement('div');
+                spacer.id = '__ossNativeBottomInset';
+                spacer.setAttribute('aria-hidden', 'true');
+                document.body.appendChild(spacer);
+            }
+            const height = ${inset} * window.innerWidth / ${view.width};
+            spacer.style.cssText = 'display:block!important;clear:both!important;flex-shrink:0!important;' +
+                'pointer-events:none!important;height:' + height + 'px!important;min-height:' + height + 'px!important;';
+        })();""".trimIndent(), null)
     }
 
     fun isCurrent(generation: Long): Boolean = !disposed && !rendererGone &&

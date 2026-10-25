@@ -19,6 +19,12 @@ This repository contains a native Android client for a Jiu-Jitsu profile and com
 - Authenticate with the provider and exchange provider information with the backend.
 - Distinguish an existing user from a user who must complete signup.
 - Collect signup agreements and a nickname.
+- Service, privacy, and marketing agreement detail arrows pass a shared policy type to a full-screen
+  WebView above the retained agreement sheet. Service uses the configured frontend's service terms;
+  privacy and marketing use their respective BuildConfig policy URLs. System bars remain clear, and a bottom-center floating
+  Close button or system Back returns to the same selections. Reading does not grant consent.
+  Scrollable document-end space accounts for the measured floating button height; loading, retry,
+  and missing-configuration states keep Close available.
 - Check nickname availability before signup completion.
 
 ### Profile
