@@ -10,6 +10,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kr.bjj_oss.data.api.NoticeService
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
@@ -46,5 +47,10 @@ object ApiModule {
     @Singleton
     fun imageKitService(@NetworkModule.ImageKitNetwork imageKitRetrofit: Retrofit): ImageKitService =
         imageKitRetrofit.create(ImageKitService::class.java)
+
+    @Provides
+    @Singleton
+    fun noticeService(@NetworkModule.BaseNetworkIncludeToken baseRetrofit: Retrofit): NoticeService =
+        baseRetrofit.create(NoticeService::class.java)
 
 }

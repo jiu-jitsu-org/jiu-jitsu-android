@@ -37,4 +37,9 @@ object NetworkConfig {
 
     }
 
+    object Notice {
+        const val NOTICE_UNREAD_COUNT = "notice/unread-count"
+        const val NOTICE_SETTING = "notice/setting"
+    }
+
 }

@@ -29,6 +29,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kr.bjj_oss.data.api.NoticeService
+import kr.bjj_oss.data.repository.NoticeRepository
+import kr.bjj_oss.data.repository.impl.NoticeRepositoryImpl
 import javax.inject.Singleton
 
 @Module
@@ -80,5 +83,11 @@ object RepositoryModule {
         refreshCoordinator: TokenRefreshCoordinator,
         communityRepository: CommunityRepository,
     ): SessionRepository = SessionRepositoryImpl(localDataSource, refreshCoordinator, communityRepository)
+
+    @Provides
+    @Singleton
+    fun provideNoticeReository(
+        noticeService: NoticeService
+    ): NoticeRepository = NoticeRepositoryImpl(noticeService)
 
 }

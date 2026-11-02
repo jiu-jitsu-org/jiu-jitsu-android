@@ -112,6 +112,9 @@ fun WebContentRoute(
             if (first) { first = false; host.prepare() } else host.sessionChanged(model.token())
         }
     }
+    LaunchedEffect(Unit) {
+        model.unreadNoticeCnt()
+    }
     val keyboard = LocalSoftwareKeyboardController.current
     val imeVisible = WindowInsets.isImeVisible
     // 상단 버튼과 시스템 Back을 같은 경로로 연결한다. 표면/로그인을 먼저 닫고,
