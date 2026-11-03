@@ -1,10 +1,6 @@
 package kr.bjj_oss.data.utils
 
 object NetworkConfig {
-    // Test Random User REST API
-    object RandomUser {
-        const val RESULTS = "api/"
-    }
 
     object BootStrap {
         const val INFO = "api/bootstrap/info"
@@ -38,8 +34,8 @@ object NetworkConfig {
     }
 
     object Notice {
-        const val NOTICE_UNREAD_COUNT = "notice/unread-count"
-        const val NOTICE_SETTING = "notice/setting"
+        const val NOTICE_UNREAD_COUNT = "api/notice/unread-count"
+        const val NOTICE_SETTING = "api/notice/setting"
     }
 
 }

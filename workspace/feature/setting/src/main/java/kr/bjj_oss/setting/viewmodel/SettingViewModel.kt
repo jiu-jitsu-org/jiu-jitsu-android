@@ -11,10 +11,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kr.bjj_oss.data.model.dto.request.UpdateNoticeSettingRequest
+import kr.bjj_oss.data.repository.NoticeRepository
+import kr.bjj_oss.ui.state.toUiState
 
 @HiltViewModel
 internal class SettingViewModel @Inject constructor(
     private val sessions: SessionRepository,
+    private val noticeRepository: NoticeRepository,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(SettingUiState())
     val uiState = mutableState.asStateFlow()
@@ -43,4 +47,28 @@ internal class SettingViewModel @Inject constructor(
             }
         }
     }
+
+    fun fetchNoticeSetting() {
+        viewModelScope.launch {
+            noticeRepository.fetchNoticeSetting().toUiState()
+        }
+    }
+
+    fun updateNoticeSetting(
+        securityEnabled: Boolean,
+        serviceEnabled: Boolean,
+        communityEnabled: Boolean,
+        marketingEnabled: Boolean,
+    ) {
+        val body = UpdateNoticeSettingRequest(
+            securityEnabled = securityEnabled,
+            serviceEnabled = serviceEnabled,
+            communityEnabled = communityEnabled,
+            marketingEnabled = marketingEnabled
+        )
+        viewModelScope.launch {
+            noticeRepository.updateNoticeSetting(body).toUiState()
+        }
+    }
+
 }

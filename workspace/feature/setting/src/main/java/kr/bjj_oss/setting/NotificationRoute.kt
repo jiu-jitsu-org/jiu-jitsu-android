@@ -7,8 +7,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.serialization.Serializable
 import kr.bjj_oss.setting.screen.NotificationScreen
+import kr.bjj_oss.setting.viewmodel.SettingViewModel
 
 @Serializable
 data object NotificationDestination
@@ -26,6 +28,8 @@ fun NotificationRoute(
     var community by rememberSaveable { mutableStateOf(true) }
     var marketing by rememberSaveable { mutableStateOf(false) }
 
+    val model: SettingViewModel = hiltViewModel()
+
     NotificationScreen(
         security = security,
         service = service,
@@ -38,5 +42,6 @@ fun NotificationRoute(
         onBack = onBack,
         modifier = modifier,
         padding = padding,
+        viewModel =  model,
     )
 }

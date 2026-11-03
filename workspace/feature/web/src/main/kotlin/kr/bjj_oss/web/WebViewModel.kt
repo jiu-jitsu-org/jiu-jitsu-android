@@ -28,7 +28,9 @@ class WebViewModel @Inject constructor(
 
     fun unreadNoticeCnt() {
         viewModelScope.launch {
-            noticeRepository.getNoticeUnreadCnt()
+            if(sessions.isLoggedIn()) {
+                noticeRepository.getNoticeUnreadCnt()
+            }
         }
     }
 }

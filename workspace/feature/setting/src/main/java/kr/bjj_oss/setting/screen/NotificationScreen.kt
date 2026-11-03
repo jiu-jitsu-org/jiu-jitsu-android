@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import kr.bjj_oss.setting.R
+import kr.bjj_oss.setting.viewmodel.SettingViewModel
 import kr.bjj_oss.ui.theme.ColorComponents
 import kr.bjj_oss.ui.theme.ColorSemantic
 
@@ -39,7 +41,13 @@ internal fun NotificationScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     padding: PaddingValues = PaddingValues(),
+    viewModel: SettingViewModel,
 ) {
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchNoticeSetting()
+    }
+
     Column(
         modifier.fillMaxSize().background(ColorSemantic.Surface.BackgroundDefault).padding(padding),
         horizontalAlignment = Alignment.CenterHorizontally,
