@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 일요일부터 토요일까지 요일별 후보 두 개를 연속으로 배치한다. 화자 배열과 같은 요일 순서를 사용한다. -->
+    <string-array name="belt_startup_greetings">
+        <item>쉬어도 되지만, 한 판?</item>
+        <item>도복 빨아두는 날, 일요일</item>
+        <item>몸 풀러 주짓수 고고?</item>
+        <item>월요병엔 롤링이 약이지</item>
+        <item>어제 털린 거 복수하러 고?</item>
+        <item>화요일도 매트 위에서 한 판?</item>
+        <item>벌써 수요일? 한 판 고고?</item>
+        <item>몸이 슬슬 매트를 찾는 수요일</item>
+        <item>목요일 출석 도장 찍으러 고?</item>
+        <item>목요일엔 탭 덜 치는 날</item>
+        <item>불금이니까 주짓수 고고?</item>
+        <item>불금엔 술 대신 롤링</item>
+        <item>오늘은 오픈매트?</item>
+        <item>주말 롤링 한 판 고?</item>
+    </string-array>
+</resources>

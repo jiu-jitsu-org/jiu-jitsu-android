@@ -1,5 +1,8 @@
 package kr.bjj_oss.ui.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -21,7 +24,6 @@ import kr.bjj_oss.setting.SettingRoute
 import kr.bjj_oss.setting.NotificationRoute
 import kr.bjj_oss.setting.NotificationDestination
 import kr.bjj_oss.web.WebContentRoute
-import kr.bjj_oss.web.WebRootActions
 import kr.bjj_oss.ui.screen.SplashScreen
 import kr.bjj_oss.ui.routes.SettingScreen
 import kr.bjj_oss.ui.routes.HomeGraph
@@ -42,14 +44,15 @@ fun AppNavHost(
     modifier: Modifier,
     padding: PaddingValues,
     onWebFullscreenChanged: (Boolean) -> Unit,
+    onStartupAuthenticated: () -> Unit,
 ) {
     NavHost(
         navController = nav,
         startDestination = SplashScreen,
         modifier = modifier,
     ) {
-        // Splash
-        composable<SplashScreen> {
+        // Belt Crowd가 시작 화면의 브랜딩에서 이어지므로 스플래시에는 기본 퇴장 페이드를 적용하지 않는다.
+        composable<SplashScreen>(exitTransition = { ExitTransition.None }) {
             SplashScreen(
                 enterLoginScreen = {
                     nav.navigate(LoginGraph) {
@@ -60,11 +63,16 @@ fun AppNavHost(
                     }
                 },
                 enterHomeScreen = {
-                    nav.navigate(HomeGraph) {
-                        popUpTo(SplashScreen) { inclusive = true }
+                    // 시작 화면이 현재 목적지일 때만 인사를 예약한다. 홈은 즉시 구성하고
+                    // 화면 전체를 덮는 인사 전환은 앱 루트가 맡는다.
+                    if (nav.currentDestination?.hasRoute(SplashScreen::class) == true) {
+                        onStartupAuthenticated()
+                        nav.navigate(HomeGraph) {
+                            popUpTo(SplashScreen) { inclusive = true }
 
-                        launchSingleTop = true
-                        restoreState = true
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 }
             )
@@ -91,7 +99,14 @@ fun AppNavHost(
                 )
             }
 
-            composable<HomeScreen> {
+            composable<HomeScreen>(
+                enterTransition = {
+                    // 스플래시에서 왔을 때는 앱 루트의 홈 슬라이드와 NavHost 전환을 겹치지 않는다.
+                    if (initialState.destination.hasRoute(SplashScreen::class)) {
+                        EnterTransition.None
+                    } else null
+                },
+            ) {
                 WebContentRoute(
                     modifier = Modifier.fillMaxSize(),
                     padding = padding,
@@ -129,8 +144,15 @@ fun AppNavHost(
         }
         // Login
         navigation<LoginGraph>(startDestination = LoginScreen) {
-            composable<LoginScreen> {
+            composable<LoginScreen>(
+                enterTransition = {
+                    // 스플래시와 같은 시작 배치에서 로그인 자체의 인트로가 이어진다.
+                    if (initialState.destination.hasRoute(SplashScreen::class)) EnterTransition.None else null
+                },
+            ) {
                 LoginScreen(
+                    // 독립 로그인 진입점에서 사용한다. 웹 문서 위의 로그인은 기본 화면으로 구성한다.
+                    showBeltCrowd = true,
                     serviceTermsContent = { type, onClose -> ServiceTermsDialog(type, onClose) },
                     modifier = modifier,
                     goHome = {

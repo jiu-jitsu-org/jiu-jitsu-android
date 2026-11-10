@@ -12,10 +12,14 @@ This repository contains a native Android client for a Jiu-Jitsu profile and com
 - Load bootstrap and app-version information.
 - Restore locally stored login/session information when available.
 - Route the user to authentication or the signed-in experience.
+- Show the Belt Crowd greeting on successful startup auto-login, then reveal the home screen.
+  When system animations are disabled, enter home immediately.
 
 ### Authentication and signup
 
 - Select a supported social-login provider.
+- Show the Belt Crowd scene on the standalone login screen. Adapt its layout to the current window and
+  any separating fold while keeping the login actions reachable. [Belt Crowd implementation](../workstreams/belt-crowd.md)
 - Authenticate with the provider and exchange provider information with the backend.
 - Distinguish an existing user from a user who must complete signup.
 - Collect signup agreements and a nickname.

@@ -7,6 +7,7 @@ Workstream documents track large, multi-change efforts that cannot be safely com
 | Workstream | Status | Goal |
 | --- | --- | --- |
 | [NIA architecture migration](nia-architecture-migration.md) | Active | Align module and public type boundaries with Now in Android |
+| [Belt Crowd](belt-crowd.md) | 구현 반영 · 검증 대기 | 로그인·시작 인사 장면 및 폴더블 대응 |
 
 ## Workstream Rules
 

@@ -43,6 +43,17 @@ class LoginViewModel @Inject constructor(
     var loginUiState by mutableStateOf<UiState<SnsLoginSucceedType>>(UiState.Idle)
         private set
 
+    /**
+     * 가입 시트 열기와 홈 이동에 쓰이는 성공 결과를 한 번 전달한다. ViewModel이 화면 재생성 후에도
+     * 살아 있을 때 이전 결과로 이동을 반복하거나 사용자가 닫은 시트를 다시 여는 일을 방지한다.
+     */
+    internal fun consumeLoginSuccess(): SnsLoginSucceedType? {
+        val state = loginUiState
+        if (state !is UiState.Success) return null
+        loginUiState = UiState.Idle
+        return state.result
+    }
+
     /** Development helper retained for the existing test server flow. */
     fun startKakaoTestLogin() {
         if (!BuildConfig.DEV) return
