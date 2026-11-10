@@ -283,6 +283,11 @@ data class CommunityProfileInfo(
     val favoriteTechnique: TECHNIQUE? = null,
     val bestPosition: POSITION? = null,
     val favoritePosition: POSITION? = null,
+    val medalCount: MedalCount = MedalCount(),
+    val isOwner: Boolean = false,
+    val teachingPhilosophy: String? = null,
+    val teachingStartDate: String? = null,
+    val teachingDetail: String? = null,
 )
 
 /** Immutable competition entry within a community profile. */
@@ -291,7 +296,20 @@ data class CompetitionInfo(
     val competitionMonth: Int? = null,
     val competitionName: String? = null,
     val competitionRank: COMPETITION_RANK? = null,
+    val uniform: CompetitionUniform? = null,
+    val belt: BELT_RANK? = null,
+    val weightLimit: Double? = null,
+    val weightBound: CompetitionWeightBound? = null,
+    val absolute: Boolean = false,
+    val isPinned: Boolean = false,
+    val displayOrder: Int? = null,
+    val competitionId: Int? = null,
 )
+
+data class MedalCount(val gold: Int = 0, val silver: Int = 0, val bronze: Int = 0)
+enum class CompetitionUniform { GI, NO_GI }
+enum class CompetitionWeightBound { UNDER, OVER }
+data class CompetitionSuggestion(val id: Int, val name: String, val year: Int? = null)
 
 /** Returns true when the optional Jiu-Jitsu profile sections contain no data. */
 fun CommunityProfileInfo?.isDataEmpty(): Boolean =
@@ -318,6 +336,7 @@ fun CommunityProfileInfo?.isShowModify(): Boolean = !isDataEmpty()
  */
 enum class CommunityProfileField(val wireValue: String) {
     ACADEMY("ACADEMY"),
+    BELT("BELT"),
     BELT_WEIGHT("BELT_WEIGHT"),
     POSITION("POSITION"),
     TECHNIQUE("TECHNIQUE"),
@@ -329,8 +348,9 @@ enum class CommunityProfileField(val wireValue: String) {
 /**
  * App-facing command for a partial community-profile update.
  *
- * Nullable fields mean “not part of this partial update.” The data layer converts this command to
- * the backend DTO, keeping JSON and Moshi details out of feature ViewModels.
+ * [field] identifies the edited section. A null favorite in its matching style section clears
+ * that selection; null values in other sections preserve the current snapshot. The data layer
+ * owns field preservation and JSON serialization.
  */
 data class CommunityProfileUpdate(
     val field: CommunityProfileField,
@@ -349,4 +369,7 @@ data class CommunityProfileUpdate(
     val bestPosition: POSITION? = null,
     val favoritePosition: POSITION? = null,
     val isWeightHidden: Boolean? = null,
+    val teachingPhilosophy: String? = null,
+    val teachingStartDate: String? = null,
+    val teachingDetail: String? = null,
 )

@@ -166,3 +166,12 @@ CSS viewport 비율로 높이를 갱신한다. 기존 body 스타일을 덮어�
 추가 변경 (2026-10-25): 타입 전달과 BuildConfig 정책 URL 분기 반영.
 사용자가 직접 검증하기로 요청하여 이번 추가 변경에는 테스트 작성·실행, 빌드, 구조 검사를 수행하지 않았다.
 위 검증 결과는 추가 변경 전 구현에 대한 기록이다.
+
+
+## MY community activity (2026-11-10)
+
+`ProfileCommunityDestination` reuses `WebContentRoute(initialPath = "/community/me")` and the existing
+origin/session preparation. Its optional `onCloseInitialSubview` callback returns to the native MY
+entry when the first pushed page closes. Nested children still close within the same retained web
+stack. Home callers leave this callback unset and keep their existing feed behavior. The MY detail
+has no bottom tabs. Runtime UI/web verification is reserved for the user.

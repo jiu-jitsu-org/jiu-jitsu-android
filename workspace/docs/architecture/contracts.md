@@ -28,7 +28,11 @@ Do not place real base URLs, OAuth secrets, Firebase configuration, or signing m
 | GET | `api/user/check/nickname?nickname=...` | Bearer-token client currently used | `UserService` | Check nickname availability |
 | POST | `api/user/appInfo` | Bearer token | `UserService` | Register device/application information |
 | GET | `api/community/profile` | Bearer token | `CommunityService` | Read the community profile |
-| POST | `api/community/profile` | Bearer token | `CommunityService` | Update the community profile |
+| POST | `api/community/profile` | Bearer token | `CommunityService` | Update a named profile section; nested competitions replace the full list |
+| GET | `api/community/competitions?keyword=...` | Bearer token | `CommunityService` | Tournament autocomplete |
+| PUT | `api/user/profile/nickname?nickname=...` | Bearer token | `UserService` | Save a checked nickname |
+| PUT | `api/user/owner?imageFileId=...` | Bearer token | `UserService` | Submit an owner-verification image |
+| DELETE | `api/image/{id}` | Bearer token | `ImageService` | Delete a profile image; successful body may be empty |
 | GET | `api/image/auth` | Bearer token | `ImageService` | Obtain ImageKit upload authorization |
 | POST | `api/image` | Bearer token | `ImageService` | Register uploaded image metadata |
 
@@ -91,3 +95,24 @@ failure sends AUTH_SESSION_EXPIRED to the waiting web document but preserves enc
 for a later retry. This current policy must be confirmed with the backend/product before release.
 Session changes increment revision; no refreshToken crosses the bridge. Cookie state and web-memory
 state are distinct. Web session POST/DELETE races remain a coordinated web release requirement.
+
+
+## MY profile contracts (2026-11-10)
+
+Belt/stripe editing sends `profileRequestType: BELT`. `BELT_WEIGHT` remains a legacy enum value for
+older callers. The repository fills untouched profile fields from its current snapshot; style edits
+preserve best values. The edited favorite key explicitly serializes null to request clearing; other
+null keys retain omission. Academy deletion sends `academyName: ""`.
+
+Community responses decode `competitions` with nested `divisions`, `medalCount`, and owner teaching
+fields. The old flat `competitionInfoList` remains a read fallback. Writes send only `competitions`,
+only for COMPETITION, including an empty list after final deletion. Wire grouping uses exact trimmed
+name/year; repeated registered IDs are emitted only on the first group. Unknown medals become
+participation, optional enums become absent, and legacy OVER kilograms are retained.
+
+User responses tolerate absent/unknown roles and optional verification/image fields. Image IDs are
+Long; blank/default/defaultImage URLs normalize to absence. OWNER is the only owner badge role.
+ImageKit uses its anonymous client with a 60-second timeout, `useUniqueFileName=true`, and folders
+`community/profile` or `community/verification`. Successful account linking is required after
+registration. Owner submission returns a user object, not a Boolean. Registered-image metadata is
+not sufficient to declare upload completion. Live-server compatibility remains for user validation.

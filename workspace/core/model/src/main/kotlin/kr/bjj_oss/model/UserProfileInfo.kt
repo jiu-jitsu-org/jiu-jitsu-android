@@ -9,4 +9,13 @@ data class UserProfileInfo(
     val snsProvider: String?,
     val role: String?,
     val status: String?,
+    val profileImageFileId: Long? = null,
+    val ownerVerification: OwnerVerification = OwnerVerification(),
+)
+
+enum class VerificationStatus { NONE, PENDING, APPROVED, REJECTED }
+data class OwnerVerification(
+    val status: VerificationStatus = VerificationStatus.NONE,
+    val documentUrl: String? = null,
+    val rejectReason: String? = null,
 )

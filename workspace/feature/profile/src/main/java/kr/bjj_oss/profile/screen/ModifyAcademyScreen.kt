@@ -1,164 +1,69 @@
 package kr.bjj_oss.profile.screen
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.ripple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import android.widget.Toast
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.paint
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import kr.bjj_oss.ui.state.UiState
-import kr.bjj_oss.profile.viewmodel.ProfileViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kr.bjj_oss.profile.R
-import kr.bjj_oss.profile.viewmodel.ModifyAcademyViewModel
-import kr.bjj_oss.ui.components.button.PrimaryCTAButton
-import kr.bjj_oss.ui.components.textfield.TransparentOutlinedTextField
-import kr.bjj_oss.ui.theme.ColorComponents
-import kr.bjj_oss.ui.theme.White
+import kr.bjj_oss.profile.components.*
+import kr.bjj_oss.profile.viewmodel.*
 
-/**
- * 도장 정보 수정
- * @param modifier Modifier
- * @param padding PaddingValues
- * @param academyName 도장 이름
- * @param onCompleted 완료
- * @param onBackClick 뒤로 가기
- */
 @Composable
 fun ModifyAcademyScreen(
     modifier: Modifier,
     padding: PaddingValues,
     academyName: String = "",
     onCompleted: () -> Unit,
-    onBackClick: () -> Unit,
+    onBackClick: () -> Unit
 ) {
-    val viewModel = hiltViewModel<ModifyAcademyViewModel>()
-
-    /** 작성 중인 */
-    var strAcademy by remember { mutableStateOf("") }
-
-    LaunchedEffect(Unit) {
-        // TODO fetch User Profile data
-        strAcademy = academyName
-    }
-
-    LaunchedEffect(viewModel.profileUiState) {
-        val uiState = viewModel.profileUiState
-        when(uiState) {
-            is UiState.Success -> {
-                onCompleted()
-            }
-            is UiState.Error -> {
-
-            }
-            is UiState.Loading -> {
-
-            }
-            else -> {}
+    val model = hiltViewModel<ModifyAcademyViewModel>()
+    val state by model.state.collectAsStateWithLifecycle()
+    var name by rememberSaveable { mutableStateOf(academyName) }
+    val context = LocalContext.current
+    val complete by rememberUpdatedState(onCompleted)
+    LaunchedEffect(model) {
+        model.events.collect {
+            Toast.makeText(
+                context,
+                it.message,
+                Toast.LENGTH_SHORT
+            ).show(); complete()
         }
     }
-
-    Surface(
-        modifier = modifier
-            .fillMaxSize(),
-        color = White,
+    ProfileForm(
+        stringResource(if (academyName.isBlank()) R.string.profile_input_title else R.string.profile_academy_edit),
+        padding,
+        onBackClick,
+        modifier
     ) {
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
-        ) {
-            // 최상단 앱바
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .paint(
-                            painter = painterResource(kr.bjj_oss.ui.R.drawable.ic_blue_left_back_button),
-                            contentScale = ContentScale.Crop,
-                        )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = ripple(bounded = true),
-                            role = Role.Button,
-                            onClick = onBackClick
-                        )
-                )
-                Text(
-                    modifier = Modifier.weight(1f),
-                    text = stringResource(R.string.profile_input_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = ColorComponents.Header.Header.Text,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.width(36.dp))
-            }
-
-            Spacer(modifier = Modifier.height(72.dp))
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResource(R.string.profile_hint_academy),
-                style = MaterialTheme.typography.displayLarge,
-                color = ColorComponents.TextFieldDisplay.Focus.Title,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            TransparentOutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = strAcademy,
-                placeholder = "",
-                errorTextColor = ColorComponents.TextFieldDisplay.Default.Placeholder,
-                onValueChange = { new ->
-                    strAcademy = new
-                },
-            )
-
-            // Bottom Button
-            PrimaryCTAButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(51.dp),
-                text = stringResource(kr.bjj_oss.ui.R.string.common_complete),
-                onClick = {
-                    viewModel.changeAcademyName(strAcademy)
-                },
-                enabled = strAcademy.isNotEmpty()
-            )
-
-        }
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.profile_hint_academy)) },
+            singleLine = true,
+            enabled = !state.saving,
+            isError = name.isNotEmpty() && !isValidAcademy(name)
+        )
+        if (name.isNotEmpty() && !isValidAcademy(name)) Text(
+            stringResource(R.string.profile_academy_error),
+            color = MaterialTheme.colorScheme.error
+        )
+        SaveError(state.error)
+        ProfileSubmit(
+            stringResource(R.string.profile_confirm),
+            isValidAcademy(name) && !state.saving
+        ) { model.save(name) }
+        if (academyName.isNotBlank()) TextButton(
+            onClick = { model.save("", delete = true) },
+            enabled = !state.saving
+        ) { Text(stringResource(R.string.profile_delete), color = MaterialTheme.colorScheme.error) }
+        if (state.saving) CircularProgressIndicator()
     }
 }

@@ -13,6 +13,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import kr.bjj_oss.login.screen.LoginScreen
+import kr.bjj_oss.nickname.EditNicknameDestination
+import kr.bjj_oss.profile.screen.CompetitionEditorDestination
+import kr.bjj_oss.profile.screen.ProfileCommunityDestination
 import kr.bjj_oss.nickname.screen.NickNameScreen
 import kr.bjj_oss.profile.screen.ModifyAcademyScreen
 import kr.bjj_oss.profile.screen.ModifyProfileScreen
@@ -45,6 +48,7 @@ fun AppNavHost(
     padding: PaddingValues,
     onWebFullscreenChanged: (Boolean) -> Unit,
     onStartupAuthenticated: () -> Unit,
+    onProfileHeaderAppearanceChanged: (Boolean) -> Unit,
 ) {
     NavHost(
         navController = nav,
@@ -79,23 +83,23 @@ fun AppNavHost(
         }
         // Home
         navigation<HomeGraph>(startDestination = HomeScreen) {
-            composable<ProfileScreen> { backStackEntry ->
+            composable<ProfileScreen> {
                 ProfileScreen(
                     modifier = modifier,
                     padding = padding,
-                    onModifyClick = {
-                        nav.navigate(ModifyProfileScreen)
-                    },
-                    savedStateHandle = backStackEntry.savedStateHandle,
                     onAcademyClick = { academyName ->
                         nav.navigate(ModifyAcademyScreen(academyName))
                     },
                     onMyStyleClick = { screenName ->
                         nav.navigate(ModifyMyStyleScreen(screenName))
                     },
-                    onCompetitionClick = {
-                        nav.navigate(ModifyCompetitionScreen)
-                    }
+                    onCompetitionClick = { nav.navigate(ModifyCompetitionScreen) { launchSingleTop = true } },
+                    onNicknameClick = { nav.navigate(EditNicknameDestination(it)) { launchSingleTop = true } },
+                    onEditCompetition = { index, key -> nav.navigate(CompetitionEditorDestination(index, key)) { launchSingleTop = true } },
+                    onSettingsClick = { nav.navigate(SettingScreen) { launchSingleTop = true } },
+                    onCommunityClick = { nav.navigate(ProfileCommunityDestination) { launchSingleTop = true } },
+                    onLoginClick = { nav.navigate(LoginGraph) { launchSingleTop = true } },
+                    onHeaderAppearanceChanged = onProfileHeaderAppearanceChanged,
                 )
             }
 
@@ -191,12 +195,26 @@ fun AppNavHost(
                 }
             )
         }
+        composable<EditNicknameDestination> { entry ->
+            val args = entry.toRoute<EditNicknameDestination>()
+            NickNameScreen(modifier, padding, isMarketingAgree = false, initialNickname = args.nickname,
+                goHome = { nav.popBackStack() }, onBackClick = { nav.popBackStack() })
+        }
+        composable<CompetitionEditorDestination> { entry ->
+            val args = entry.toRoute<CompetitionEditorDestination>()
+            ModifyCompetitionScreen(modifier, padding, onCompleteClick = { nav.popBackStack() },
+                onBackClick = { nav.popBackStack() }, originalIndex = args.originalIndex, groupKey = args.groupKey)
+        }
+        composable<ProfileCommunityDestination> {
+            WebContentRoute(padding = padding, modifier = Modifier.fillMaxSize(), initialPath = "/community/me",
+                onFullscreenChanged = {}, loginContent = { done -> WebLoginFlow(padding, done) },
+                onCloseInitialSubview = { nav.popBackStack() })
+        }
         // Modify Profile
-        composable<ModifyProfileScreen> { backStackEntry ->
+        composable<ModifyProfileScreen> {
             ModifyProfileScreen(
                 modifier = modifier,
                 padding = padding,
-                savedStateHandle = backStackEntry.savedStateHandle,
                 onAcademyClick = { academyName ->
                     nav.navigate(ModifyAcademyScreen(academyName))
                 },
@@ -204,6 +222,11 @@ fun AppNavHost(
                     nav.navigate(ModifyMyStyleScreen(screenName))
                 },
                 onBackClick = { nav.popBackStack() },
+                onNicknameClick = { nav.navigate(EditNicknameDestination(it)) { launchSingleTop = true } },
+                onCompetitionClick = { nav.navigate(ModifyCompetitionScreen) { launchSingleTop = true } },
+                onEditCompetition = { index, key -> nav.navigate(CompetitionEditorDestination(index, key)) { launchSingleTop = true } },
+                onCommunityClick = { nav.navigate(ProfileCommunityDestination) { launchSingleTop = true } },
+                onHeaderAppearanceChanged = onProfileHeaderAppearanceChanged,
             )
         }
         // Modify Profile Academy
@@ -214,7 +237,6 @@ fun AppNavHost(
                 padding = padding,
                 academyName = args.academyName,
                 onCompleted = {
-                    nav.previousBackStackEntry?.savedStateHandle?.set("isCompetitionUpdated", "AcademyName")
                     nav.popBackStack()
                 },
                 onBackClick = {
@@ -228,7 +250,6 @@ fun AppNavHost(
                 modifier = modifier,
                 padding = padding,
                 onCompleteClick = {
-                    nav.previousBackStackEntry?.savedStateHandle?.set("isCompetitionUpdated", "Competition")
                     nav.popBackStack()
                 },
                 onBackClick = {
@@ -244,7 +265,6 @@ fun AppNavHost(
                 padding = padding,
                 type = args.styleType,
                 onCompleteClick = {
-                    nav.previousBackStackEntry?.savedStateHandle?.set("isCompetitionUpdated", "MyStyle")
                     nav.popBackStack()
                 },
                 onBackClick = {

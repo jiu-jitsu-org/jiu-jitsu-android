@@ -1,258 +1,168 @@
 package kr.bjj_oss.profile.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kr.bjj_oss.data.repository.CommunityRepository
 import kr.bjj_oss.model.CommunityProfileField
-import kr.bjj_oss.model.CommunityProfileInfo
 import kr.bjj_oss.model.CommunityProfileUpdate
-import kr.bjj_oss.profile.model.POSITION_LIST
-import kr.bjj_oss.profile.model.SUBMISSION_LIST
-import kr.bjj_oss.profile.model.TECHNIQUE_LIST
-import kr.bjj_oss.profile.model.getIndex
-import kr.bjj_oss.ui.routes.SkillStyleScreenType
-import kr.bjj_oss.ui.state.UiState
-import kr.bjj_oss.ui.state.toUiState
-import dagger.hilt.android.lifecycle.HiltViewModel
+import kr.bjj_oss.model.AppResult
+import kr.bjj_oss.model.toPosition
+import kr.bjj_oss.model.toTechnique
+import kr.bjj_oss.model.toSubmission
+import kr.bjj_oss.profile.R
+import kr.bjj_oss.profile.model.EditorResult
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed interface ModifyMyStyleAction {
-    /** 나의 스타일 나중에 등록 하기 **/
-    data class SkipClicked(val completeClick: () -> Unit): ModifyMyStyleAction
-    /** 하단 수정 또는 설정 버튼 **/
-    data class BottomBtnClicked(val completeClick: () -> Unit): ModifyMyStyleAction
-    /** 스타일 카드 선택 **/
-    data class CardItemSelected(val selectedIndex: Int): ModifyMyStyleAction
-    /** 뒤로 가기 액션 **/
-    data class BackClicked(val navigationBackAction: () -> Unit): ModifyMyStyleAction
+data class StyleEditorState(
+    val page: Int = 0,
+    val selected: String? = null,
+    val bestSelected: String? = null,
+    val bestEdited: Boolean = false,
+    val selectedTab: Int = 0,
+    val saving: Boolean = false,
+    val error: Boolean = false,
+    val ready: Boolean = false,
+) {
+    val visibleSelection: String? get() = if (selectedTab == 0) bestSelected else selected
 }
 
 @HiltViewModel
 class ModifyMyStyleViewModel @Inject constructor(
-    private val communityRepository: CommunityRepository,
-): ViewModel()  {
+    private val repository: CommunityRepository,
+    private val saved: SavedStateHandle,
+) : ViewModel() {
+    private val mutableState = MutableStateFlow(StyleEditorState())
+    val state = mutableState.asStateFlow()
+    private val results = Channel<EditorResult>(Channel.BUFFERED)
+    val events = results.receiveAsFlow()
+    private var all = false
+    private var initialized = false
 
-    var profileUiState by mutableStateOf<UiState<CommunityProfileInfo>>(UiState.Idle)
+    suspend fun initialize(type: String) {
+        if (initialized) return
+        initialized = true
+        if (repository.communityProfile.value == null) {
+            mutableState.update { it.copy(saving = true) }
+            if (repository.getCommunityProfile() is AppResult.Failure) {
+                mutableState.update { it.copy(saving = false, error = true) }
+                initialized = false
+                return
+            }
+        }
+        all = type == "all"
+        val page = saved.get<Int>("stylePage") ?: when (type) {
+            "technique" -> 1
+            "submission" -> 2
+            else -> 0
+        }
+        mutableState.value = currentPage(page).copy(
+            selected = if (saved.get<Boolean>("selectionEdited") == true) saved["styleSelection"] else currentSelection(page),
+            bestSelected = if (saved.get<Boolean>("bestSelectionEdited") == true) saved["bestStyleSelection"] else currentSelection(page, best = true),
+            bestEdited = saved.get<Boolean>("bestSelectionEdited") == true,
+            selectedTab = (saved.get<Int>("styleTab") ?: 0).coerceIn(0, 1),
+        )
+    }
 
-    /** SkillStyleScreenType **/
-    var screenType by mutableStateOf<SkillStyleScreenType>(SkillStyleScreenType.ALL)
+    fun retry(type: String) {
+        viewModelScope.launch { initialize(type) }
+    }
 
-    /** Tab Index ( 0 == Best, 1 == Favorite ) **/
-    var styleTabIndex by mutableIntStateOf(0)
-    var bestTabTitle by mutableStateOf<String?>(null)
-    var favoriteTabTitle by mutableStateOf<String?>(null)
-
-    /** Page Index ( 0==Position, 1==Technique, 2==Submission) **/
-    var pageIndex by mutableIntStateOf(0)
-
-    /** Select Position Value **/
-    var bestPositionIndex by mutableStateOf<Int?>(null)
-    var favoritePositionIndex by mutableStateOf<Int?>(null)
-
-    /** Select Technique Value **/
-    var bestTechniqueIndex by mutableStateOf<Int?>(null)
-    var favoriteTechniqueIndex by mutableStateOf<Int?>(null)
-
-    /** Select Submission Value **/
-    var bestSubmissionIndex by mutableStateOf<Int?>(null)
-    var favoriteSubmissionIndex by mutableStateOf<Int?>(null)
-
-    fun onAction(action: ModifyMyStyleAction) {
-        when (action) {
-            is ModifyMyStyleAction.SkipClicked -> changeUiIndex(action.completeClick)
-            is ModifyMyStyleAction.BottomBtnClicked -> updateProfileMyStyle(action.completeClick)
-            is ModifyMyStyleAction.CardItemSelected -> onSelectedCardItem(action.selectedIndex)
-            is ModifyMyStyleAction.BackClicked -> onHistoryBackClick(action.navigationBackAction)
+    private fun currentSelection(page: Int, best: Boolean = false): String? = repository.communityProfile.value?.let {
+        when (page) {
+            0 -> if (best) it.bestPosition?.name else it.favoritePosition?.name
+            1 -> if (best) it.bestTechnique?.name else it.favoriteTechnique?.name
+            else -> if (best) it.bestSubmission?.name else it.favoriteSubmission?.name
         }
     }
 
-    fun initScreenType(type: String) {
-        // 스크린 타입 - 포지션, 기술, 서브미션
+    private fun currentPage(page: Int) = StyleEditorState(
+        page = page,
+        selected = currentSelection(page),
+        bestSelected = currentSelection(page, best = true),
+        ready = true,
+    )
+
+    fun selectTab(index: Int) {
+        if (state.value.saving || !state.value.ready || index !in 0..1) return
+        saved["styleTab"] = index
+        mutableState.update { it.copy(selectedTab = index) }
+    }
+
+    fun select(wire: String?) {
+        val current = state.value
+        if (current.saving || !current.ready) return
+        if (current.selectedTab == 0) {
+            // Best has no clear operation in the existing repository contract. Never turn a
+            // preview's fallback artwork into a write until a real choice has been made.
+            if (wire == null) return
+            saved["bestSelectionEdited"] = true
+            saved["bestStyleSelection"] = wire
+            mutableState.update { it.copy(bestSelected = wire, bestEdited = true, error = false) }
+        } else {
+            // Tapping the selected favorite again preserves the current clear-selection behavior.
+            val value = wire.takeUnless { it == current.selected }
+            saved["selectionEdited"] = true
+            saved["styleSelection"] = value
+            mutableState.update { it.copy(selected = value, error = false) }
+        }
+    }
+
+    fun completeSelection() {
+        if (state.value.saving || !state.value.ready) return
+        if (state.value.selectedTab == 0) selectTab(1) else save()
+    }
+
+    fun save() {
+        val before = state.value
+        if (before.saving || !before.ready) return
         viewModelScope.launch {
-            val currentProfile = communityRepository.communityProfile.value
-            when (type) {
-                SkillStyleScreenType.Position.screenName -> {
-                    pageIndex = 0
-                    screenType = SkillStyleScreenType.Position
-
-                    bestPositionIndex = currentProfile?.bestPosition?.getIndex()
-                    favoritePositionIndex = currentProfile?.favoritePosition?.getIndex()
-                }
-
-                SkillStyleScreenType.Technique.screenName -> {
-                    pageIndex = 1
-                    screenType = SkillStyleScreenType.Technique
-
-                    bestTechniqueIndex = currentProfile?.bestTechnique?.getIndex()
-                    favoriteTechniqueIndex = currentProfile?.favoriteTechnique?.getIndex()
-                }
-
-                SkillStyleScreenType.Submission.screenName -> {
-                    pageIndex = 2
-                    screenType = SkillStyleScreenType.Submission
-
-                    bestSubmissionIndex = currentProfile?.bestSubmission?.getIndex()
-                    favoriteSubmissionIndex = currentProfile?.favoriteSubmission?.getIndex()
-                }
-
-                else -> {
-                    // ALL > 포지션, 기술, 서브미션 모두 선택 > 시작은 포지션부터
-                    pageIndex = 0
-                    screenType = SkillStyleScreenType.ALL
-                }
-            }
-            setTabTitle()
-        }
-    }
-
-    /** 상단 탭 타이틀  **/
-    fun setTabTitle() {
-        viewModelScope.launch {
-            when(pageIndex) {
-                0 -> { // POSITION
-                    bestTabTitle = POSITION_LIST[bestPositionIndex?:0].displayName
-                    if (styleTabIndex == 0) {
-                        favoriteTabTitle = if(favoritePositionIndex == null) "입력해주세요" else POSITION_LIST[favoritePositionIndex?:0].displayName
-                    } else {
-                        favoriteTabTitle = POSITION_LIST[favoritePositionIndex?:0].displayName
-                        if (favoritePositionIndex == null)
-                            favoritePositionIndex = 0
-                    }
-                }
-                1 -> { // TECHNIQUE
-                    bestTabTitle = TECHNIQUE_LIST[bestTechniqueIndex?:0].displayName
-                    if (styleTabIndex == 0) {
-                        favoriteTabTitle = if(favoriteTechniqueIndex == null) "입력해주세요" else TECHNIQUE_LIST[favoriteTechniqueIndex?:0].displayName
-                    } else {
-                        favoriteTabTitle = TECHNIQUE_LIST[favoriteTechniqueIndex?:0].displayName
-                        if (favoriteTechniqueIndex == null)
-                            favoriteTechniqueIndex = 0
-                    }
-                }
-                2 -> { // SUBMISSION
-                    bestTabTitle = SUBMISSION_LIST[bestSubmissionIndex?:0].displayName
-                    if (styleTabIndex == 0) {
-                        favoriteTabTitle = if(favoriteSubmissionIndex == null) "입력해주세요" else SUBMISSION_LIST[favoriteSubmissionIndex?:0].displayName
-                    } else {
-                        favoriteTabTitle = SUBMISSION_LIST[favoriteSubmissionIndex?:0].displayName
-                        if (favoriteSubmissionIndex == null)
-                            favoriteSubmissionIndex = 0
-                    }
-                }
-            }
-        }
-    }
-
-    /** 카드 선택 콜백 **/
-    private fun onSelectedCardItem(index: Int) {
-        when (pageIndex) {
-            0 -> {
-                if (styleTabIndex == 0) {
-                    bestPositionIndex = index
-                } else {
-                    favoritePositionIndex = index
-                }
-            }
-            1 -> {
-                if (styleTabIndex == 0) {
-                    bestTechniqueIndex = index
-                } else {
-                    favoriteTechniqueIndex = index
-                }
-            }
-            2 -> {
-                if (styleTabIndex == 0) {
-                    bestSubmissionIndex = index
-                } else {
-                    favoriteSubmissionIndex = index
-                }
-            }
-        }
-        setTabTitle()
-    }
-
-    /** 뒤로가기 컨트롤 **/
-    private fun onHistoryBackClick(navigationBackAction: () -> Unit) {
-        viewModelScope.launch {
-            if (screenType is SkillStyleScreenType.ALL) {
-                // ALL > 포지션, 기술, 서브미션 모두 선택 > 시작은 포지션부터
-                when (pageIndex) {
-                    1 -> { pageIndex = 0 }
-                    2 -> { pageIndex = 1 }
-                    else -> { navigationBackAction() }
-                }
-            } else {
-                navigationBackAction()
-            }
-        }
-    }
-
-    /** UI Index 변경
-     * ex. 특기 > 최애 or 최애 > 다음 특기 **/
-    private fun changeUiIndex(completeClick: () -> Unit) {
-        viewModelScope.launch {
-            if (screenType == SkillStyleScreenType.ALL) {
-                if (styleTabIndex == 1) {
-                    // 스타일 인덱스 마지막 값(최애 탭) >> 페이지 인덱스 변경
-                    pageIndex++
-                } else {
-                    if (pageIndex == 2) {
-                        // 페이지 인덱스 마지막
-                        completeClick()
-                    } else {
-                        // 스타일 인덱스(특기->최애) 변경
-                        styleTabIndex++
-                    }
-                }
-            } else {
-                if (styleTabIndex == 1) {
-                    // 스타일 인덱스 마지막 값(최애 탭) >> 수정 하기
-                    completeClick()
-                } else {
-                    // 스타일 인덱스(특기->최애) 변경
-                    styleTabIndex++
-                }
-            }
-        }
-    }
-
-    /** Update Profile MyStyle
-     * 내 스타일 등록 (포지션, 기술, 서브미션) **/
-    private fun updateProfileMyStyle(completeClick: () -> Unit) {
-        viewModelScope.launch {
-            profileUiState = UiState.Loading
-
-            // Build a typed immutable command. The data layer alone knows how this maps to the
-            // backend's partial-update request and its profileRequestType wire string.
-            val update = when (pageIndex) {
+            mutableState.update { it.copy(saving = true, error = false) }
+            val best = before.bestSelected.takeIf { before.bestEdited }
+            val update = when (before.page) {
                 0 -> CommunityProfileUpdate(
-                    field = CommunityProfileField.POSITION,
-                    bestPosition = POSITION_LIST[bestPositionIndex ?: 0],
-                    favoritePosition = POSITION_LIST[favoritePositionIndex ?: 0],
+                    CommunityProfileField.POSITION,
+                    bestPosition = best.toPosition(),
+                    favoritePosition = before.selected.toPosition(),
                 )
-
                 1 -> CommunityProfileUpdate(
-                    field = CommunityProfileField.TECHNIQUE,
-                    bestTechnique = TECHNIQUE_LIST[bestTechniqueIndex ?: 0],
-                    favoriteTechnique = TECHNIQUE_LIST[favoriteTechniqueIndex ?: 0],
+                    CommunityProfileField.TECHNIQUE,
+                    bestTechnique = best.toTechnique(),
+                    favoriteTechnique = before.selected.toTechnique(),
                 )
-
-                2 -> CommunityProfileUpdate(
-                    field = CommunityProfileField.SUBMISSION,
-                    bestSubmission = SUBMISSION_LIST[bestSubmissionIndex ?: 0],
-                    favoriteSubmission = SUBMISSION_LIST[favoriteSubmissionIndex ?: 0],
+                else -> CommunityProfileUpdate(
+                    CommunityProfileField.SUBMISSION,
+                    bestSubmission = best.toSubmission(),
+                    favoriteSubmission = before.selected.toSubmission(),
                 )
-
-                else -> return@launch
             }
-
-            profileUiState = communityRepository.modifyCommunityProfile(update).toUiState()
-            if (profileUiState is UiState.Success) changeUiIndex(completeClick)
+            when (repository.modifyCommunityProfile(update)) {
+                is AppResult.Failure -> mutableState.update { it.copy(saving = false, error = true) }
+                is AppResult.Success -> {
+                    val next = all && before.page < 2
+                    results.send(EditorResult(
+                        if (all && !next) R.string.profile_all_styles_saved else when (before.page) {
+                            0 -> R.string.profile_position_saved
+                            1 -> R.string.profile_technique_saved
+                            else -> R.string.profile_submission_saved
+                        },
+                        close = !next,
+                    ))
+                    val page = if (next) before.page + 1 else before.page
+                    saved["stylePage"] = page
+                    saved["selectionEdited"] = false
+                    saved["bestSelectionEdited"] = false
+                    saved["styleTab"] = 0
+                    mutableState.value = currentPage(page)
+                }
+            }
         }
     }
 }

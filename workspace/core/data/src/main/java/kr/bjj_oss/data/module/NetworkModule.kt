@@ -5,6 +5,7 @@ import kr.bjj_oss.data.api.interceptor.TokenRefreshInterceptor
 import kr.bjj_oss.data.session.AccessTokenProvider
 import kr.bjj_oss.data.session.SessionRequestRevision
 import kr.bjj_oss.data.session.TokenRefreshCoordinator
+import kr.bjj_oss.data.model.dto.request.ProfileUpdateJsonAdapterFactory
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -83,6 +84,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideMoshi(): Moshi = Moshi.Builder()
+        .add(ProfileUpdateJsonAdapterFactory())
         .addLast(KotlinJsonAdapterFactory())
         .build()
 
@@ -113,7 +115,13 @@ object NetworkModule {
     fun provideImageKitRetrofit(
         @BaseNetworkExceptToken okHttpClient: OkHttpClient,
         moshiConverterFactory: MoshiConverterFactory,
-    ): Retrofit = createRetrofit(IMAGE_KIT_UPLOAD_BASE_URL, okHttpClient, moshiConverterFactory)
+    ): Retrofit = createRetrofit(
+        IMAGE_KIT_UPLOAD_BASE_URL,
+        okHttpClient.newBuilder().connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS).writeTimeout(60, TimeUnit.SECONDS)
+            .callTimeout(60, TimeUnit.SECONDS).build(),
+        moshiConverterFactory,
+    )
 
     /** Applies identical transport defaults so authenticated and anonymous clients cannot drift. */
     private fun commonClientBuilder(): OkHttpClient.Builder = OkHttpClient.Builder()

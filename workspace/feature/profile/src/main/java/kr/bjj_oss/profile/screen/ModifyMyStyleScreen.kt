@@ -1,92 +1,53 @@
 package kr.bjj_oss.profile.screen
 
+import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.ripple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.paint
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import kr.bjj_oss.ui.state.UiState
-import kr.bjj_oss.profile.viewmodel.ModifyMyStyleAction
-import kr.bjj_oss.profile.viewmodel.ModifyMyStyleViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kr.bjj_oss.profile.R
 import kr.bjj_oss.profile.components.style.CardBackLayout
 import kr.bjj_oss.profile.components.style.CardFrontLayout
 import kr.bjj_oss.profile.components.style.CardIndicatorLayout
 import kr.bjj_oss.profile.components.style.SegmentedPositionTabBar
-import kr.bjj_oss.profile.model.POSITION_INDICATOR_LIST
-import kr.bjj_oss.profile.model.POSITION_LIST
-import kr.bjj_oss.profile.model.SUBMISSION_INDICATOR_LIST
-import kr.bjj_oss.profile.model.SUBMISSION_LIST
-import kr.bjj_oss.profile.model.StyleCardIndicator
-import kr.bjj_oss.profile.model.TECHNIQUE_INDICATOR_LIST
-import kr.bjj_oss.profile.model.TECHNIQUE_LIST
+import kr.bjj_oss.profile.components.styleLabelRes
+import kr.bjj_oss.profile.model.*
+import kr.bjj_oss.profile.viewmodel.ModifyMyStyleViewModel
+import kr.bjj_oss.profile.viewmodel.StyleEditorState
 import kr.bjj_oss.ui.components.button.PrimaryButton
 import kr.bjj_oss.ui.components.button.TintButton
 import kr.bjj_oss.ui.components.card.DraggableFlipCard
-import kr.bjj_oss.ui.routes.SkillStyleScreenType
 import kr.bjj_oss.ui.theme.ColorComponents
 import kr.bjj_oss.ui.theme.CoolGray25
 import kr.bjj_oss.ui.theme.WhiteOpacity40
 import kr.bjj_oss.ui.theme.getBgDrawableRes
 import kr.bjj_oss.ui.theme.getIconDrawableRes
 
-sealed class StyleTabItem(open val type: String, open val selectedItem: String) {
-    data class Best(
-        override val type: String = "best",
-        override val selectedItem: String = "",
-    ) : StyleTabItem(type, selectedItem)
-
-    data class Favorite(
-        override val type: String = "favorite",
-        override val selectedItem: String = "",
-    ) : StyleTabItem(type, selectedItem)
-}
-
-/**
- * 내 스타일 수정하기
- * @param modifier
- * @param padding
- * @param type 화면 타입 - 포지션, 기술, 서브미션
- * @param onBackClick
- */
+/** Keeps the existing navigation API and repository-backed editor flow behind the restored UI. */
 @Composable
 fun ModifyMyStyleScreen(
     modifier: Modifier,
@@ -95,290 +56,222 @@ fun ModifyMyStyleScreen(
     onCompleteClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    val viewModel = hiltViewModel<ModifyMyStyleViewModel>()
-
-    /** Screen Info **/
-    var screenTitleRes by remember { mutableStateOf<Int?>(null) }
-    var screenIndicatorItems by remember { mutableStateOf<List<StyleCardIndicator>>(listOf()) }
-    /** Card Shape **/
-    val cardShape = RoundedCornerShape(24.dp)
-
-    /** 카드 배경 반환 **/
-    fun returnCardBgRes (): Int = when(viewModel.pageIndex) {
-        0 -> { // POSITION
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
-            POSITION_LIST[itemIndex ?: 0].getBgDrawableRes()
-        }
-
-        1 -> { // TECHNIQUE
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestTechniqueIndex else viewModel.favoriteTechniqueIndex
-            TECHNIQUE_LIST[itemIndex ?: 0].getBgDrawableRes()
-        }
-
-        2 -> { // SUBMISSION
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestSubmissionIndex else viewModel.favoriteSubmissionIndex
-            SUBMISSION_LIST[itemIndex ?: 0].getBgDrawableRes()
-        }
-
-        else -> {
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
-            POSITION_LIST[itemIndex ?: 0].getBgDrawableRes()
+    val model = hiltViewModel<ModifyMyStyleViewModel>()
+    val state by model.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val complete by rememberUpdatedState(onCompleteClick)
+    LaunchedEffect(type) { model.initialize(type) }
+    LaunchedEffect(model) {
+        model.events.collect { result ->
+            Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+            if (result.close) complete()
         }
     }
+    MyStyleEditorContent(
+        state = state,
+        padding = padding,
+        showSkip = type == "all",
+        onBack = onBackClick,
+        onTab = model::selectTab,
+        onSelect = model::select,
+        onComplete = model::completeSelection,
+        onRetry = { model.retry(type) },
+        modifier = modifier,
+    )
+}
 
-    /** 카드 타입 반환 **/
-    fun returnCardType(): String = when(viewModel.pageIndex) {
-        // POSITION
-        0 -> "포지션"
-        // TECHNIQUE
-        1 -> "기술"
-        // SUBMISSION
-        2 -> "서브 미션"
-        else -> ""
-    }
+private data class StyleCardVisual(
+    val wire: String,
+    val background: Int,
+    val icon: Int,
+)
 
-    /** 카드 이름 반환 **/
-    fun returnCardTitle (): String = when(viewModel.pageIndex) {
-        0 -> { // POSITION
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
-            POSITION_LIST[itemIndex ?: 0].displayName
-        }
-
-        1 -> { // TECHNIQUE
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestTechniqueIndex else viewModel.favoriteTechniqueIndex
-            TECHNIQUE_LIST[itemIndex ?: 0].displayName
-        }
-
-        2 -> { // SUBMISSION
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestSubmissionIndex else viewModel.favoriteSubmissionIndex
-            SUBMISSION_LIST[itemIndex ?: 0].displayName
-        }
-
-        else -> {
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
-            POSITION_LIST[itemIndex ?: 0].displayName
-        }
-    }
-
-    /** 카드 설명 반환 **/
-    fun returnCardInfo (): String = when(viewModel.pageIndex) {
-        0 -> { // POSITION
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
-            POSITION_LIST[itemIndex ?: 0].cardInfo
-        }
-
-        1 -> { // TECHNIQUE
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestTechniqueIndex else viewModel.favoriteTechniqueIndex
-            TECHNIQUE_LIST[itemIndex ?: 0].cardInfo
-        }
-
-        2 -> { // SUBMISSION
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestSubmissionIndex else viewModel.favoriteSubmissionIndex
-            SUBMISSION_LIST[itemIndex ?: 0].cardInfo
-        }
-
-        else -> {
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
-            POSITION_LIST[itemIndex ?: 0].cardInfo
-        }
-    }
-
-    /** 카드 아이콘 반환 **/
-    fun returnCardIconRes (): Int = when(viewModel.pageIndex) {
-        0 -> { // POSITION
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
-            POSITION_LIST[itemIndex ?: 0].getIconDrawableRes()
-        }
-
-        1 -> { // TECHNIQUE
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestTechniqueIndex else viewModel.favoriteTechniqueIndex
-            TECHNIQUE_LIST[itemIndex ?: 0].getIconDrawableRes()
-        }
-
-        2 -> { // SUBMISSION
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestSubmissionIndex else viewModel.favoriteSubmissionIndex
-            SUBMISSION_LIST[itemIndex ?: 0].getIconDrawableRes()
-        }
-
-        else -> {
-            val itemIndex = if (viewModel.styleTabIndex==0) viewModel.bestPositionIndex else viewModel.favoritePositionIndex
-            POSITION_LIST[itemIndex ?: 0].getIconDrawableRes()
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.initScreenType(type)
-    }
-
-    LaunchedEffect(viewModel.pageIndex) {
-        viewModel.styleTabIndex = 0
-        when (viewModel.pageIndex) {
-            0 -> {
-                // Position
-                screenTitleRes = R.string.profile_my_style_position_title
-                screenIndicatorItems = POSITION_INDICATOR_LIST
+@Composable
+private fun MyStyleEditorContent(
+    state: StyleEditorState,
+    padding: PaddingValues,
+    showSkip: Boolean,
+    onBack: () -> Unit,
+    onTab: (Int) -> Unit,
+    onSelect: (String?) -> Unit,
+    onComplete: () -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val options = remember(state.page) {
+        when (state.page) {
+            0 -> POSITION_LIST.map {
+                StyleCardVisual(
+                    it.name,
+                    it.getBgDrawableRes(),
+                    it.getIconDrawableRes()
+                )
             }
 
-            1 -> {
-                // Technique
-                screenTitleRes = R.string.profile_my_style_technique_title
-                screenIndicatorItems = TECHNIQUE_INDICATOR_LIST
+            1 -> TECHNIQUE_LIST.map {
+                StyleCardVisual(
+                    it.name,
+                    it.getBgDrawableRes(),
+                    it.getIconDrawableRes()
+                )
             }
 
-            2 -> {
-                // Submission
-                screenTitleRes = R.string.profile_my_style_submission_title
-                screenIndicatorItems = SUBMISSION_INDICATOR_LIST
+            else -> SUBMISSION_LIST.map {
+                StyleCardVisual(
+                    it.name,
+                    it.getBgDrawableRes(),
+                    it.getIconDrawableRes()
+                )
             }
         }
-        viewModel.setTabTitle()
     }
-
-    LaunchedEffect(viewModel.profileUiState) {
-        val uiState = viewModel.profileUiState
-        when(uiState) {
-            is UiState.Success -> {
-//                onCompleteClick()
-            }
-            is UiState.Error -> {
-
-            }
-            is UiState.Loading -> {
-
-            }
-            else -> {}
+    val indicators = when (state.page) {
+        0 -> POSITION_INDICATOR_LIST
+        1 -> TECHNIQUE_INDICATOR_LIST
+        else -> SUBMISSION_INDICATOR_LIST
+    }
+    val selectedIndex = options.indexOfFirst { it.wire == state.visibleSelection }
+    // Keep the original default artwork without assigning that preview to the stored selection.
+    val preview = options.getOrElse(selectedIndex) { options.first() }
+    val title = stringResource(styleCardTitle(preview.wire))
+    val category = stringResource(
+        when (state.page) {
+            0 -> R.string.profile_position
+            1 -> R.string.profile_technique
+            else -> R.string.profile_submission
         }
+    )
+    val titleRes = when (state.page) {
+        0 -> R.string.profile_my_style_position_title
+        1 -> R.string.profile_my_style_technique_title
+        else -> R.string.profile_my_style_submission_title
     }
+    val bestTitle = state.bestSelected?.let { stringResource(styleCardTitle(it)) }
+        ?: stringResource(styleCardTitle(options.first().wire))
+    val favoriteTitle = state.selected?.let { stringResource(styleCardTitle(it)) }
+        ?: stringResource(R.string.profile_style_input_prompt)
+    val shape = RoundedCornerShape(24.dp)
+    val fontScale = LocalDensity.current.fontScale
+    val enabled = state.ready && !state.saving
+    var footerHeightPx by remember { mutableIntStateOf(0) }
+    val footerHeight =
+        with(LocalDensity.current) { footerHeightPx.toDp() }.takeIf { it > 0.dp } ?: 132.dp
 
-    Surface(
-        modifier = modifier
-            .fillMaxSize(),
-        color = CoolGray25,
-    ) {
-        BoxWithConstraints(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
-        ) {
+    Surface(modifier.fillMaxSize(), color = CoolGray25) {
+        BoxWithConstraints(Modifier
+            .padding(padding)
+            .fillMaxSize()) {
             val cardAspectRatio = 262f / 394f
             val cardMaxHeight = (maxHeight * 0.49f).coerceAtMost(420.dp)
-            val cardWidth = minOf(maxWidth * 0.76f, cardMaxHeight * cardAspectRatio)
+            // The phone composition matches the original. Short windows scroll a readable card.
+            val readableCardHeight = maxOf(cardMaxHeight, 320.dp)
+            val cardWidth = minOf(maxWidth * 0.76f, readableCardHeight * cardAspectRatio)
+            val cardHeight =
+                maxOf(cardWidth / cardAspectRatio, 320.dp * (fontScale - 0.3f).coerceAtLeast(1f))
             val topContentPadding = (maxHeight * 0.09f).coerceIn(52.dp, 92.dp)
             val tabCardSpacing = (maxHeight * 0.035f).coerceIn(20.dp, 32.dp)
 
-            Column(
-                modifier = Modifier
+            Box(
+                Modifier
                     .fillMaxSize()
-                    .padding(bottom = 124.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                    .padding(top = 56.dp, bottom = footerHeight),
+                contentAlignment = Alignment.TopCenter,
             ) {
-                Spacer(modifier = Modifier.height(topContentPadding))
-
-                // 특기/최애 탭
-                SegmentedPositionTabBar(
-                    modifier = Modifier
-                        .fillMaxWidth(0.78f)
-                        .widthIn(max = 360.dp),
-                    tabs = listOf(
-                        StyleTabItem.Best(selectedItem = viewModel.bestTabTitle?:"입력해주세요"),
-                        StyleTabItem.Favorite(selectedItem = viewModel.favoriteTabTitle?:"입력해주세요"),
-                    ),
-                    selectedIndex = viewModel.styleTabIndex,
-                    onTabSelected = { index ->
-                        viewModel.styleTabIndex = index
-                        if (index == 1 && viewModel.favoriteTabTitle == "입력해주세요")
-                            viewModel.setTabTitle()
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(tabCardSpacing))
-
-                // Selected Card
-                key(viewModel.styleTabIndex, viewModel.pageIndex) {
-                    DraggableFlipCard(
+                Column(
+                    Modifier
+                        .widthIn(max = 600.dp)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(
+                            top = (topContentPadding - 56.dp).coerceAtLeast(0.dp),
+                            bottom = 20.dp
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    SegmentedPositionTabBar(
+                        tabs = listOf(
+                            StyleTabItem.Best(selectedItem = bestTitle),
+                            StyleTabItem.Favorite(selectedItem = favoriteTitle)
+                        ),
+                        selectedIndex = state.selectedTab,
+                        onTabSelected = onTab,
                         modifier = Modifier
-                            .width(cardWidth)
-                            .aspectRatio(cardAspectRatio)
-                            .shadow(
-                                elevation = 18.dp,
-                                shape = cardShape,
-                                clip = false,
-                            )
-                            .clip(cardShape),
-
-                        front = {
-                            CardFrontLayout(
-                                modifier = Modifier.fillMaxSize(),
-                                cardShape = cardShape,
-                                backgroundRes = returnCardBgRes(),
-                                iconRes = returnCardIconRes(),
-                                title = returnCardTitle(),
-                                info = returnCardInfo(),
-                            )
-                        },
-                        back = {
-                            CardBackLayout(
-                                modifier = Modifier.fillMaxSize(),
-                                cardShape = cardShape,
-                                type = returnCardType(),
-                                title = returnCardTitle(),
-                            )
-                        }
+                            .fillMaxWidth(0.78f)
+                            .widthIn(max = 360.dp),
+                        enabled = enabled,
                     )
+                    Spacer(Modifier.height(tabCardSpacing))
+                    key(state.page, state.selectedTab) {
+                        DraggableFlipCard(
+                            modifier = Modifier
+                                .width(cardWidth)
+                                .height(cardHeight)
+                                .shadow(18.dp, shape, clip = false)
+                                .clip(shape),
+                            front = {
+                                CardFrontLayout(
+                                    modifier = Modifier.fillMaxSize(),
+                                    cardShape = shape,
+                                    backgroundRes = preview.background,
+                                    iconRes = preview.icon,
+                                    title = title,
+                                    info = stringResource(styleCardInfo(preview.wire)),
+                                )
+                            },
+                            back = {
+                                CardBackLayout(
+                                    Modifier.fillMaxSize(),
+                                    cardShape = shape,
+                                    type = category,
+                                    title = title
+                                )
+                            },
+                        )
+                    }
+                    if (state.error) {
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            stringResource(R.string.profile_save_error),
+                            Modifier.padding(horizontal = 20.dp),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        if (!state.ready) TextButton(onClick = onRetry) { Text(stringResource(R.string.profile_retry)) }
+                    }
                 }
-
-                Spacer(modifier = Modifier.weight(1f))
             }
 
-            // Top App Bar
+            // Original translucent header and centered category title.
             Box(
-                modifier = Modifier
+                Modifier
                     .fillMaxWidth()
                     .height(56.dp)
-                    .background(color = WhiteOpacity40)
+                    .background(WhiteOpacity40)
                     .padding(horizontal = 16.dp)
             ) {
                 Row(
-                    modifier = Modifier
+                    Modifier
                         .fillMaxWidth()
                         .align(Alignment.CenterStart),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .paint(
-                                painter = painterResource(kr.bjj_oss.ui.R.drawable.ic_gray_left_back_button),
-                                contentScale = ContentScale.Crop,
-                            )
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = ripple(bounded = true),
-                                role = Role.Button,
-                                onClick = {
-                                    viewModel.onAction(ModifyMyStyleAction.BackClicked(onBackClick))
-                                }
-                            )
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    if (viewModel.screenType is SkillStyleScreenType.ALL) {
-                        TintButton(
-                            text = "나중에 하기",
-                            onClick = { viewModel.onAction(ModifyMyStyleAction.SkipClicked(onCompleteClick)) }
+                    IconButton(onClick = onBack, enabled = !state.saving) {
+                        Image(
+                            painterResource(kr.bjj_oss.ui.R.drawable.ic_gray_left_back_button),
+                            stringResource(R.string.profile_back), Modifier.size(36.dp)
                         )
-                    } else {
-
                     }
+                    Spacer(Modifier.weight(1f))
+                    if (showSkip) TintButton(
+                        text = stringResource(R.string.profile_skip),
+                        enabled = !state.saving,
+                        onClick = onBack
+                    )
                 }
-                // Center Title
                 Text(
-                    modifier = Modifier
+                    stringResource(titleRes),
+                    Modifier
                         .align(Alignment.Center)
-                        .padding(horizontal = 48.dp),
-                    text = stringResource(
-                        screenTitleRes ?: R.string.profile_my_style_position_title
-                    ),
+                        .padding(horizontal = if (showSkip) 96.dp else 48.dp),
                     style = MaterialTheme.typography.titleSmall,
                     color = ColorComponents.Header.Header.Text,
                     textAlign = TextAlign.Center,
@@ -386,61 +279,83 @@ fun ModifyMyStyleScreen(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-
-            // Bottom Button
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
+            if (!state.ready || state.saving) LinearProgressIndicator(
+                Modifier
                     .fillMaxWidth()
-                    .height(132.dp),
-            ) {
-                // Card Indicator
-                CardIndicatorLayout(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .fillMaxWidth()
-                        .height(94.dp),
-                    items = screenIndicatorItems,
-                    selectedIndex = when (viewModel.pageIndex) {
-                        0 -> {
-                            if (viewModel.styleTabIndex == 0) viewModel.bestPositionIndex ?: 0 else viewModel.favoritePositionIndex ?: 0
-                        }
-                        1 -> {
-                            if (viewModel.styleTabIndex == 0) viewModel.bestTechniqueIndex ?: 0 else viewModel.favoriteTechniqueIndex ?: 0
-                        }
-                        2 -> {
-                            if (viewModel.styleTabIndex == 0) viewModel.bestSubmissionIndex ?: 0 else viewModel.favoriteSubmissionIndex ?: 0
-                        }
-                        else -> 0
-                    },
-                    onTabSelected = { index -> viewModel.onAction(ModifyMyStyleAction.CardItemSelected(index)) }
-                )
+                    .align(Alignment.TopCenter)
+            )
 
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
+            // Keep the overlapping mini-card/gradient footer on normal font sizes.
+            Box(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .widthIn(max = 600.dp)
+                    .fillMaxWidth()
+                    .onSizeChanged { footerHeightPx = it.height }) {
+                if (fontScale <= 1.3f) {
+                    Box(Modifier
                         .fillMaxWidth()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    CoolGray25.copy(alpha = 0f),
-                                    CoolGray25,
-                                )
-                            )
+                        .height(132.dp)) {
+                        CardIndicatorLayout(
+                            Modifier
+                                .align(Alignment.TopCenter)
+                                .fillMaxWidth()
+                                .height(94.dp),
+                            items = indicators, selectedIndex = selectedIndex, enabled = enabled,
+                            onTabSelected = { index -> onSelect(options[index].wire) },
                         )
-                        .padding(horizontal = 20.dp)
-                        .padding(bottom = 10.dp)
-                ) {
-                    PrimaryButton(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        text = stringResource(R.string.profile_my_style_complete),
-                        roundedCorner = 16.dp,
-                        onClick = { viewModel.onAction(ModifyMyStyleAction.BottomBtnClicked(onCompleteClick)) }
-                    )
+                        StyleCompleteButton(
+                            Modifier.align(Alignment.BottomCenter),
+                            enabled,
+                            onComplete
+                        )
+                    }
+                } else {
+                    Column {
+                        CardIndicatorLayout(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(94.dp * fontScale),
+                            items = indicators, selectedIndex = selectedIndex, enabled = enabled,
+                            onTabSelected = { index -> onSelect(options[index].wire) })
+                        StyleCompleteButton(Modifier, enabled, onComplete)
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun StyleCompleteButton(modifier: Modifier, enabled: Boolean, onComplete: () -> Unit) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .background(Brush.verticalGradient(listOf(CoolGray25.copy(alpha = 0f), CoolGray25)))
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 10.dp)
+    ) {
+        PrimaryButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp),
+            text = stringResource(R.string.profile_my_style_complete),
+            roundedCorner = 16.dp,
+            enabled = enabled,
+            onClick = onComplete,
+        )
+    }
+}
+
+private fun styleCardTitle(wire: String): Int =
+    if (wire == "ESCAPES") R.string.profile_style_escape_title else styleLabelRes(wire)
+
+private fun styleCardInfo(wire: String): Int = when (wire) {
+    "CHOKES" -> R.string.profile_style_choke_info
+    "ARM_LOCKS" -> R.string.profile_style_arm_info
+    "LEG_LOCKS" -> R.string.profile_style_leg_info
+    "SWEEPS" -> R.string.profile_style_sweep_info
+    "GUARD_PASSES" -> R.string.profile_style_pass_info
+    "ESCAPES" -> R.string.profile_style_escape_info
+    else -> R.string.profile_style_position_info
 }

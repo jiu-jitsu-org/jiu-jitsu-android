@@ -1,318 +1,246 @@
 package kr.bjj_oss.profile.screen
 
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.ripple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.paint
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import kr.bjj_oss.model.COMPETITION_RANK
-import kr.bjj_oss.domain.yearsDescending
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kr.bjj_oss.model.*
 import kr.bjj_oss.profile.R
-import kr.bjj_oss.profile.model.COMPETITION_RANK_LIST
-import kr.bjj_oss.profile.viewmodel.ModifyCompetitionAction
-import kr.bjj_oss.profile.viewmodel.ModifyCompetitionViewModel
-import kr.bjj_oss.ui.components.button.PrimaryButton
-import kr.bjj_oss.ui.components.picker.VerticalWheelPicker
-import kr.bjj_oss.ui.components.textfield.TransparentOutlinedTextField
-import kr.bjj_oss.ui.theme.ColorComponents
-import kr.bjj_oss.ui.theme.White
+import kr.bjj_oss.profile.components.*
+import kr.bjj_oss.profile.viewmodel.*
+import java.time.Year
 
-sealed interface CompetitionScreenType {
-    object TypeDate : CompetitionScreenType
-    object TypeTitle : CompetitionScreenType
-    object TypeResult : CompetitionScreenType
-}
-
-/**
- * 대회 정보 수정
- * @param modifier Modifier
- * @param padding PaddingValues
- * @param onCompleteClick 완료
- * @param onBackClick 뒤로가기
- */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ModifyCompetitionScreen(
     modifier: Modifier,
     padding: PaddingValues,
     onCompleteClick: () -> Unit,
     onBackClick: () -> Unit,
+    originalIndex: Int = -1,
+    groupKey: String? = null
 ) {
-    val viewModel = hiltViewModel<ModifyCompetitionViewModel>()
-
-    /** Selected Value **/
-    var typeYearValueIndex by remember { mutableIntStateOf(0) }
-    var typeMonthValueIndex by remember { mutableIntStateOf(0) }
-    var typeTitleValue by remember { mutableStateOf("") }
-    var typeRankValueIndex by remember { mutableIntStateOf(0) }
-    /** Date Picker List **/
-    val yearList = yearsDescending(20)
-    val monthList = (1..12).toList()
-    val rankList = COMPETITION_RANK_LIST
-
-    Surface(
-        modifier = modifier
-            .fillMaxSize(),
-        color = White,
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
-        ) {
-            // 최상단 앱바
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .paint(
-                            painter = painterResource(kr.bjj_oss.ui.R.drawable.ic_blue_left_back_button),
-                            contentScale = ContentScale.Crop,
-                        )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = ripple(bounded = true),
-                            role = Role.Button,
-                            onClick = { viewModel.onAction(ModifyCompetitionAction.BackClicked(onBackClick)) }
-                        )
-                )
+    val model = hiltViewModel<ModifyCompetitionViewModel>()
+    LaunchedEffect(originalIndex, groupKey) { model.initialize(originalIndex, groupKey) }
+    val state by model.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val complete by rememberUpdatedState(onCompleteClick)
+    LaunchedEffect(model) {
+        model.events.collect {
+            Toast.makeText(
+                context,
+                it.message,
+                Toast.LENGTH_SHORT
+            ).show(); if (it.close) complete()
+        }
+    }
+    var deleting by rememberSaveable { mutableStateOf(false) }
+    var years by remember { mutableStateOf(false) }
+    BackHandler { model.back(onBackClick) }
+    ProfileForm(
+        stringResource(if (state.editing) R.string.profile_competition_edit else if (state.fixedGroup) R.string.profile_division_add else R.string.profile_competition_add),
+        padding,
+        { model.back(onBackClick) },
+        modifier,
+        actions = {
+            if (state.editing) TextButton(
+                onClick = { deleting = true },
+                enabled = !state.saving
+            ) { Text(stringResource(R.string.profile_delete)) }
+        }) {
+        when (state.step) {
+            CompetitionStep.RESULT -> {
                 Text(
-                    modifier = Modifier.weight(1f),
-                    text = stringResource(R.string.profile_competition_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = ColorComponents.Header.Header.Text,
-                    textAlign = TextAlign.Center
+                    stringResource(R.string.profile_competition_result_title),
+                    style = MaterialTheme.typography.headlineMedium
                 )
-                Spacer(modifier = Modifier.width(36.dp))
+                listOf(
+                    COMPETITION_RANK.GOLD(),
+                    COMPETITION_RANK.SILVER(),
+                    COMPETITION_RANK.BRONZE(),
+                    COMPETITION_RANK.PARTICIPATION()
+                ).forEach { rank ->
+                    FilterChip(
+                        selected = state.rank == rank.name,
+                        onClick = { model.rank(rank.name) },
+                        enabled = !state.saving,
+                        label = { Text(medalLabel(rank)) },
+                        leadingIcon = { MedalIcon(rank) })
+                }
             }
-            // 대회 정보 입력
-            when(viewModel.screenIndex) {
-                CompetitionScreenType.TypeDate -> {
-                    TypeDateLayout(
-                        selectedYearIndex = typeYearValueIndex,
-                        selectedMonthIndex = typeMonthValueIndex,
-                        yearList = yearList,
-                        monthList = monthList,
-                    ) { yearIndex, monthIndex ->
-                        typeYearValueIndex = yearIndex
-                        typeMonthValueIndex = monthIndex
 
-                        viewModel.selectedYear = yearList[yearIndex]
-                        viewModel.selectedMonth = monthList[monthIndex]
-                        viewModel.onAction(ModifyCompetitionAction.BottomBtnClicked())
-                    }
-                }
-                CompetitionScreenType.TypeTitle -> {
-                    TypeTitleLayout(
-                        inputTitle = typeTitleValue,
-                    ) { title ->
-                        typeTitleValue = title
-
-                        viewModel.selectedName = title
-                        viewModel.onAction(ModifyCompetitionAction.BottomBtnClicked())
-                    }
-                }
-                CompetitionScreenType.TypeResult -> {
-                    TypeRankLayout(
-                        selectedRankIndex = typeRankValueIndex,
-                        resultList = rankList,
-                    ) { resultIndex ->
-                        typeRankValueIndex = resultIndex
-
-                        viewModel.selectedRank = rankList[resultIndex].name
-                        viewModel.onAction(ModifyCompetitionAction.BottomBtnClicked(onCompleteClick))
+            CompetitionStep.NAME -> {
+                Text(
+                    stringResource(R.string.profile_competition_name_title),
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                OutlinedTextField(
+                    state.name,
+                    model::name,
+                    Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = !state.saving,
+                    label = { Text(stringResource(R.string.profile_competition_name)) })
+                if (state.searchFailed) Text(stringResource(R.string.profile_search_error))
+                state.suggestions.forEach { item ->
+                    TextButton(onClick = { model.suggestion(item) }) {
+                        Text(
+                            listOfNotNull(item.name, item.year?.toString()).joinToString(" · ")
+                        )
                     }
                 }
             }
+
+            CompetitionStep.YEAR -> {
+                Text(
+                    stringResource(R.string.profile_competition_date_title),
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                Box {
+                    OutlinedButton(
+                        onClick = { years = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(state.year.toString()) }
+                    DropdownMenu(
+                        expanded = years,
+                        onDismissRequest = { years = false },
+                        modifier = Modifier.heightIn(max = 320.dp)
+                    ) {
+                        (maxOf(Year.now().value, state.year) downTo minOf(
+                            1990,
+                            state.year
+                        )).forEach { year ->
+                            DropdownMenuItem(
+                                text = { Text(year.toString()) },
+                                onClick = { model.year(year); years = false })
+                        }
+                    }
+                }
+            }
+
+            CompetitionStep.DIVISION -> {
+                Text(
+                    stringResource(R.string.profile_division),
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                Text("${state.year} ${state.name}", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.profile_uniform))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf<String?>(null, "GI", "NO_GI").forEach { uniform ->
+                        FilterChip(
+                            selected = state.uniform == uniform,
+                            onClick = { model.uniform(uniform) },
+                            enabled = !state.saving,
+                            label = {
+                                Text(
+                                    stringResource(
+                                        when (uniform) {
+                                            "GI" -> R.string.profile_gi; "NO_GI" -> R.string.profile_no_gi; else -> R.string.profile_none
+                                        }
+                                    )
+                                )
+                            })
+                    }
+                }
+                Text(stringResource(R.string.profile_competition_belt))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    (listOf<BELT_RANK?>(null) + BELT_RANK_LIST).forEach { belt ->
+                        FilterChip(
+                            selected = state.belt == belt?.name,
+                            onClick = { model.belt(belt?.name) },
+                            enabled = !state.saving,
+                            label = { Text(beltLabel(belt)) })
+                    }
+                }
+                OutlinedTextField(
+                    state.weight,
+                    model::weight,
+                    Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.profile_weight)) },
+                    singleLine = true,
+                    enabled = !state.saving && !state.unlimited && !state.absolute,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = !state.saving) { model.unlimited(!state.unlimited) },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(state.unlimited, model::unlimited, enabled = !state.saving); Text(
+                    stringResource(R.string.profile_unlimited)
+                )
+                }
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = !state.saving) { model.absolute(!state.absolute) },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(state.absolute, model::absolute, enabled = !state.saving); Text(
+                    stringResource(R.string.profile_absolute)
+                )
+                }
+            }
+
+            CompetitionStep.COMPLETE -> {
+                Text(
+                    stringResource(R.string.profile_competition_complete),
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                val entries = state.completedEntries.ifEmpty { emptyList() }
+                entries.forEach { entry ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        MedalIcon(
+                            entry.competitionRank
+                        ); Text(divisionLabel(entry), Modifier.padding(start = 8.dp))
+                    }
+                }
+                ProfileSubmit(stringResource(R.string.profile_added_division)) { model.anotherDivision() }
+                ProfileSubmit(
+                    stringResource(R.string.profile_to_profile),
+                    onClick = onCompleteClick
+                )
+            }
         }
-    }
-}
-
-/**
- * 출전 정보 입력
- * @param selectedYearIndex 선택된 년도 인덱스
- * @param selectedMonthIndex 선택된 월 인덱스
- * @param onBottomBtnClick 하단 버튼 클릭
- */
-@Composable
-private fun TypeDateLayout(
-    selectedYearIndex: Int = 0,
-    selectedMonthIndex: Int = 0,
-    yearList: List<Int>,
-    monthList: List<Int>,
-    onBottomBtnClick: (
-        selectedYearIndex: Int,
-        selectedMonthIndex: Int,
-    ) -> Unit,
-) {
-
-    var selectedYearIndex by remember { mutableIntStateOf(selectedYearIndex) }
-    var selectedMonthIndex by remember { mutableIntStateOf(selectedMonthIndex) }
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = stringResource(R.string.profile_competition_date_title),
-            style = MaterialTheme.typography.titleSmall,
-            color = ColorComponents.Header.Header.Text,
-            textAlign = TextAlign.Center
-        )
-        // Date Picker
-        Row (verticalAlignment = Alignment.CenterVertically) {
-            // Year
-            VerticalWheelPicker(
-                items = yearList,
-                initialIndex = selectedYearIndex,
-                onSelected = { i, _ -> selectedYearIndex = i },
-                itemHeight = 44.dp,
-                itemWidth  = 86.dp,
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            // Month
-            VerticalWheelPicker(
-                items = monthList,
-                initialIndex = selectedMonthIndex,
-                onSelected = { i, _ -> selectedMonthIndex = i },
-                itemHeight = 44.dp,
-                itemWidth  = 86.dp
-            )
+        state.error?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) }
+        if (state.step != CompetitionStep.COMPLETE) {
+            ProfileSubmit(
+                stringResource(if (state.step == CompetitionStep.DIVISION) R.string.profile_save else R.string.profile_next),
+                !state.saving && (state.step != CompetitionStep.NAME || state.name.isNotBlank()) && state.error != R.string.profile_division_removed
+            ) { model.next() }
+            if (state.step == CompetitionStep.DIVISION && !state.editing) TextButton(onClick = {
+                model.save(
+                    true
+                )
+            }, enabled = !state.saving) { Text(stringResource(R.string.profile_division_skip)) }
         }
-        // Bottom Button
-        Spacer(modifier = Modifier.weight(1f))
-        PrimaryButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            text = "Bottom Button",
-            onClick = { onBottomBtnClick(selectedYearIndex, selectedMonthIndex) }
-        )
+        if (state.saving) CircularProgressIndicator()
     }
-}
-
-/**
- * 대회명 입력
- * @param inputTitle 입력된 대회명
- * @param onBottomBtnClick 하단 버튼 클릭
- */
-@Composable
-private fun TypeTitleLayout(
-    inputTitle: String = "",
-    onBottomBtnClick: (
-        inputTitle: String,
-    ) -> Unit,
-) {
-    var strTitle by remember { mutableStateOf(inputTitle) }
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = stringResource(R.string.profile_competition_name_title),
-            style = MaterialTheme.typography.displayLarge,
-            color = ColorComponents.TextFieldDisplay.Focus.Title,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        TransparentOutlinedTextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = strTitle,
-            placeholder = "",
-            errorTextColor = ColorComponents.TextFieldDisplay.Default.Placeholder,
-            onValueChange = { new ->
-                strTitle = new
-            },
-        )
-
-        // Bottom Button
-        Spacer(modifier = Modifier.weight(1f))
-        PrimaryButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            text = "Bottom Button",
-            onClick = { onBottomBtnClick(strTitle) }
-        )
-    }
-}
-
-@Composable
-private fun TypeRankLayout(
-    selectedRankIndex: Int = 0,
-    resultList: List<COMPETITION_RANK>,
-    onBottomBtnClick: (
-        selectedRankIndex: Int,
-    ) -> Unit,
-) {
-    var selectedIndex by remember { mutableIntStateOf(selectedRankIndex) }
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = stringResource(R.string.profile_competition_result_title),
-            style = MaterialTheme.typography.displayLarge,
-            color = ColorComponents.TextFieldDisplay.Focus.Title,
-            textAlign = TextAlign.Center
-        )
-
-        VerticalWheelPicker(
-            items = resultList,
-            initialIndex = selectedIndex,
-            onSelected = { i, _ -> selectedIndex = i },
-            itemHeight = 44.dp,
-            itemWidth  = 86.dp,
-            itemText = { rank -> rank.displayName },
-        )
-
-        // Bottom Button
-        Spacer(modifier = Modifier.weight(1f))
-        PrimaryButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            text = "Bottom Button",
-            onClick = { onBottomBtnClick(selectedIndex) }
-        )
-    }
+    if (deleting) AlertDialog(
+        onDismissRequest = { deleting = false },
+        title = { Text(stringResource(R.string.profile_competition_delete_title)) },
+        confirmButton = {
+            TextButton(
+                onClick = { deleting = false; model.delete() },
+                enabled = !state.saving
+            ) { Text(stringResource(R.string.profile_delete)) }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                deleting = false
+            }) { Text(stringResource(R.string.profile_cancel)) }
+        })
 }

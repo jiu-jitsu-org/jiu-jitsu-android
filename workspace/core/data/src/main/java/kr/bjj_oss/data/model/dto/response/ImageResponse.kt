@@ -34,7 +34,7 @@ data class RegisterImageResponse(
 
 @JsonClass(generateAdapter = true)
 data class RegisterImageData(
-    val id: Int?,
+    val id: Long?,
     val cdnId: String?,
     val imageUrl: String?,
     val status: String?,
@@ -42,8 +42,8 @@ data class RegisterImageData(
 
 internal fun RegisterImageData.toInfo(): CdnImageInfo =
     CdnImageInfo(
-        id = id ?: 0,
+        id = id ?: 0L,
         cdnId = cdnId.orEmpty(),
         imageUrl = imageUrl.orEmpty(),
-        status = status.orEmpty(),
+        status = status?.takeIf { it in setOf("TEMP", "ACTIVE", "DELETED") } ?: "TEMP",
     )

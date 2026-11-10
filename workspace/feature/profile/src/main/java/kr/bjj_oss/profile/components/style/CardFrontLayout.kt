@@ -55,7 +55,7 @@ fun CardFrontLayout(
                     .background(color = TrueWhite,shape = RoundedCornerShape(10.dp)),
                 painter = painterResource(backgroundRes),
                 contentScale = ContentScale.Crop,
-                contentDescription = "Card Background"
+                contentDescription = null
             )
             // Front Card Contents
             Column(
@@ -70,7 +70,7 @@ fun CardFrontLayout(
                     modifier = Modifier.size(80.dp),
                     painter = painterResource(iconRes),
                     contentScale = ContentScale.Crop,
-                    contentDescription = "Card Icon"
+                    contentDescription = null
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 // Front Card Contents

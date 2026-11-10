@@ -26,7 +26,7 @@ fun SplashScreen(
 
     LaunchedEffect(viewModel.splashUiState) {
         val uiState = viewModel.splashUiState
-        when(uiState) {
+        when (uiState) {
             is UiState.Success -> {
                 val (bootStrapInfo, autoLogin) = uiState.result
 
@@ -45,9 +45,11 @@ fun SplashScreen(
                     }
                 }
             }
+
             is UiState.Error -> {
                 // TODO: Render a retry action instead of leaving the splash surface static.
             }
+
             is UiState.Loading -> Unit
             else -> {}
         }
@@ -55,10 +57,11 @@ fun SplashScreen(
 
     LaunchedEffect(viewModel.autoLoginState) {
         val uiState = viewModel.autoLoginState
-        when(uiState) {
+        when (uiState) {
             is UiState.Success -> {
                 enterHomeScreen()
             }
+
             is UiState.Error -> {
                 if (
                     uiState.code == 401 ||
@@ -68,6 +71,7 @@ fun SplashScreen(
                     enterLoginScreen()
                 }
             }
+
             is UiState.Loading -> Unit
             else -> {}
         }

@@ -35,6 +35,9 @@ internal class UserRepositoryImpl @Inject constructor(
             )
         }.mapEnvelope { response -> response.toInfo() }
 
+    override suspend fun updateNickname(nickname: String): AppResult<UserProfileInfo> =
+        safeApiCall { userService.updateNickname(nickname) }.mapEnvelope { it.toInfo() }
+
     override suspend fun signupUser(
         nickname: String,
         isMarketingAgreed: Boolean

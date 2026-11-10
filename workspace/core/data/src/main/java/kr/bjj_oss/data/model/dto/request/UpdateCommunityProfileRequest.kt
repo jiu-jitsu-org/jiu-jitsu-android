@@ -1,6 +1,9 @@
 package kr.bjj_oss.data.model.dto.request
 
-import kr.bjj_oss.data.model.dto.response.Competition
+import kr.bjj_oss.data.model.dto.response.CompetitionGroupDto
+import kr.bjj_oss.data.model.dto.response.CompetitionDivisionDto
+import kr.bjj_oss.model.CommunityProfileField
+import kr.bjj_oss.model.CompetitionInfo
 import kr.bjj_oss.model.CommunityProfileUpdate
 import com.squareup.moshi.JsonClass
 
@@ -14,7 +17,7 @@ data class UpdateCommunityProfileRequest(
     val gender: String? = null,
     val weightKg: Double? = null,
     val academyName: String? = null,
-    val competitionInfoList: List<Competition>? = null,
+    val competitions: List<CompetitionGroupDto>? = null,
     val bestSubmission: String? = null,
     val favoriteSubmission: String? = null,
     val bestTechnique: String? = null,
@@ -39,14 +42,7 @@ internal fun CommunityProfileUpdate.toRequest(): UpdateCommunityProfileRequest =
         gender = gender?.name,
         weightKg = weightKg,
         academyName = academyName,
-        competitionInfoList = competitions?.map { competition ->
-            Competition(
-                competitionYear = competition.competitionYear,
-                competitionMonth = competition.competitionMonth,
-                competitionName = competition.competitionName,
-                competitionRank = competition.competitionRank?.name,
-            )
-        },
+        competitions = if (field == CommunityProfileField.COMPETITION) competitions.orEmpty().toGroups() else null,
         bestSubmission = bestSubmission?.name,
         favoriteSubmission = favoriteSubmission?.name,
         bestTechnique = bestTechnique?.name,
@@ -54,4 +50,38 @@ internal fun CommunityProfileUpdate.toRequest(): UpdateCommunityProfileRequest =
         bestPosition = bestPosition?.name,
         favoritePosition = favoritePosition?.name,
         isWeightHidden = isWeightHidden,
+        teachingPhilosophy = teachingPhilosophy,
+        teachingStartDate = teachingStartDate,
+        teachingDetail = teachingDetail,
     )
+
+/** Wire grouping deliberately preserves case and internal whitespace, unlike UI grouping. */
+private fun List<CompetitionInfo>.toGroups(): List<CompetitionGroupDto> {
+    val groups = linkedMapOf<String, MutableList<CompetitionInfo>>()
+    forEachIndexed { index, entry ->
+        val name = entry.competitionName.orEmpty().trim()
+        val key = if (name.isEmpty()) "empty:$index" else "${entry.competitionYear}|$name"
+        groups.getOrPut(key) { mutableListOf() }.add(entry)
+    }
+    val usedIds = mutableSetOf<Int>()
+    return groups.values.map { entries ->
+        val first = entries.first()
+        CompetitionGroupDto(
+            competitionYear = first.competitionYear,
+            competitionName = first.competitionName.orEmpty().trim(),
+            competitionPinned = entries.any { it.isPinned },
+            competitionDisplayOrder = entries.mapNotNull { it.displayOrder }.minOrNull(),
+            competitionId = entries.firstNotNullOfOrNull { it.competitionId }?.takeIf { usedIds.add(it) },
+            divisions = entries.map { entry ->
+                CompetitionDivisionDto(
+                    competitionRank = entry.competitionRank?.name ?: "PARTICIPATION",
+                    competitionUniform = entry.uniform?.name,
+                    competitionBelt = entry.belt?.name,
+                    competitionWeightLimit = entry.weightLimit,
+                    competitionWeightBound = entry.weightBound?.name,
+                    competitionAbsolute = entry.absolute,
+                )
+            },
+        )
+    }
+}

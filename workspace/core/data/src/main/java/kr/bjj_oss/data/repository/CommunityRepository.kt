@@ -1,5 +1,6 @@
 package kr.bjj_oss.data.repository
 
+import kr.bjj_oss.model.CompetitionSuggestion
 import kr.bjj_oss.model.AppResult
 import kr.bjj_oss.model.CommunityProfileInfo
 import kr.bjj_oss.model.CommunityProfileUpdate
@@ -19,6 +20,9 @@ interface CommunityRepository {
     suspend fun modifyCommunityProfile(
         update: CommunityProfileUpdate,
     ): AppResult<CommunityProfileInfo>
+
+    suspend fun searchCompetitions(keyword: String): AppResult<List<CompetitionSuggestion>>
+    fun updateCachedNickname(nickname: String)
 
     /** Clears user-scoped memory when the authenticated session changes or ends. */
     fun clearCachedProfile()

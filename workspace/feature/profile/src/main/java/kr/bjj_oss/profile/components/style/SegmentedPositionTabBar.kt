@@ -29,10 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kr.bjj_oss.profile.screen.StyleTabItem
+import kr.bjj_oss.profile.model.StyleTabItem
 import kr.bjj_oss.ui.R
 
 /**
@@ -52,10 +53,12 @@ fun SegmentedPositionTabBar(
     modifier: Modifier = Modifier,
     containerColor: Color = Color(0xFFE6E8EE),
     indicatorColor: Color = Color.White,
+    enabled: Boolean = true,
 ) {
+    val fontScale = LocalDensity.current.fontScale.takeIf { it > 1.3f } ?: 1f
     BoxWithConstraints(
         modifier = modifier
-            .height(68.dp)
+            .height(68.dp * fontScale)
             .clip(RoundedCornerShape(34.dp))
             .background(containerColor)
     ) {
@@ -102,6 +105,7 @@ fun SegmentedPositionTabBar(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
+                            enabled = enabled,
                         ) {
                             if (!isSelected) onTabSelected(index)
                         },

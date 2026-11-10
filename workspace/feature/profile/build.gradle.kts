@@ -2,6 +2,7 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.jjs.android.feature)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.secrets)
     alias(libs.plugins.compose.screenshot)
 }
@@ -50,6 +51,7 @@ android {
 
 dependencies {
 
+    implementation(libs.kotlinx.serialization)
     implementation(projects.core.data)
     implementation(projects.core.domain)
     implementation(projects.core.model)

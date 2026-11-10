@@ -61,6 +61,7 @@ import kr.bjj_oss.ui.routes.LoginGraph
 import kr.bjj_oss.ui.routes.SplashScreen
 import kr.bjj_oss.ui.routes.ProfileGraph
 import kr.bjj_oss.ui.routes.ProfileScreen
+import kr.bjj_oss.ui.routes.ModifyProfileScreen
 import kr.bjj_oss.ui.routes.HomeScreen
 import kr.bjj_oss.ui.theme.JiuJitsuPjtTheme
 import kr.bjj_oss.ui.theme.White
@@ -115,12 +116,16 @@ fun AppRoot() {
         bottomBarDestinations.any { route -> node.hasRoute(route) }
     } == true && !webFullscreen
 
+    var profileDarkIcons by remember { mutableStateOf(false) }
+    val isProfile = destination?.hasRoute(ProfileScreen::class) == true || destination?.hasRoute(
+        ModifyProfileScreen::class
+    ) == true
     val destinationEdge = rememberEdgeBehavior(destination)
     val edge = if (webFullscreen) EdgeBehavior.PadSystemBars else destinationEdge
 
     // (선택) 아이콘 밝기 정책: 예시로 배경이 밝은 홈탭에 어두운 아이콘, 컨텐츠가 어두운 상세에 밝은 아이콘
-    val statusIconsDark = !greetingVisible && when (edge) {
-        EdgeBehavior.Extend        -> false // 배경 어두움 가정
+    val statusIconsDark = !greetingVisible && if (isProfile) profileDarkIcons else when (edge) {
+        EdgeBehavior.Extend -> false // 배경 어두움 가정
         EdgeBehavior.PadStatusOnly -> true  // 배경 밝음 가정
         EdgeBehavior.PadSystemBars -> true
     }
@@ -132,7 +137,7 @@ fun AppRoot() {
 
     // 핵심: 화면별 insets를 다르게
     val contentInsets = when (edge) {
-        EdgeBehavior.Extend        -> WindowInsets(0, 0, 0, 0)
+        EdgeBehavior.Extend -> WindowInsets(0, 0, 0, 0)
         EdgeBehavior.PadStatusOnly -> WindowInsets.statusBars
         EdgeBehavior.PadSystemBars -> WindowInsets.systemBars
     }
@@ -149,13 +154,15 @@ fun AppRoot() {
             val homeLayer = if (greetingVisible && greetingTime != null) {
                 // 실제 홈과 하단 탭을 함께 올린다. 창 높이가 바뀌어도 진행률은 유지하고 이동 거리만
                 // 새 높이에 맞춘다. 전환 중에는 홈의 접근성 노출을 제한한다.
-                Modifier.clearAndSetSemantics {}.graphicsLayer {
-                    val progress = beltHomeProgress(greetingTime.value)
-                    translationY = size.height * (1f - progress)
-                    val radius = (28f * (1f - progress)).dp
-                    shape = RoundedCornerShape(topStart = radius, topEnd = radius)
-                    clip = true
-                }
+                Modifier
+                    .clearAndSetSemantics {}
+                    .graphicsLayer {
+                        val progress = beltHomeProgress(greetingTime.value)
+                        translationY = size.height * (1f - progress)
+                        val radius = (28f * (1f - progress)).dp
+                        shape = RoundedCornerShape(topStart = radius, topEnd = radius)
+                        clip = true
+                    }
             } else Modifier
             Scaffold(
                 modifier = homeLayer,
@@ -185,16 +192,19 @@ fun AppRoot() {
                     padding = innerPadding,
                     onWebFullscreenChanged = { webFullscreen = it },
                     onStartupAuthenticated = startGreeting,
+                    onProfileHeaderAppearanceChanged = { profileDarkIcons = it },
                 )
             }
             if (webFullscreen && !greetingVisible) StatusBarBackground(color = Color.White)
             if (greetingVisible) {
                 // 전환이 끝나기 전에 드러난 홈에 터치가 닿지 않도록 별도 입력 레이어에서 소비한다.
-                Box(Modifier.fillMaxSize().pointerInput(Unit) {
-                    awaitPointerEventScope {
-                        while (true) awaitPointerEvent().changes.forEach { it.consume() }
-                    }
-                })
+                Box(Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) awaitPointerEvent().changes.forEach { it.consume() }
+                        }
+                    })
             }
         }
     }
@@ -211,14 +221,17 @@ sealed interface EdgeBehavior {
 @Composable
 private fun rememberEdgeBehavior(dest: NavDestination?): EdgeBehavior {
     val isFullScreen = dest?.hierarchy?.any {
-        it.hasRoute(LoginGraph::class) || it.hasRoute(ProfileGraph::class) || it.hasRoute(SplashScreen::class)
+        it.hasRoute(LoginGraph::class) || it.hasRoute(ProfileGraph::class) || it.hasRoute(
+            SplashScreen::class
+        )
     } == true
-    val isHomeTabs   = dest?.hierarchy?.any { it.hasRoute(HomeGraph::class) } == true
+    val isHomeTabs = dest?.hierarchy?.any { it.hasRoute(HomeGraph::class) } == true
 
     return when {
+        dest?.hasRoute(ProfileScreen::class) == true || dest?.hasRoute(ModifyProfileScreen::class) == true -> EdgeBehavior.Extend
         isFullScreen -> EdgeBehavior.Extend        // 상세 화면: 뒤로 배경이 보여도 OK
-        isHomeTabs   -> EdgeBehavior.PadStatusOnly // 탭 루트들: 상단만 보호
-        else         -> EdgeBehavior.PadSystemBars
+        isHomeTabs -> EdgeBehavior.PadStatusOnly // 탭 루트들: 상단만 보호
+        else -> EdgeBehavior.PadSystemBars
     }
 }
 

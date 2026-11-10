@@ -13,6 +13,8 @@ interface UserRepository {
         profileImageUrl: String,
     ): AppResult<UserProfileInfo>
 
+    suspend fun updateNickname(nickname: String): AppResult<UserProfileInfo>
+
     suspend fun signupUser(
         nickname: String,
         isMarketingAgreed: Boolean,

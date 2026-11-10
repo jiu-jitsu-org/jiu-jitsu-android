@@ -1,52 +1,46 @@
 package kr.bjj_oss.profile.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kr.bjj_oss.data.repository.CommunityRepository
-import kr.bjj_oss.model.CommunityProfileField
-import kr.bjj_oss.model.CommunityProfileInfo
-import kr.bjj_oss.model.CommunityProfileUpdate
-import kr.bjj_oss.ui.state.UiState
-import kr.bjj_oss.ui.state.toUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kr.bjj_oss.data.repository.CommunityRepository
+import kr.bjj_oss.model.*
+import kr.bjj_oss.profile.R
+import kr.bjj_oss.profile.model.EditorResult
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed interface ModifyAcademyAction {
-    data class ChangeAcademyName(val academyName: String, val onCompleted: () -> Unit = {}): ModifyAcademyAction
-}
+data class AcademyEditorState(val saving: Boolean = false, val error: Boolean = false)
 
 @HiltViewModel
-class ModifyAcademyViewModel @Inject constructor(
-    private val communityRepository: CommunityRepository,
-): ViewModel() {
-
-    var profileUiState by mutableStateOf<UiState<CommunityProfileInfo>>(UiState.Idle)
-
-    fun onAction(action: ModifyAcademyAction) {
-        when (action) {
-            is ModifyAcademyAction.ChangeAcademyName -> changeAcademyName(action.academyName, action.onCompleted)
-        }
-    }
-
-    /** 도장 정보 수정 */
-    fun changeAcademyName(academyName: String, onCompleted: () -> Unit = {}) {
+class ModifyAcademyViewModel @Inject constructor(private val repository: CommunityRepository) :
+    ViewModel() {
+    private val mutableState = MutableStateFlow(AcademyEditorState())
+    val state = mutableState.asStateFlow()
+    private val results = Channel<EditorResult>(Channel.BUFFERED)
+    val events = results.receiveAsFlow()
+    fun save(name: String, delete: Boolean = false) {
+        if (state.value.saving) return
+        val normalized = name.trim()
+        if (!delete && !isValidAcademy(normalized)) return
+        val wasEmpty = repository.communityProfile.value?.academyName.isNullOrBlank()
         viewModelScope.launch {
-            profileUiState = UiState.Loading
-
-            val update = CommunityProfileUpdate(
-                field = CommunityProfileField.ACADEMY,
-                academyName = academyName,
-            )
-
-            // Repository updates its shared StateFlow before returning success, so the main
-            // profile screen will already have the latest server snapshot when navigation pops.
-            profileUiState = communityRepository.modifyCommunityProfile(update).toUiState()
-            if (profileUiState is UiState.Success) onCompleted()
+            mutableState.value = AcademyEditorState(saving = true)
+            when (repository.modifyCommunityProfile(
+                CommunityProfileUpdate(
+                    CommunityProfileField.ACADEMY,
+                    academyName = if (delete) "" else normalized
+                )
+            )) {
+                is AppResult.Success -> results.send(EditorResult(if (delete) R.string.profile_academy_deleted else if (wasEmpty) R.string.profile_academy_created else R.string.profile_updated))
+                is AppResult.Failure -> mutableState.value = AcademyEditorState(error = true)
+            }
+            mutableState.update { it.copy(saving = false) }
         }
     }
-
 }
+
+fun isValidAcademy(name: String) =
+    name.trim().length in 1..100 && Regex("[가-힣a-zA-Z0-9\\s]+").matches(name.trim())

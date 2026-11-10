@@ -83,6 +83,20 @@ Build artifacts stay in `app/build/outputs/`; do not create or copy artifacts to
 - Use `api` only when a dependency is intentionally part of a module's public contract.
 - Prefer a Kotlin/JVM module for `:core:model`.
 
+## Serializable Navigation Destinations
+
+Apply `alias(libs.plugins.kotlin.serialization)` in every module that declares an
+`@Serializable` navigation destination. Applying it only in `:app` does not generate serializers
+for classes compiled by feature modules. Declare `implementation(libs.kotlinx.serialization)` in
+the owning feature rather than relying on a transitive runtime dependency.
+
+`EditNicknameDestination` belongs to `:feature:nickname`; `CompetitionEditorDestination` and
+`ProfileCommunityDestination` belong to `:feature:profile`. Both feature modules apply the plugin.
+Without it, an APK can compile but throw `Serializer ... is not found` while NavHost registers
+the graph, before the user opens the affected screen. For route changes, verify generated
+serializers or a serializer lookup in addition to building the APK. After changing compiler-plugin
+configuration, use a full build and Android Studio Run/reinstall instead of Apply Changes.
+
 ## Color Token Class Names
 
 Use `ColorSemantic.Transparent.Transparent` for transparent semantic colors. Do not add class or

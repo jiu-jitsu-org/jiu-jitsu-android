@@ -33,10 +33,15 @@ This repository contains a native Android client for a Jiu-Jitsu profile and com
 
 ### Profile
 
-- Display the signed-in user's community profile.
-- Update basic profile information and profile image.
-- Update academy, belt, stripe, gender, weight, and weight visibility.
-- Maintain competition history and Jiu-Jitsu style information such as positions, techniques, and submissions.
+- Display member/guest MY with belt-colored header, editable avatar/nickname/academy, belt card,
+  community activity, grouped competition records, and favorite style cards.
+- Edit belt/stripe separately from legacy weight/gender. Preserve other profile fields on save.
+- Check then save nicknames, save favorite styles in individual steps, and retain drafts on failure.
+- Add/edit/delete competition divisions; pin up to three groups and save/cancel order drafts.
+- Crop and upload avatars, delete server images, and submit uncropped owner-verification documents.
+- Bound and scroll content for phones, short windows, tablets/foldables, large fonts, and the IME.
+
+See [MY profile behavior and verification](my-profile.md). Device/UI tests are reserved for the user.
 
 ### Device registration
 
@@ -49,7 +54,6 @@ The following gaps are visible in the current implementation and are not complet
 
 - Google login UI does not complete the full click-to-login flow.
 - Apple login is represented but not implemented.
-- Some profile-edit actions still display placeholder text.
 - FCM token updates are not fully connected to startup and refresh behavior.
 
 Architecture-only migration work is tracked separately in [the NIA migration workstream](../workstreams/nia-architecture-migration.md).

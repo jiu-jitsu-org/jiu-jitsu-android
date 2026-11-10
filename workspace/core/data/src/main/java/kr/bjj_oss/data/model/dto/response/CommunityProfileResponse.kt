@@ -1,5 +1,6 @@
 package kr.bjj_oss.data.model.dto.response
 
+import kr.bjj_oss.model.*
 import kr.bjj_oss.model.CommunityProfileInfo
 import kr.bjj_oss.model.CompetitionInfo
 import kr.bjj_oss.model.toBeltRank
@@ -31,6 +32,8 @@ data class CommunityProfileData(
     val weightKg: Double? = null,
     val academyName: String? = null,
     val competitionInfoList: List<Competition>? = null,
+    val competitions: List<CompetitionGroupDto>? = null,
+    val medalCount: MedalCountDto? = null,
     val bestSubmission: String? = null,
     val favoriteSubmission: String? = null,
     val bestTechnique: String? = null,
@@ -66,8 +69,13 @@ internal fun CommunityProfileData.toInfo(): CommunityProfileInfo = CommunityProf
     beltStripe = beltStripe.toBeltStripe(),
     gender = gender.toGender(),
     weightKg = weightKg,
-    academyName = academyName.orEmpty(),
-    competitions = competitionInfoList?.map(Competition::toInfo),
+    academyName = academyName?.trim().orEmpty(),
+    competitions = competitions?.flatMap { it.toEntries() } ?: competitionInfoList?.map(Competition::toInfo).orEmpty(),
+    medalCount = MedalCount(medalCount?.gold ?: 0, medalCount?.silver ?: 0, medalCount?.bronze ?: 0),
+    isOwner = isOwner ?: false,
+    teachingPhilosophy = teachingPhilosophy,
+    teachingStartDate = teachingStartDate,
+    teachingDetail = teachingDetail,
     bestSubmission = bestSubmission.toSubmission(),
     favoriteSubmission = favoriteSubmission.toSubmission(),
     bestTechnique = bestTechnique.toTechnique(),
@@ -81,5 +89,45 @@ internal fun Competition.toInfo(): CompetitionInfo = CompetitionInfo(
     competitionYear = competitionYear,
     competitionMonth = competitionMonth,
     competitionName = competitionName,
-    competitionRank = competitionRank.toCompetitionRank(),
+    competitionRank = competitionRank.toCompetitionRank() ?: COMPETITION_RANK.PARTICIPATION(),
 )
+
+@JsonClass(generateAdapter = true)
+data class MedalCountDto(val gold: Int? = null, val silver: Int? = null, val bronze: Int? = null)
+
+@JsonClass(generateAdapter = true)
+data class CompetitionGroupDto(
+    val competitionYear: Int? = null,
+    val competitionName: String? = null,
+    val competitionPinned: Boolean? = null,
+    val competitionDisplayOrder: Int? = null,
+    val competitionId: Int? = null,
+    val divisions: List<CompetitionDivisionDto>? = null,
+)
+
+@JsonClass(generateAdapter = true)
+data class CompetitionDivisionDto(
+    val competitionRank: String = "PARTICIPATION",
+    val competitionUniform: String? = null,
+    val competitionBelt: String? = null,
+    val competitionWeightLimit: Double? = null,
+    val competitionWeightBound: String? = null,
+    val competitionAbsolute: Boolean? = null,
+)
+
+internal fun CompetitionGroupDto.toEntries(): List<CompetitionInfo> = divisions.orEmpty().map { division ->
+    val bound = CompetitionWeightBound.entries.firstOrNull { it.name == division.competitionWeightBound }
+    CompetitionInfo(
+        competitionYear = competitionYear,
+        competitionName = competitionName.orEmpty(),
+        competitionRank = division.competitionRank.toCompetitionRank() ?: COMPETITION_RANK.PARTICIPATION(),
+        uniform = CompetitionUniform.entries.firstOrNull { it.name == division.competitionUniform },
+        belt = division.competitionBelt.toBeltRank(),
+        weightLimit = division.competitionWeightLimit.takeIf { bound != null },
+        weightBound = bound.takeIf { it == CompetitionWeightBound.OVER || division.competitionWeightLimit != null },
+        absolute = division.competitionAbsolute == true,
+        isPinned = competitionPinned == true,
+        displayOrder = competitionDisplayOrder,
+        competitionId = competitionId,
+    )
+}

@@ -21,6 +21,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import kr.bjj_oss.profile.R
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,8 +37,10 @@ fun CardIndicatorLayout(
     items: List<StyleCardIndicator>,
     selectedIndex: Int = 0,
     onTabSelected: (index:Int) -> Unit,
+    enabled: Boolean = true,
 ) {
 
+    val fontScale = LocalDensity.current.fontScale.takeIf { it > 1.3f } ?: 1f
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center,
@@ -48,7 +53,7 @@ fun CardIndicatorLayout(
         ) {
             itemsIndexed(items) { index, item ->
                 val indicatorHeight by animateDpAsState(
-                    targetValue = if (selectedIndex == index) 88.dp else 66.dp,
+                    targetValue = (if (selectedIndex == index) 88.dp else 66.dp) * fontScale,
                     animationSpec = tween(durationMillis = 250),
                     label = "indicatorHeight"
                 )
@@ -72,6 +77,7 @@ fun CardIndicatorLayout(
                         )
                         .clickable(
                             role = Role.Button,
+                            enabled = enabled,
                             onClick = { onTabSelected(index) }
                         ),
                     contentAlignment = Alignment.TopCenter
@@ -91,15 +97,19 @@ fun CardIndicatorLayout(
     }
 }
 
-private fun StyleCardIndicator.displayTitle(): String = when (title) {
-    "TOP" -> "탑"
-    "GUARD" -> "가드"
-    "SWEEPS" -> "스윕"
-    "GUARD_PASSES" -> "패스"
-    "TAKE_DOWNS" -> "테이"
-    "ESCAPES" -> "이스"
-    "CHOKES" -> "조르"
-    "ARM_LOCKS" -> "팔"
-    "LEG_LOCKS" -> "하체"
-    else -> title
+@Composable
+private fun StyleCardIndicator.displayTitle(): String {
+    val resource = when (title) {
+        "TOP" -> R.string.profile_style_mini_top
+        "GUARD" -> R.string.profile_style_mini_guard
+        "SWEEPS" -> R.string.profile_style_mini_sweep
+        "GUARD_PASSES" -> R.string.profile_style_mini_pass
+        "TAKE_DOWNS" -> R.string.profile_style_mini_takedown
+        "ESCAPES" -> R.string.profile_style_mini_escape
+        "CHOKES" -> R.string.profile_style_mini_choke
+        "ARM_LOCKS" -> R.string.profile_style_mini_arm
+        "LEG_LOCKS" -> R.string.profile_style_mini_leg
+        else -> null
+    }
+    return resource?.let { stringResource(it) } ?: title
 }

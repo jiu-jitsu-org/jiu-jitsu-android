@@ -1,172 +1,163 @@
 package kr.bjj_oss.nickname.screen
 
-import androidx.annotation.StringRes
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import android.widget.Toast
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kr.bjj_oss.nickname.NickNameAction
-import kr.bjj_oss.nickname.NickNameViewModel
+import kr.bjj_oss.nickname.*
 import kr.bjj_oss.nickname.R
 import kr.bjj_oss.nickname.model.NickNameState
-import kr.bjj_oss.ui.components.button.PrimaryCTAButton
-import kr.bjj_oss.ui.components.textfield.TransparentOutlinedTextField
-import kr.bjj_oss.ui.theme.ColorComponents
-import kr.bjj_oss.ui.theme.CoolGray25
-import kr.bjj_oss.ui.theme.White
 
 @Composable
 fun NickNameScreen(
+    modifier: Modifier, padding: PaddingValues, isMarketingAgree: Boolean,
+    isShowBackArrowIcon: Boolean = false, goHome: () -> Unit,
+    initialNickname: String? = null, onBackClick: () -> Unit = {},
+) {
+    if (initialNickname != null) {
+        val model = hiltViewModel<EditNicknameViewModel>()
+        LaunchedEffect(initialNickname) { model.initialize(initialNickname) }
+        val state by model.state.collectAsStateWithLifecycle()
+        val context = LocalContext.current
+        val complete by rememberUpdatedState(goHome)
+        LaunchedEffect(model) {
+            model.events.collect { changed ->
+                if (changed) Toast.makeText(context, R.string.nickname_updated, Toast.LENGTH_SHORT)
+                    .show()
+                complete()
+            }
+        }
+        NicknameForm(
+            modifier,
+            padding,
+            stringResource(R.string.nickname_edit),
+            state.input,
+            model::input,
+            state.error?.let { stringResource(it) }
+                ?: if (state.checked == state.input) stringResource(R.string.nickname_title_duplicate_success) else stringResource(
+                    R.string.nickname_hint_default
+                ),
+            state.error != null,
+            state.busy,
+            state.input.isNotBlank() && state.error != R.string.nickname_title_duplicate_error && state.error != R.string.nickname_title_validate_error,
+            stringResource(R.string.nickname_edit),
+            model::submit,
+            onBackClick,
+            inputEnabled = !state.busy || state.checked == null)
+    } else {
+        val model = hiltViewModel<NickNameViewModel>()
+        val loading by model.loadingUiState.collectAsStateWithLifecycle()
+        val submitting by model.submitting.collectAsStateWithLifecycle()
+        val state by model.validateNickNameState.collectAsStateWithLifecycle()
+        val local by model.localNickNameState.collectAsStateWithLifecycle()
+        val error by model.errorUiState.collectAsStateWithLifecycle()
+        var input by rememberSaveable { mutableStateOf<String?>(null) }
+        val value = input ?: local.orEmpty()
+        val feedback = stringResource(
+            when (state) {
+                NickNameState.ValidationSuccess -> R.string.nickname_title_duplicate_success
+                NickNameState.ValidationError -> R.string.nickname_title_validate_error
+                NickNameState.DuplicateError -> R.string.nickname_title_duplicate_error
+                else -> if (error != null) R.string.nickname_network_error else R.string.nickname_hint_default
+            }
+        )
+        NicknameForm(
+            modifier,
+            padding,
+            stringResource(R.string.nickname_title_default),
+            value,
+            { input = it; model.onAction(NickNameAction.InitNickNameState) },
+            feedback,
+            state is NickNameState.ValidationError || state is NickNameState.DuplicateError || error != null,
+            loading,
+            value.isNotBlank() && state !is NickNameState.ValidationError && state !is NickNameState.DuplicateError,
+            stringResource(if (state is NickNameState.Succeed) kr.bjj_oss.ui.R.string.common_go_home else kr.bjj_oss.ui.R.string.common_confirm),
+            {
+                when (state) {
+                    NickNameState.Succeed -> goHome()
+                    NickNameState.ValidationSuccess -> model.onAction(
+                        NickNameAction.SignUp(
+                            value,
+                            isMarketingAgree
+                        )
+                    )
+
+                    else -> model.onAction(NickNameAction.ValidateNickName(value))
+                }
+            },
+            if (isShowBackArrowIcon) onBackClick else null,
+            inputEnabled = !submitting
+        )
+    }
+}
+
+@Composable
+private fun NicknameForm(
     modifier: Modifier,
     padding: PaddingValues,
-    isMarketingAgree: Boolean,
-    isShowBackArrowIcon: Boolean = false,
-    goHome: () -> Unit,
+    title: String,
+    value: String,
+    onInput: (String) -> Unit,
+    feedback: String,
+    error: Boolean,
+    busy: Boolean,
+    enabled: Boolean,
+    button: String,
+    onSubmit: () -> Unit,
+    onBack: (() -> Unit)?,
+    inputEnabled: Boolean = true
 ) {
-    val viewModel = hiltViewModel<NickNameViewModel>()
-    /** Collect State **/
-    val loadingState by viewModel.loadingUiState.collectAsStateWithLifecycle()
-    val nickNameState by viewModel.validateNickNameState.collectAsStateWithLifecycle()
-    val localNickNameState by viewModel.localNickNameState.collectAsStateWithLifecycle()
-    val errorState by viewModel.errorUiState.collectAsStateWithLifecycle()
-
-    /** 닉네임 선택 Info Title String ID */
-    @StringRes
-    var titleId by remember { mutableIntStateOf(R.string.nickname_title_default) }
-    /** 작성 중인 닉네임 */
-    var strNickName by remember { mutableStateOf(localNickNameState ?: "") }
-    /** 하단 버튼 Title String ID*/
-    @StringRes
-    var textBottomBtn by remember { mutableIntStateOf(kr.bjj_oss.ui.R.string.common_confirm) }
-    /** 하단 버튼 사용 가능 여부 */
-    var enableBottomBtn by remember { mutableStateOf(false) }
-
-    LaunchedEffect(nickNameState) {
-        val inputNickNameState = nickNameState
-        when (inputNickNameState) {
-            is NickNameState.Idle -> {
-                textBottomBtn = kr.bjj_oss.ui.R.string.common_confirm
-                titleId = R.string.nickname_title_default
-            }
-            is NickNameState.ValidationError -> {
-                enableBottomBtn = false
-                titleId = R.string.nickname_title_validate_error
-            }
-            is NickNameState.ValidationSuccess -> {
-                enableBottomBtn = true
-                titleId = R.string.nickname_title_duplicate_success
-            }
-            is NickNameState.DuplicateError -> {
-                enableBottomBtn = false
-                titleId = R.string.nickname_title_duplicate_error
-            }
-            is NickNameState.Succeed -> {
-                textBottomBtn = kr.bjj_oss.ui.R.string.common_go_home
-                enableBottomBtn = true
-            }
-            is NickNameState.Error -> {
-                val message = inputNickNameState.message
-            }
-        }
-    }
-
-    Surface(
-        color = White,
-        modifier = modifier,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
+    Surface(modifier.fillMaxSize(), color = androidx.compose.ui.graphics.Color.White) {
+        Box(
+            Modifier
                 .padding(padding)
-                .padding(horizontal = 25.dp),
+                .consumeWindowInsets(padding)
+                .imePadding()
+                .fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
+                Modifier
+                    .widthIn(max = 560.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(200.dp)
-                        .background(color = CoolGray25)
-                )
-
+                if (onBack != null) TextButton(onClick = onBack) { Text(stringResource(R.string.nickname_back)) }
+                Text(title, style = MaterialTheme.typography.headlineMedium)
+                OutlinedTextField(
+                    value,
+                    onInput,
+                    Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    isError = error,
+                    enabled = inputEnabled,
+                    label = { Text(stringResource(R.string.nickname_hint_default)) })
                 Text(
-                    text = stringResource(titleId),
-                    style = MaterialTheme.typography.displayLarge,
-                    color = ColorComponents.TextFieldDisplay.Default.Title,
-                    textAlign = TextAlign.Center
+                    feedback,
+                    color = if (error) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
-
-                TransparentOutlinedTextField(
-                    modifier = Modifier.wrapContentWidth(),
-                    value = strNickName,
-                    placeholder = stringResource(R.string.nickname_hint_default),
-                    errorTextColor = ColorComponents.TextFieldDisplay.Default.Placeholder,
-                    isError = nickNameState is NickNameState.ValidationError
-                            || nickNameState is NickNameState.DuplicateError,
-                    onValueChange = { new ->
-                        strNickName = new
-                        enableBottomBtn = new.trim().isNotBlank()
-                        viewModel.onAction(NickNameAction.InitNickNameState)
-                    },
-                )
+                Button(
+                    onClick = onSubmit,
+                    enabled = enabled && !busy,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 51.dp),
+                    contentPadding = PaddingValues(16.dp)
+                ) { Text(button) }
+                if (busy) CircularProgressIndicator()
             }
-
-            // Bottom Button
-            PrimaryCTAButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(51.dp),
-                text = stringResource(textBottomBtn),
-                onClick = {
-                    when (nickNameState) {
-                        is NickNameState.Succeed -> {
-                            // Success Sign Up
-                            goHome()
-                        }
-
-                        is NickNameState.ValidationSuccess -> {
-                            // Sign Up
-                            viewModel.onAction(NickNameAction.SignUp(strNickName, isMarketingAgree))
-                        }
-
-                        else -> {
-                            // Check NickName
-                            viewModel.onAction(NickNameAction.ValidateNickName(strNickName))
-                        }
-                    }
-                },
-                enabled = enableBottomBtn
-            )
-
         }
     }
-
 }

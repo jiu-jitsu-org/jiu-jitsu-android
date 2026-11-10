@@ -19,5 +19,6 @@ interface ImageKitService {
         @Part("signature") signature: RequestBody,
         @Part("expire") expire: RequestBody,
         @Part("folder") folder: RequestBody,
+        @Part("useUniqueFileName") useUniqueFileName: RequestBody,
     ): ImageKitUploadResponse
 }

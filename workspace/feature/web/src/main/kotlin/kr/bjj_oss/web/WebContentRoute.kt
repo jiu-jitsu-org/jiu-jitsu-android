@@ -41,6 +41,7 @@ fun WebContentRoute(
     // 같은-origin 상대 경로. 미설정/허용되지 않은 주소는 해당 아이콘을 비활성화한다.
     notificationPath: String? = null,
     myCommunityPath: String? = null,
+    onCloseInitialSubview: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -88,6 +89,7 @@ fun WebContentRoute(
                     }, context.getString(R.string.web_share)))
                 } catch (_: ActivityNotFoundException) { Toast.makeText(context, R.string.web_external_unavailable, Toast.LENGTH_SHORT).show() }
             },
+            closeInitialSubview = onCloseInitialSubview,
             chooseFile = { request ->
                 if (launchedFile != null) controller?.finishFile(null, request)
                 else {

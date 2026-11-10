@@ -10,6 +10,7 @@ import kr.bjj_oss.model.SessionUpdate
 import kr.bjj_oss.nickname.model.NickNameState
 import kr.bjj_oss.ui.state.toUiError
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -40,15 +41,26 @@ class NickNameViewModel @Inject constructor(
     private val mutableLoadingUiState = MutableStateFlow(false)
     val loadingUiState = mutableLoadingUiState.asStateFlow()
 
+    private val mutableSubmitting = MutableStateFlow(false)
+    val submitting = mutableSubmitting.asStateFlow()
+    private var checkJob: Job? = null
+    private var checkedNickname: String? = null
+    private var checkGeneration = 0
+
     init {
         getLocalNickName()
     }
 
     fun onAction(action: NickNameAction) {
+        if (mutableSubmitting.value) return
         when (action) {
             is NickNameAction.SignUp -> signUp(action.inputNickName, action.isMarketingAgreed)
             is NickNameAction.ValidateNickName -> validateNickname(action.inputNickName)
-            NickNameAction.InitNickNameState -> mutableValidateNickNameState.value = NickNameState.Idle
+            NickNameAction.InitNickNameState -> {
+                checkGeneration++; checkJob?.cancel(); checkedNickname = null
+                mutableLoadingUiState.value = false
+                mutableValidateNickNameState.value = NickNameState.Idle
+            }
         }
     }
 
@@ -73,35 +85,45 @@ class NickNameViewModel @Inject constructor(
     }
 
     private fun signUp(inputNickName: String, isMarketingAgreed: Boolean) {
+        if (mutableLoadingUiState.value || checkedNickname != inputNickName) return
+        mutableSubmitting.value = true
         viewModelScope.launch {
-            beginRequest()
-            when (val result = userRepository.signupUser(inputNickName, isMarketingAgreed)) {
-                is AppResult.Success -> {
-                    val loginInfo = result.data
-                    sessionRepository.updateSession(
-                        SessionUpdate(
-                            accessToken = loginInfo.accessToken,
-                            refreshToken = loginInfo.refreshToken,
-                            nickname = loginInfo.userInfo?.nickname ?: inputNickName,
-                            profileImageUrl = loginInfo.userInfo?.profileImageUrl,
-                        ),
-                    )
-                    mutableValidateNickNameState.value = NickNameState.Succeed
-                }
+            try {
+                beginRequest()
+                when (val result = userRepository.signupUser(inputNickName, isMarketingAgreed)) {
+                    is AppResult.Success -> {
+                        val loginInfo = result.data
+                        sessionRepository.updateSession(
+                            SessionUpdate(
+                                accessToken = loginInfo.accessToken,
+                                refreshToken = loginInfo.refreshToken,
+                                nickname = loginInfo.userInfo?.nickname ?: inputNickName,
+                                profileImageUrl = loginInfo.userInfo?.profileImageUrl,
+                            ),
+                        )
+                        mutableValidateNickNameState.value = NickNameState.Succeed
+                    }
 
-                is AppResult.Failure -> {
-                    mutableErrorUiState.value = result.error.toUiError().message
+                    is AppResult.Failure -> {
+                        mutableErrorUiState.value = result.error.toUiError().message
+                    }
                 }
+            } finally {
+                mutableLoadingUiState.value = false
+                mutableSubmitting.value = false
             }
-            mutableLoadingUiState.value = false
         }
     }
 
     private fun checkNickname(nickName: String) {
-        viewModelScope.launch {
+        if (mutableLoadingUiState.value) return
+        val generation = ++checkGeneration
+        checkJob = viewModelScope.launch {
             beginRequest()
             when (val result = userRepository.checkNickname(nickName)) {
                 is AppResult.Success -> {
+                    if (generation != checkGeneration) return@launch
+                    checkedNickname = nickName.takeIf { result.data }
                     mutableValidateNickNameState.value = if (result.data) {
                         NickNameState.ValidationSuccess
                     } else {
@@ -110,6 +132,7 @@ class NickNameViewModel @Inject constructor(
                 }
 
                 is AppResult.Failure -> {
+                    if (generation != checkGeneration) return@launch
                     val error = result.error.toUiError()
                     if (error.code == 400) {
                         mutableValidateNickNameState.value = NickNameState.DuplicateError

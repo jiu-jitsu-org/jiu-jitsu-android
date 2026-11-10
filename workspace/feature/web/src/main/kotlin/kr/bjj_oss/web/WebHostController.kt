@@ -36,6 +36,7 @@ internal class WebHostController(
     private val external: (String) -> Unit,
     private val share: (String, String?) -> Unit,
     private val chooseFile: (FileRequest) -> Unit,
+    private val closeInitialSubview: (() -> Unit)? = null,
 ) {
     val entries = mutableStateListOf<WebEntry>()
     val top get() = entries.lastOrNull()?.page
@@ -50,6 +51,7 @@ internal class WebHostController(
     private val refreshing = mutableSetOf<String>()
     private var token: String? = null
     private var disposed = false
+    private var initialSubviewClosed = false
     private var preparation: Job? = null
     private var surfaceTimeout: Job? = null
 
@@ -154,6 +156,10 @@ internal class WebHostController(
 
     private fun close(page: WebViewPage) {
         if (page != top || entries.size <= 1) return
+        if (entries.size == 2 && closeInitialSubview != null) {
+            if (!initialSubviewClosed) { initialSubviewClosed = true; closeInitialSubview.invoke() }
+            return
+        }
         // CLOSE_SUBVIEW는 웹이 명시적으로 닫기를 결정한 메시지이므로 히스토리와 무관하다.
         // 최상단 자식만 해제하며, 부모는 재로드 없이 같은 인스턴스로 다시 표시된다.
         entries.removeAt(entries.lastIndex)
